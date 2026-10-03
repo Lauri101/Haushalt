@@ -69,13 +69,19 @@ button{font:inherit;color:inherit}
   font-size:clamp(46px,13vw,58px);line-height:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08)}
 .card .text{font-size:clamp(30px,8.5vw,42px);line-height:1.1;font-weight:700;text-align:center;letter-spacing:-.025em;overflow-wrap:anywhere}
 .card .tint{position:absolute;inset:0;opacity:0;pointer-events:none;border-radius:inherit}
-.card .tint.r{background:radial-gradient(120% 80% at 100% 50%,rgba(48,209,88,.6),transparent 62%)}
-.card .tint.l{background:radial-gradient(120% 80% at 0% 50%,rgba(255,159,10,.6),transparent 62%)}
-.card .tint.d{background:radial-gradient(120% 70% at 50% 100%,rgba(10,132,255,.55),transparent 62%)}
+.card .tint.r{background:radial-gradient(140% 110% at 100% 50%,rgba(48,209,88,.95),rgba(48,209,88,.45) 50%,rgba(48,209,88,.22) 100%)}
+.card .tint.l{background:radial-gradient(140% 110% at 0% 50%,rgba(255,159,10,.95),rgba(255,159,10,.45) 50%,rgba(255,159,10,.22) 100%)}
+.card .tint.d{background:radial-gradient(130% 100% at 50% 100%,rgba(10,132,255,.95),rgba(10,132,255,.45) 50%,rgba(10,132,255,.22) 100%)}
+.card .stamp{position:absolute;z-index:2;top:26px;display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;
+  font-size:15px;font-weight:700;letter-spacing:.01em;color:#fff;opacity:0;pointer-events:none;transform:scale(.85);
+  border:1.5px solid rgba(255,255,255,.55);background:rgba(0,0,0,.18);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.card .stamp.r{left:22px;transform-origin:left center}
+.card .stamp.l{right:22px;transform-origin:right center}
+.card .stamp.d{left:50%;margin-left:-52px;width:104px;justify-content:center}
 .card.behind.promote{transform:none;opacity:1;transition:transform .32s var(--ease),opacity .32s var(--ease)}
-.card.behind.enter{animation:enterB .5s var(--ease) both}
+.card.behind.enter{animation:enterB .5s var(--ease) backwards}
 @keyframes enterB{from{opacity:0;transform:scale(.86) translateY(34px)}to{opacity:.45;transform:scale(.93) translateY(16px)}}
-.card.reappear{animation:reap .5s var(--ease) both}
+.card.reappear{animation:reap .5s var(--ease) backwards}
 @keyframes reap{from{opacity:0;transform:translateY(40px) scale(.94)}to{opacity:1;transform:none}}
 .card .overdue{position:absolute;left:0;right:0;bottom:22px;text-align:center;font-size:13px;font-weight:500;color:#FF453A;z-index:1;letter-spacing:-.005em}
 .card.fly{transition:transform .32s var(--ease),opacity .32s var(--ease)}
@@ -84,6 +90,11 @@ button{font:inherit;color:inherit}
 .empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:24px}
 .empty h2{margin:0;font-size:30px;font-weight:700;line-height:1.15;letter-spacing:-.025em}
 .empty p{margin:0;color:var(--muted);font-size:16px;max-width:30ch;line-height:1.45}
+.donelist{list-style:none;margin:18px 0 0;padding:0;display:flex;flex-direction:column;gap:9px;align-items:flex-start;max-height:45vh;overflow-y:auto;text-align:left}
+.donelist li{display:flex;align-items:center;gap:9px;font-size:15px;color:var(--ink);opacity:0;animation:dl .5s var(--ease) forwards}
+.donelist li span{opacity:.8}
+.donelist svg{flex:none}
+@keyframes dl{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
 .hint{flex:none;display:flex;justify-content:space-between;font-size:13px;color:var(--muted);padding:0 10px 14px;height:32px}
 .hint .l{color:var(--later)} .hint .r{color:var(--done)} .hint .d{color:var(--accent)}
@@ -161,6 +172,7 @@ input[type=date]{-webkit-appearance:none;appearance:none;line-height:52px}
 @media (prefers-reduced-motion:reduce){
   .card.fly,.card.back,.undo,.btn,.row,.chip,.card.behind.promote{transition:none}
   .card.behind.enter,.card.reappear{animation:none}
+  .donelist li{animation:none;opacity:1}
   .success.go .disc{animation:fade .6s linear forwards} .success.go .ring{animation:none} .success path{stroke-dashoffset:0}
   @keyframes fade{0%,70%{opacity:1;transform:scale(1)}100%{opacity:0}}
 }
@@ -374,20 +386,32 @@ input[type=date]{-webkit-appearance:none;appearance:none;line-height:52px}
       countEl.textContent = "";
       hint.style.visibility="hidden";
       stage.innerHTML = '<div class="empty"><h2>Für heute alles erledigt</h2><p>Morgen kommen die nächsten Aufgaben.</p></div>';
+      const doneToday = state.tasks.filter(x=>x.last===today()).sort((a,b)=>(a.lastAt||0)-(b.lastAt||0));
+      if(doneToday.length){
+        const ul = document.createElement("ul"); ul.className="donelist"; ul.setAttribute("aria-label","Heute geschafft");
+        doneToday.forEach((x,i)=>{
+          const li=document.createElement("li"); li.style.animationDelay=(0.15+i*0.06)+"s";
+          li.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#30D158" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+          const sp=document.createElement("span"); sp.textContent=x.text; li.appendChild(sp); ul.appendChild(li);
+        });
+        stage.querySelector(".empty").appendChild(ul);
+      }
       return;
     }
     hint.style.visibility="visible";
     countEl.innerHTML = "<b>"+due.length+"</b> offen";
-    if(due[1]){ const bc = makeCard(due[1], true); if(opts.enter) bc.classList.add("enter"); stage.appendChild(bc); }
+    if(due[1]){ const bc = makeCard(due[1], true); if(opts.enter){ bc.classList.add("enter"); bc.addEventListener("animationend", ()=>bc.classList.remove("enter"), {once:true}); } stage.appendChild(bc); }
     const top = makeCard(due[0], false);
     if(opts.requeued && due.length===1 && due[0].id===opts.requeued) top.classList.add("reappear");
+    top.addEventListener("animationend", ()=>top.classList.remove("reappear"), {once:true});
     stage.appendChild(top);
     attachSwipe(top, due[0]);
   }
   function makeCard(t, behind){
     const c = document.createElement("div");
     c.className = "card glass"+(behind?" behind":"");
-    c.innerHTML = '<div class="tint r"></div><div class="tint l"></div><div class="tint d"></div>';
+    c.innerHTML = '<div class="tint r"></div><div class="tint l"></div><div class="tint d"></div>'
+      + '<div class="stamp r">✓ Erledigt</div><div class="stamp l">Morgen ↺</div><div class="stamp d">↓ Später</div>';
     const wrap = document.createElement("div"); wrap.className="inner";
     const ic = document.createElement("div"); ic.className="ico"; ic.setAttribute("aria-hidden","true"); ic.textContent=iconOf(t);
     const tx = document.createElement("div"); tx.className="text"; tx.textContent=t.text;
@@ -401,7 +425,21 @@ input[type=date]{-webkit-appearance:none;appearance:none;line-height:52px}
     let sx=0, sy=0, dx=0, dy=0, t0=0, dragging=false, axis=null;
     const tr=card.querySelector(".tint.r"), tl=card.querySelector(".tint.l"), td=card.querySelector(".tint.d");
     const W = () => stage.clientWidth, H = () => stage.clientHeight;
-    const resetTints = ()=>{ tr.style.opacity=0; tl.style.opacity=0; td.style.opacity=0; };
+    const GLOW = { r:"48,209,88", l:"255,159,10", d:"10,132,255" };
+    const tints = { r:tr, l:tl, d:td };
+    const stamps = { r:card.querySelector(".stamp.r"), l:card.querySelector(".stamp.l"), d:card.querySelector(".stamp.d") };
+    function paint(dir, a){
+      for(const k of ["r","l","d"]){
+        const on = k===dir ? a : 0;
+        tints[k].style.opacity = on;
+        stamps[k].style.opacity = Math.min(1, Math.max(0, (on-0.25)/0.5));
+        stamps[k].style.transform = "scale("+(0.85+0.15*Math.min(1,on))+")";
+      }
+      card.style.boxShadow = dir && a>0
+        ? `0 0 0 2px rgba(${GLOW[dir]},${0.9*a}), 0 0 60px rgba(${GLOW[dir]},${0.55*a}), 0 25px 50px -12px rgba(0,0,0,.6)`
+        : "";
+    }
+    const resetTints = ()=>paint(null, 0);
     card.addEventListener("pointerdown", e=>{
       dragging=true; axis=null; sx=e.clientX; sy=e.clientY; dx=0; dy=0; t0=performance.now();
       card.classList.remove("back"); card.setPointerCapture(e.pointerId);
@@ -413,12 +451,11 @@ input[type=date]{-webkit-appearance:none;appearance:none;line-height:52px}
       if(axis==="y"){
         dx = rx*0.15; dy = Math.max(0, ry);
         card.style.transform = `translate(${dx}px,${dy}px) scale(${1 - Math.min(dy/H(),1)*0.06})`;
-        resetTints(); td.style.opacity = Math.min(dy/180,1)*0.9;
+        paint("d", Math.min(dy/130,1));
       } else {
         dx = rx; dy = ry*0.25;
         card.style.transform = `translate(${dx}px,${dy}px) rotate(${dx/18}deg)`;
-        const a = Math.min(Math.abs(dx)/160, 1)*0.9;
-        tr.style.opacity = dx>0 ? a : 0; tl.style.opacity = dx<0 ? a : 0; td.style.opacity = 0;
+        paint(dx>0 ? "r" : "l", Math.min(Math.abs(dx)/120, 1));
       }
     });
     const end = ()=>{
@@ -443,11 +480,11 @@ input[type=date]{-webkit-appearance:none;appearance:none;line-height:52px}
       card.classList.add("fly");
       if(dir==="d"){
         card.style.transform = `translate(0,${H()+260}px) scale(.9)`; card.style.opacity = "0";
-        td.style.opacity = .9;
+        paint("d", 1);
       } else {
         const off = (W()+200)*(dir==="r"?1:-1);
         card.style.transform = `translate(${off}px,0) rotate(${dir==="r"?24:-24}deg)`;
-        (dir==="r"?tr:tl).style.opacity = .9;
+        paint(dir, 1);
       }
       const behind = stage.querySelector(".card.behind");
       if(behind) behind.classList.add("promote");
@@ -457,8 +494,8 @@ input[type=date]{-webkit-appearance:none;appearance:none;line-height:52px}
   }
   function apply(id, dir){
     const t = state.tasks.find(x=>x.id===id); if(!t) return render();
-    lastAction = { id, next:t.next, last:t.last||null, done:t.done||null, q:t.q, qd:t.qd, since:t.since||null };
-    if(dir==="r"){ t.last = today(); delete t.since; if(t.mode==="once") t.done = today(); else t.next = afterDone(t); }
+    lastAction = { id, next:t.next, last:t.last||null, lastAt:t.lastAt||null, done:t.done||null, q:t.q, qd:t.qd, since:t.since||null };
+    if(dir==="r"){ t.last = today(); t.lastAt = Date.now(); delete t.since; if(t.mode==="once") t.done = today(); else t.next = afterDone(t); }
     else if(dir==="d"){ t.q = Date.now(); t.qd = today(); }
     else { if(!t.since) t.since = t.next < today() ? t.next : today(); t.next = addDays(today(),1); }
     save(); render({enter:true, requeued: dir==="d" ? id : null}); showUndo();
@@ -518,7 +555,7 @@ input[type=date]{-webkit-appearance:none;appearance:none;line-height:52px}
   undoBtn.onclick = ()=>{
     if(!lastAction) return;
     const t = state.tasks.find(x=>x.id===lastAction.id);
-    if(t){ t.next=lastAction.next; t.last=lastAction.last; if(lastAction.done) t.done=lastAction.done; else delete t.done;
+    if(t){ t.next=lastAction.next; t.last=lastAction.last; if(lastAction.lastAt) t.lastAt=lastAction.lastAt; else delete t.lastAt; if(lastAction.done) t.done=lastAction.done; else delete t.done;
       if(lastAction.q) { t.q=lastAction.q; t.qd=lastAction.qd; } else { delete t.q; delete t.qd; }
       if(lastAction.since) t.since=lastAction.since; else delete t.since; save(); }
     lastAction=null; undoBtn.classList.remove("show"); render();
