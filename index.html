@@ -125,7 +125,9 @@ button{font:inherit;color:inherit}
 .row + .row{border-top:1px solid var(--line)}
 .row:hover{background:rgba(255,255,255,.05)}
 .row .ri{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(255,255,255,.07);font-size:19px;flex:none}
-.row .t{flex:1;font-size:16px;font-weight:600;letter-spacing:-.01em}
+.row .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.row .tt{font-size:16px;font-weight:600;letter-spacing:-.01em}
+.row .ld{font-size:13px;color:var(--muted)}
 .row .m{font-size:13px;color:var(--muted);white-space:nowrap}
 .list .none{color:var(--muted);padding:24px 4px;font-size:16px}
 .foot{flex:none;padding:12px 0 16px}
@@ -347,6 +349,12 @@ input[type=date]{-webkit-appearance:none;appearance:none;line-height:52px}
     const base = t.since || t.next; if(!base) return 0;
     return Math.max(0, Math.round((parse(today()) - parse(base)) / 864e5));
   }
+  function lastDoneLabel(t){
+    if(!t.last) return "noch nie erledigt";
+    const n = Math.max(0, Math.round((parse(today()) - parse(t.last)) / 864e5)), d = parse(t.last);
+    const rel = n===0 ? "heute" : n===1 ? "gestern" : "vor "+n+" Tagen";
+    return "zuletzt "+rel+" · "+d.getDate()+"."+(d.getMonth()+1)+".";
+  }
   function dueTasks(){ const t=today(); const key=x=>(x.qd===t && x.q) ? x.q : 0; return active().filter(x=>x.next<=t).map((x,i)=>[x,i]).sort((a,b)=>key(a[0])-key(b[0]) || a[1]-b[1]).map(p=>p[0]); }
   function cleanup(){ const t=today(); const n=state.tasks.length; state.tasks=state.tasks.filter(x=>!(x.done && x.done<t)); if(state.tasks.length!==n) save(); }
 
@@ -494,7 +502,10 @@ input[type=date]{-webkit-appearance:none;appearance:none;line-height:52px}
     active().forEach(t=>{
       const b = document.createElement("button"); b.className="row";
       const s0=document.createElement("span"); s0.className="ri"; s0.setAttribute("aria-hidden","true"); s0.textContent=iconOf(t);
-      const s1=document.createElement("span"); s1.className="t"; s1.textContent=t.text;
+      const s1=document.createElement("span"); s1.className="t";
+      const s1a=document.createElement("span"); s1a.className="tt"; s1a.textContent=t.text;
+      const s1b=document.createElement("span"); s1b.className="ld"; s1b.textContent=lastDoneLabel(t);
+      s1.append(s1a,s1b);
       const s2=document.createElement("span"); s2.className="m"; s2.textContent=rhythmLabel(t);
       b.append(s0,s1,s2); b.onclick=()=>openForm(t); group.appendChild(b);
     });
