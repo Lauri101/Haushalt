@@ -49,7 +49,8 @@ button{font:inherit;color:inherit}
 }
 
 .app{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;max-width:520px;margin:0 auto;padding:12px 16px 0}
-.top{display:flex;align-items:center;justify-content:space-between;height:52px;flex:none;border-radius:18px;padding:0 6px 0 18px}
+.top{display:flex;align-items:center;justify-content:space-between;height:52px;flex:none;border-radius:18px;padding:0 6px}
+.app .top .count{flex:1;text-align:center}
 .count{font-size:15px;color:var(--muted)}
 .count b{color:var(--ink);font-weight:600}
 .icon-btn{width:40px;height:40px;border:0;background:rgba(255,255,255,.06);border-radius:12px;display:grid;place-items:center;cursor:pointer;color:var(--ink);transition:background .3s var(--ease)}
@@ -140,6 +141,29 @@ button{font:inherit;color:inherit}
 .row .tt{font-size:16px;font-weight:600;letter-spacing:-.01em}
 .row .ld{font-size:13px;color:var(--muted)}
 .row .m{font-size:13px;color:var(--muted);white-space:nowrap}
+.calwrap{flex:1;overflow-y:auto;padding:6px 0 20px;display:flex;flex-direction:column;gap:14px}
+.cal{border-radius:24px;padding:12px 10px 14px;touch-action:pan-y;position:relative;user-select:none;-webkit-user-select:none}
+.calhead .icon-btn{width:44px;height:44px;background:rgba(255,255,255,.08)}
+.calhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.caltitle{text-align:center;display:flex;flex-direction:column;gap:2px}
+.caltitle b{font-size:17px;font-weight:600;letter-spacing:-.01em}
+.caltitle span{font-size:12px;color:var(--muted)}
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.calwd{text-align:center;font-size:11px;color:var(--muted);padding:4px 0 6px;font-weight:500}
+.calday{aspect-ratio:1/1.05;border:0;background:none;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--ink);transition:background .3s var(--ease);padding:0}
+.calday:hover:not(:disabled){background:rgba(255,255,255,.06)}
+.calday:disabled{color:rgba(245,245,247,.25);cursor:default}
+.calday .n{font-size:15px;line-height:1}
+.calday.today .n{color:var(--accent);font-weight:700}
+.calday.sel{background:rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+.calday .dot{min-width:6px;height:6px;border-radius:3px;background:var(--done);font-size:0;line-height:0}
+.calday.has .dot:not(:empty){height:14px;min-width:14px;border-radius:7px;font-size:9px;line-height:14px;font-weight:700;color:#04210f;padding:0 3px}
+.calday .dot.empty{background:transparent}
+.calday:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.calsel{font-size:15px;font-weight:600;margin:4px 6px 0}
+.calnone{color:var(--muted);font-size:15px;margin:0 6px}
+.row.static{cursor:default}
+.row.static:hover{background:none}
 .list .none{color:var(--muted);padding:24px 4px;font-size:16px}
 .foot{flex:none;padding:12px 0 16px}
 .foot .btn{width:100%}
@@ -182,6 +206,9 @@ input[type=date]{-webkit-appearance:none;appearance:none;line-height:52px}
 <div class="amb" aria-hidden="true"><i class="a"></i><i class="b"></i><i class="c"></i></div>
 <div class="app">
   <div class="top glass">
+    <button class="icon-btn" id="openCal" aria-label="Verlauf im Kalender">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3.5"/><line x1="3.5" y1="10" x2="20.5" y2="10"/><line x1="8" y1="3" x2="8" y2="6.5"/><line x1="16" y1="3" x2="16" y2="6.5"/><path d="M9 15l2 2 4-4" stroke="#30D158"/></svg>
+    </button>
     <span class="count" id="count"></span>
     <button class="icon-btn" id="openSettings" aria-label="Aufgaben verwalten">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="9" cy="7" r="2.4" fill="#1c1c20"/><circle cx="15" cy="17" r="2.4" fill="#1c1c20"/></svg>
@@ -318,6 +345,17 @@ input[type=date]{-webkit-appearance:none;appearance:none;line-height:52px}
   }
 
   /* ---------- storage ---------- */
+  const LOG_DAYS = 400;
+  function norm(){
+    if(!Array.isArray(state.log)) state.log = [];
+    if(!state.logSeeded){
+      state.tasks.forEach(t=>{ if(t.last && !state.log.some(e=>e.d===t.last && e.id===t.id)) state.log.push({d:t.last, id:t.id, t:t.text, i:iconOf(t)}); });
+      state.log.sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
+      state.logSeeded = true;
+    }
+    const cut = addDays(today(), -LOG_DAYS);
+    if(state.log.length && state.log[0].d < cut) state.log = state.log.filter(e=>e.d>=cut);
+  }
   function loadLocal(){
     try{ const raw=localStorage.getItem(LS_KEY); if(raw){ const s=JSON.parse(raw); if(s&&Array.isArray(s.tasks)) state=s; } }catch(e){}
   }
@@ -341,14 +379,14 @@ input[type=date]{-webkit-appearance:none;appearance:none;line-height:52px}
         const d = snap.data();
         if(d && Array.isArray(d.tasks)){ state = JSON.parse(JSON.stringify(d)); try{localStorage.setItem(LS_KEY,JSON.stringify(state));}catch(e){} }
         dbRef = ref;
-        cleanup(); render();
+        norm(); cleanup(); render();
       } else {
         dbRef = ref;
         if(state.tasks.length) save();
       }
       document.addEventListener("visibilitychange", async ()=>{
         if(document.visibilityState!=="visible" || !dbRef) return;
-        try{ await writing; const s=await dbRef.get(); if(s.exists){ const d=s.data(); if(d&&Array.isArray(d.tasks)){ state=JSON.parse(JSON.stringify(d)); render(); } } }catch(e){}
+        try{ await writing; const s=await dbRef.get(); if(s.exists){ const d=s.data(); if(d&&Array.isArray(d.tasks)){ state=JSON.parse(JSON.stringify(d)); norm(); render(); } } }catch(e){}
       });
     }catch(e){}
   }
@@ -372,7 +410,7 @@ input[type=date]{-webkit-appearance:none;appearance:none;line-height:52px}
   function cleanup(){ const t=today(); const n=state.tasks.length; state.tasks=state.tasks.filter(x=>!(x.done && x.done<t)); if(state.tasks.length!==n) save(); }
 
   function render(opts){ opts = opts || {};
-    if(document.getElementById("sheet").classList.contains("open")) renderList();
+    if(document.getElementById("sheet").classList.contains("open")){ if(sheetMode==="list") renderList(); else if(sheetMode==="cal") renderCal(); }
     const due = dueTasks();
     stage.innerHTML = "";
     if(!active().length){
@@ -495,7 +533,7 @@ input[type=date]{-webkit-appearance:none;appearance:none;line-height:52px}
   function apply(id, dir){
     const t = state.tasks.find(x=>x.id===id); if(!t) return render();
     lastAction = { id, next:t.next, last:t.last||null, lastAt:t.lastAt||null, done:t.done||null, q:t.q, qd:t.qd, since:t.since||null };
-    if(dir==="r"){ t.last = today(); t.lastAt = Date.now(); delete t.since; if(t.mode==="once") t.done = today(); else t.next = afterDone(t); }
+    if(dir==="r"){ state.log.push({d:today(), id:t.id, t:t.text, i:iconOf(t)}); lastAction.logged = true; t.last = today(); t.lastAt = Date.now(); delete t.since; if(t.mode==="once") t.done = today(); else t.next = afterDone(t); }
     else if(dir==="d"){ t.q = Date.now(); t.qd = today(); }
     else { if(!t.since) t.since = t.next < today() ? t.next : today(); t.next = addDays(today(),1); }
     save(); render({enter:true, requeued: dir==="d" ? id : null}); showUndo();
@@ -555,6 +593,7 @@ input[type=date]{-webkit-appearance:none;appearance:none;line-height:52px}
   undoBtn.onclick = ()=>{
     if(!lastAction) return;
     const t = state.tasks.find(x=>x.id===lastAction.id);
+    if(lastAction.logged){ for(let k=state.log.length-1;k>=0;k--){ if(state.log[k].id===lastAction.id && state.log[k].d===today()){ state.log.splice(k,1); break; } } }
     if(t){ t.next=lastAction.next; t.last=lastAction.last; if(lastAction.lastAt) t.lastAt=lastAction.lastAt; else delete t.lastAt; if(lastAction.done) t.done=lastAction.done; else delete t.done;
       if(lastAction.q) { t.q=lastAction.q; t.qd=lastAction.qd; } else { delete t.q; delete t.qd; }
       if(lastAction.since) t.since=lastAction.since; else delete t.since; save(); }
@@ -565,9 +604,11 @@ input[type=date]{-webkit-appearance:none;appearance:none;line-height:52px}
   const sheet = document.getElementById("sheet");
   const inner = document.getElementById("sheetInner");
   document.getElementById("openSettings").onclick = ()=>{ openSheet(); };
+  let sheetMode = "list";
   function openSheet(){ sheet.classList.add("open"); renderList(); }
+  document.getElementById("openCal").onclick = ()=>{ sheet.classList.add("open"); calMonth = today().slice(0,7); calSel = today(); renderCal(); };
   function closeSheet(){ sheet.classList.remove("open"); render(); }
-  function renderList(){
+  function renderList(){ sheetMode = "list";
     inner.innerHTML = '';
     const top = document.createElement("div"); top.className="top";
     top.innerHTML = '<h1>Aufgaben</h1><button class="icon-btn" aria-label="Schließen"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>';
@@ -593,7 +634,77 @@ input[type=date]{-webkit-appearance:none;appearance:none;line-height:52px}
     const bk=document.createElement("button"); bk.className="linkbtn"; bk.textContent="Daten sichern oder importieren"; bk.onclick=openBackup;
     foot.append(add,bk); inner.appendChild(foot);
   }
-  function openBackup(){
+  /* ---------- calendar ---------- */
+  const MONTHS = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+  const WDL = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
+  let calMonth = null, calSel = null;
+  function renderCal(){
+    sheetMode = "cal";
+    const byDay = {};
+    state.log.forEach(e=>{ (byDay[e.d] = byDay[e.d] || []).push(e); });
+    const [y,m] = calMonth.split("-").map(Number);
+    const first = calMonth+"-01", dim = new Date(y, m, 0).getDate(), lead = wd(first), td = today();
+    inner.innerHTML = '';
+    const top=document.createElement("div"); top.className="top";
+    top.innerHTML='<h1>Verlauf</h1><button class="icon-btn" aria-label="Schließen"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>';
+    top.querySelector("button").onclick=closeSheet; inner.appendChild(top);
+    const wrap=document.createElement("div"); wrap.className="calwrap";
+    let monthCount=0; for(let d=1; d<=dim; d++){ const k=calMonth+"-"+pad(d); if(byDay[k]) monthCount+=byDay[k].length; }
+    const box=document.createElement("div"); box.className="cal glass";
+    const head=document.createElement("div"); head.className="calhead";
+    const prev=document.createElement("button"); prev.className="icon-btn"; prev.setAttribute("aria-label","Vorheriger Monat");
+    prev.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>';
+    const next=document.createElement("button"); next.className="icon-btn"; next.setAttribute("aria-label","Nächster Monat");
+    next.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
+    const goMonth = delta => { const d=new Date(y, m-1+delta, 1); calMonth=d.getFullYear()+"-"+pad(d.getMonth()+1); renderCal(); };
+    const title=document.createElement("div"); title.className="caltitle";
+    title.innerHTML='<b>'+MONTHS[m-1]+' '+y+'</b><span>'+(monthCount===1?'1 Aufgabe erledigt':monthCount+' Aufgaben erledigt')+'</span>';
+    prev.onclick=()=>goMonth(-1);
+    next.onclick=()=>goMonth(1);
+    let csx=0, csy=0, cdown=false;
+    box.addEventListener("pointerdown", e=>{ cdown=true; csx=e.clientX; csy=e.clientY; });
+    box.addEventListener("pointerup", e=>{
+      if(!cdown) return; cdown=false;
+      const dx=e.clientX-csx, dy=e.clientY-csy;
+      if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.5) goMonth(dx<0 ? 1 : -1);
+    });
+    box.addEventListener("pointercancel", ()=>{ cdown=false; });
+    head.append(prev,title,next); box.appendChild(head);
+    const grid=document.createElement("div"); grid.className="calgrid";
+    DAYS.forEach(d=>{ const h=document.createElement("div"); h.className="calwd"; h.textContent=d; grid.appendChild(h); });
+    for(let i=0;i<lead;i++){ grid.appendChild(document.createElement("div")); }
+    for(let d=1; d<=dim; d++){
+      const k=calMonth+"-"+pad(d), n=(byDay[k]||[]).length, future = k>td;
+      const b=document.createElement("button"); b.className="calday"+(k===td?" today":"")+(k===calSel?" sel":"")+(n?" has":"");
+      b.disabled = future;
+      b.setAttribute("aria-label", d+". "+MONTHS[m-1]+(n?", "+n+" erledigt":""));
+      b.innerHTML='<span class="n">'+d+'</span>'+(n?'<span class="dot">'+(n>1?n:'')+'</span>':'<span class="dot empty"></span>');
+      b.onclick=()=>{ calSel=k; renderCal(); };
+      grid.appendChild(b);
+    }
+    box.appendChild(grid); wrap.appendChild(box);
+    if(calSel && calSel.slice(0,7)===calMonth){
+      const sd=parse(calSel), items=byDay[calSel]||[];
+      const h=document.createElement("div"); h.className="calsel";
+      h.textContent = (calSel===td?"Heute, ":"")+WDL[wd(calSel)]+", "+sd.getDate()+". "+MONTHS[sd.getMonth()];
+      wrap.appendChild(h);
+      if(items.length){
+        const g=document.createElement("div"); g.className="group glass";
+        items.forEach(e=>{
+          const rw=document.createElement("div"); rw.className="row static";
+          const a=document.createElement("span"); a.className="ri"; a.textContent=e.i||"🏠"; a.setAttribute("aria-hidden","true");
+          const t=document.createElement("span"); t.className="t"; const tt=document.createElement("span"); tt.className="tt"; tt.textContent=e.t; t.appendChild(tt);
+          const c=document.createElement("span"); c.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#30D158" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+          rw.append(a,t,c); g.appendChild(rw);
+        });
+        wrap.appendChild(g);
+      } else {
+        const p=document.createElement("div"); p.className="calnone"; p.textContent="An diesem Tag nichts erledigt."; wrap.appendChild(p);
+      }
+    }
+    inner.appendChild(wrap);
+  }
+  function openBackup(){ sheetMode = "backup";
     inner.innerHTML='';
     const top=document.createElement("div"); top.className="top";
     top.innerHTML='<h1>Daten</h1><button class="icon-btn" aria-label="Zurück"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>';
@@ -610,10 +721,10 @@ input[type=date]{-webkit-appearance:none;appearance:none;line-height:52px}
       let d; try{ d=JSON.parse(bi.value.trim()); }catch(e){ be.textContent="Das ist keine gültige Sicherung."; return; }
       if(!d || !Array.isArray(d.tasks) || !d.tasks.every(t=>t && typeof t.id==="string" && typeof t.text==="string" && typeof t.next==="string")){ be.textContent="Das ist keine gültige Sicherung."; return; }
       if(!bm.dataset.c){ bm.dataset.c="1"; bm.textContent="Wirklich ersetzen? ("+d.tasks.length+" Aufgaben)"; return; }
-      state={tasks:d.tasks}; cleanup(); save(); renderList();
+      state={tasks:d.tasks, log:Array.isArray(d.log)?d.log:[], logSeeded:!!d.logSeeded}; norm(); cleanup(); save(); renderList();
     };
   }
-  function openForm(task){
+  function openForm(task){ sheetMode = "form";
     const draft = task ? JSON.parse(JSON.stringify(task)) : { text:"", mode:"every", every:1, days:[], date:today() };
     if(!draft.date) draft.date = today();
     inner.innerHTML = '';
@@ -714,7 +825,7 @@ input[type=date]{-webkit-appearance:none;appearance:none;line-height:52px}
   }
 
   /* ---------- boot ---------- */
-  loadLocal(); cleanup(); render(); connectDb();
+  loadLocal(); norm(); cleanup(); render(); connectDb();
   if("serviceWorker" in navigator){ window.addEventListener("load", ()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); }); }
   let day = today();
   setInterval(()=>{ if(today()!==day){ day=today(); cleanup(); render(); } }, 60000);
