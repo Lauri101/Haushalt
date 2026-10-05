@@ -141,7 +141,9 @@ button{font:inherit;color:inherit}
 .row .tt{font-size:16px;font-weight:600;letter-spacing:-.01em}
 .row .ld{font-size:13px;color:var(--muted)}
 .row .m{font-size:13px;color:var(--muted);white-space:nowrap}
-.calwrap{flex:1;overflow-y:auto;padding:6px 0 20px;display:flex;flex-direction:column;gap:14px}
+.calwrap{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:6px 0 calc(28px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+.calwrap > *{flex-shrink:0}
+.list,.form{min-height:0;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .cal{border-radius:24px;padding:12px 10px 14px;touch-action:pan-y;position:relative;user-select:none;-webkit-user-select:none}
 .calhead .icon-btn{width:44px;height:44px;background:rgba(255,255,255,.08)}
 .calhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
