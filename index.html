@@ -87,6 +87,7 @@ button{font:inherit;color:inherit}
 @keyframes enterB{from{opacity:0;transform:scale(.86) translateY(34px)}to{opacity:.45;transform:scale(.93) translateY(16px)}}
 .card.reappear{animation:reap .5s var(--ease) backwards}
 @keyframes reap{from{opacity:0;transform:translateY(40px) scale(.94)}to{opacity:1;transform:none}}
+.card .lastdone{font-size:14px;color:var(--muted);margin-top:-8px;text-align:center}
 .card .overdue{position:absolute;left:0;right:0;bottom:22px;text-align:center;font-size:13px;font-weight:500;color:#FF453A;z-index:1;letter-spacing:-.005em}
 .card.fly{transition:transform .32s var(--ease),opacity .32s var(--ease)}
 .card.back{transition:transform .45s var(--ease)}
@@ -457,6 +458,21 @@ html,body{transition:background-color .4s ease}
 .vol::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3)}
 .vol:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}
 .volv{min-width:40px;text-align:right}
+
+.bk{gap:12px}
+.bk-stat,.bk-prev{border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.bk-stat b,.bk-prev b{font-size:16px}
+.bk-stat span,.bk-prev span{font-size:13px;color:var(--muted);line-height:1.4}
+.bk-stat.due b{color:var(--later)}
+.bk-hint{margin:-4px 4px 6px;font-size:12.5px;color:var(--muted);line-height:1.4}
+.bk-msg{margin:0 4px;font-size:13.5px;min-height:18px;color:var(--ink)}
+.bk-prev .form-actions{padding:8px 0 0}
+.bk-more{margin-top:6px}
+.bk-more summary{cursor:pointer;color:var(--muted);font-size:13.5px;padding:8px 4px}
+.bk-text{display:flex;flex-direction:column;gap:8px}
+.row .ld.warn{color:var(--later)}
+.icon-btn{position:relative}
+.icon-btn.badge::after{content:"";position:absolute;top:7px;right:7px;width:8px;height:8px;border-radius:50%;background:var(--later);box-shadow:0 0 0 2px var(--bg)}
 </style>
 </head>
 <body>
@@ -696,6 +712,7 @@ html,body{transition:background-color .4s ease}
     return n;
   }
   function render(opts){
+    try{ updateBackupBadge(); }catch(e){}
     const before = JSON.stringify(state.days||{}) + state.lastSeen;
     markToday();
     const n = streak(); if(n > (state.best||0)) state.best = n;
@@ -1693,7 +1710,8 @@ html,body{transition:background-color .4s ease}
     sw.onchange=()=>{ const v = sw.checked ? "light" : "dark"; setTimeout(()=>switchTheme(v), 200); };
     row.append(ic,t,sw); g.appendChild(row);
     const bk=document.createElement("button"); bk.className="row";
-    bk.innerHTML='<span class="ri" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></span><span class="t"><span class="tt">Daten sichern oder importieren</span></span><span class="m">›</span>';
+    bk.innerHTML='<span class="ri" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></span><span class="t"><span class="tt">Sicherung</span><span class="ld"></span></span><span class="m">›</span>';
+    { const a=backupAgeDays(); const ld=bk.querySelector(".ld"); ld.textContent = a===null ? "Noch nie gesichert" : a===0 ? "Zuletzt heute" : a===1 ? "Zuletzt gestern" : "Zuletzt vor "+a+" Tagen"; if(backupDue()) ld.classList.add("warn"); }
     bk.onclick=openBackup; g.appendChild(bk);
     list.appendChild(g); inner.appendChild(list);
   }
@@ -1796,25 +1814,116 @@ html,body{transition:background-color .4s ease}
     }
     inner.appendChild(wrap);
   }
+  /* ---------- backup ---------- */
+  const SETTING_KEYS=["haushalt-skin","haushalt-theme","haushalt-music","haushalt-vol","haushalt-sfx","haushalt-sfxvol"];
+  function lastBackup(){ return LS("haushalt-lastbackup",""); }
+  function backupAgeDays(){ const lb=lastBackup(); if(!lb) return null; return Math.max(0, Math.round((parse(today())-parse(lb))/864e5)); }
+  function backupDue(){ if(!state.tasks.length) return false; const a=backupAgeDays(); return a===null || a>=7; }
+  function updateBackupBadge(){ const b=document.getElementById("openPrefs"); if(b) b.classList.toggle("badge", backupDue()); }
+  function markBackedUp(){ LSset("haushalt-lastbackup", today()); updateBackupBadge(); }
+  function backupPayload(){
+    const settings={}; SETTING_KEYS.forEach(k=>{ const v=LS(k,null); if(v!==null) settings[k]=v; });
+    return {app:"haushalt", v:2, exportedAt:new Date().toISOString(), state:JSON.parse(JSON.stringify(state)), settings};
+  }
+  function parseBackup(text){
+    let d; try{ d=JSON.parse(String(text).trim()); }catch(e){ return null; }
+    const st = d && d.app==="haushalt" && d.state ? d.state : d;   // also accept the old plain format
+    if(!st || !Array.isArray(st.tasks) || !st.tasks.every(t=>t && typeof t.id==="string" && typeof t.text==="string" && typeof t.next==="string")) return null;
+    return {state:st, settings:(d && d.settings) || null, exportedAt:(d && d.exportedAt) || null};
+  }
+  function restoreBackup(bk){
+    try{ localStorage.setItem("haushalt-prev", JSON.stringify(backupPayload())); }catch(e){}
+    state = JSON.parse(JSON.stringify(bk.state));
+    if(!Array.isArray(state.log)) state.log=[];
+    norm(); cleanup(); save();
+    if(bk.settings) Object.keys(bk.settings).forEach(k=>{ if(SETTING_KEYS.includes(k)) LSset(k, bk.settings[k]); });
+    applyLook(); musicSetVol(); if(typeof sfxSetVol==="function") sfxSetVol();
+    curTrackId=null; if(musicOn()) musicPlay();
+    updateBackupBadge();
+  }
+  async function saveBackupFile(btn, msg){
+    const json=JSON.stringify(backupPayload(), null, 1);
+    const name="haushalt-sicherung-"+today()+".json";
+    let file=null; try{ file=new File([json], name, {type:"application/json"}); }catch(e){}
+    if(file && navigator.canShare && navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file], title:"Haushalt Sicherung"}); markBackedUp(); msg("Gesichert. Lege die Datei in iCloud Drive oder „Dateien“ ab."); return; }
+      catch(e){ if(e && e.name==="AbortError"){ msg("Abgebrochen, nichts gesichert."); return; } }
+    }
+    try{
+      const url=URL.createObjectURL(new Blob([json],{type:"application/json"}));
+      const a=document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 4000);
+      markBackedUp(); msg("Datei „"+name+"“ wird heruntergeladen.");
+    }catch(e){ msg("Speichern als Datei geht hier nicht. Nutze unten „Als Text kopieren“."); }
+  }
   function openBackup(){ sheetMode = "backup";
     inner.innerHTML='';
     const top=document.createElement("div"); top.className="top";
-    top.innerHTML='<h1>Daten</h1><button class="icon-btn" aria-label="Zurück"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>';
+    top.innerHTML='<h1>Sicherung</h1><button class="icon-btn" aria-label="Zurück"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>';
     top.querySelector("button").onclick=renderSettings; inner.appendChild(top);
-    const f=document.createElement("div"); f.className="form";
-    f.innerHTML='<div><label class="lbl" for="bx">Sicherung. Kopieren und an einem sicheren Ort ablegen.</label><textarea id="bx" readonly rows="5"></textarea><button class="btn ghost full" id="bc" style="margin-top:10px">Kopieren</button></div>'
-      +'<div><label class="lbl" for="bi">Import. Sicherung hier einfügen. Ersetzt alle aktuellen Aufgaben.</label><textarea id="bi" rows="5" placeholder="{&quot;tasks&quot;:[…]}"></textarea><button class="btn full" id="bm" style="margin-top:10px">Importieren</button><div class="err" id="be"></div></div>';
-    inner.appendChild(f);
-    const bx=f.querySelector("#bx"), bi=f.querySelector("#bi"), be=f.querySelector("#be"), bc=f.querySelector("#bc"), bm=f.querySelector("#bm");
-    bx.value=JSON.stringify(state);
-    bc.onclick=async()=>{ bx.focus(); bx.select(); let ok=false; try{ await navigator.clipboard.writeText(bx.value); ok=true; }catch(e){ try{ ok=document.execCommand("copy"); }catch(_){} }
-      bc.textContent = ok ? "Kopiert" : "Text ist markiert, jetzt manuell kopieren"; };
-    bm.onclick=()=>{
-      let d; try{ d=JSON.parse(bi.value.trim()); }catch(e){ be.textContent="Das ist keine gültige Sicherung."; return; }
-      if(!d || !Array.isArray(d.tasks) || !d.tasks.every(t=>t && typeof t.id==="string" && typeof t.text==="string" && typeof t.next==="string")){ be.textContent="Das ist keine gültige Sicherung."; return; }
-      if(!bm.dataset.c){ bm.dataset.c="1"; bm.textContent="Wirklich ersetzen? ("+d.tasks.length+" Aufgaben)"; return; }
-      state={tasks:d.tasks, log:Array.isArray(d.log)?d.log:[], logSeeded:!!d.logSeeded}; norm(); cleanup(); save(); renderList();
+    const f=document.createElement("div"); f.className="form bk";
+    const stat=document.createElement("div"); stat.className="bk-stat glass";
+    stat.innerHTML='<b></b><span></span>';
+    const refreshStat=()=>{
+      const age=backupAgeDays(), done=Object.values(state.days||{}).filter(x=>x==="done").length;
+      stat.querySelector("b").textContent = age===null ? "Noch nie gesichert" : age===0 ? "Zuletzt gesichert: heute" : age===1 ? "Zuletzt gesichert: gestern" : "Zuletzt gesichert: vor "+age+" Tagen";
+      stat.querySelector("span").textContent=state.tasks.length+" Aufgaben · "+(state.log||[]).length+" erledigte Einträge · "+done+" geschaffte Tage. Die Sicherung enthält alles, auch Streak, Erfolge und Einstellungen.";
+      stat.classList.toggle("due", backupDue());
     };
+    refreshStat(); f.appendChild(stat);
+    const msgEl=document.createElement("p"); msgEl.className="bk-msg"; msgEl.setAttribute("aria-live","polite");
+    const msg=t=>{ msgEl.textContent=t; refreshStat(); };
+    const save1=document.createElement("button"); save1.className="btn full"; save1.textContent="Sicherung speichern";
+    save1.dataset.sfx="none"; save1.onclick=()=>{ sfx("save"); saveBackupFile(save1,msg); };
+    const hint1=document.createElement("p"); hint1.className="bk-hint"; hint1.textContent="Öffnet das Teilen‑Menü. Wähle „In Dateien sichern“ und dann iCloud Drive. So überlebt die Sicherung auch einen Handywechsel.";
+    const load=document.createElement("button"); load.className="btn ghost full"; load.textContent="Sicherung laden";
+    const fileIn=document.createElement("input"); fileIn.type="file"; fileIn.accept=".json,application/json,text/plain"; fileIn.id="bkFile"; fileIn.hidden=true;
+    load.onclick=()=>fileIn.click();
+    const preview=document.createElement("div"); preview.className="bk-prev glass"; preview.hidden=true;
+    const showPreview=bk=>{
+      preview.hidden=false; preview.innerHTML="";
+      const dd=bk.exportedAt ? new Date(bk.exportedAt) : null;
+      const pd=Object.values(bk.state.days||{}).filter(x=>x==="done").length;
+      const h=document.createElement("b"); h.textContent = dd ? "Sicherung vom "+dd.getDate()+"."+(dd.getMonth()+1)+"."+dd.getFullYear() : "Sicherung gefunden";
+      const t=document.createElement("span"); t.textContent=bk.state.tasks.length+" Aufgaben · "+(bk.state.log||[]).length+" erledigte Einträge · "+pd+" geschaffte Tage. Ersetzt deinen aktuellen Stand.";
+      const row=document.createElement("div"); row.className="form-actions";
+      const no=document.createElement("button"); no.className="btn ghost"; no.textContent="Abbrechen"; no.onclick=()=>{ preview.hidden=true; };
+      const yes=document.createElement("button"); yes.className="btn"; yes.textContent="Wiederherstellen"; yes.dataset.sfx="none";
+      yes.onclick=()=>{ restoreBackup(bk); sfx("alldone"); preview.hidden=true; msg("Wiederhergestellt. Dein vorheriger Stand ist zur Sicherheit gemerkt."); renderBackupExtras(); render(); };
+      row.append(no,yes); preview.append(h,t,row);
+    };
+    fileIn.onchange=()=>{
+      const fl=fileIn.files && fileIn.files[0]; if(!fl) return;
+      const rd=new FileReader();
+      rd.onload=()=>{ const bk=parseBackup(rd.result); if(!bk){ msg("Diese Datei ist keine Haushalt‑Sicherung."); preview.hidden=true; return; } msg(""); showPreview(bk); };
+      rd.onerror=()=>msg("Die Datei konnte nicht gelesen werden.");
+      rd.readAsText(fl); fileIn.value="";
+    };
+    f.append(save1,hint1,load,fileIn,preview,msgEl);
+    // emergency: text copy / paste and undo of the last import
+    const extras=document.createElement("div"); f.appendChild(extras);
+    function renderBackupExtras(){
+      extras.innerHTML="";
+      let prev=null; try{ prev=JSON.parse(localStorage.getItem("haushalt-prev")||"null"); }catch(e){}
+      if(prev && prev.state){
+        const ub=document.createElement("button"); ub.className="btn ghost full"; ub.textContent="Stand vor dem letzten Import zurückholen";
+        ub.dataset.sfx="none"; ub.onclick=()=>{ const bk=parseBackup(JSON.stringify(prev)); if(!bk) return; try{ localStorage.removeItem("haushalt-prev"); }catch(e){} restoreBackup(bk); try{ localStorage.removeItem("haushalt-prev"); }catch(e){} sfx("undo"); msg("Vorheriger Stand ist zurück."); renderBackupExtras(); render(); };
+        extras.appendChild(ub);
+      }
+      const det=document.createElement("details"); det.className="bk-more";
+      det.innerHTML='<summary>Als Text sichern oder einfügen</summary>';
+      const box=document.createElement("div"); box.className="bk-text";
+      const bx=document.createElement("textarea"); bx.id="bx"; bx.readOnly=true; bx.rows=4; bx.value=JSON.stringify(backupPayload());
+      const bc=document.createElement("button"); bc.className="btn ghost full"; bc.textContent="Als Text kopieren";
+      bc.onclick=async()=>{ bx.focus(); bx.select(); let ok=false; try{ await navigator.clipboard.writeText(bx.value); ok=true; }catch(e){ try{ ok=document.execCommand("copy"); }catch(_){} }
+        if(ok){ markBackedUp(); bc.textContent="Kopiert. In die Notizen einfügen."; } else bc.textContent="Text ist markiert, jetzt manuell kopieren"; };
+      const bi=document.createElement("textarea"); bi.id="bi"; bi.rows=4; bi.placeholder="Gesicherten Text hier einfügen";
+      const bm=document.createElement("button"); bm.className="btn ghost full"; bm.textContent="Text prüfen";
+      bm.onclick=()=>{ const bk=parseBackup(bi.value); if(!bk){ msg("Der Text ist keine Haushalt‑Sicherung."); return; } msg(""); showPreview(bk); preview.scrollIntoView({block:"nearest",behavior:"smooth"}); };
+      box.append(bx,bc,bi,bm); det.appendChild(box); extras.appendChild(det);
+    }
+    renderBackupExtras();
+    inner.appendChild(f);
   }
   function openForm(task){ sheetMode = "form";
     const draft = task ? JSON.parse(JSON.stringify(task)) : { text:"", mode:"every", every:1, days:[], date:today() };
@@ -1828,7 +1937,7 @@ html,body{transition:background-color .4s ease}
       <div><label class="lbl" for="ft">Was soll auf der Karte stehen?</label>
         <input type="text" id="ft" maxlength="80" placeholder="z. B. Pflanzen gießen"></div>
       <div><label class="lbl" for="fi">Icon</label>
-        <div class="icofield"><input type="text" id="fi" maxlength="8" aria-label="Icon"><span>Wird anhand des Textes gewählt. Zum Ändern ein eigenes Emoji eintippen.</span></div></div>
+        <div class="icofield"><input type="text" id="fi" maxlength="8" aria-label="Icon"><span>Wird automatisch gewählt. Zum Ändern ein eigenes Emoji eintippen.</span></div></div>
       <div><label class="lbl">Wie oft?</label>
         <div class="seg" role="group"><button type="button" data-m="every">Alle X Tage</button><button type="button" data-m="days">Wochentage</button><button type="button" data-m="once">Einmalig</button></div></div>
       <div id="modeEvery"><div class="every"><span>Alle</span><input type="number" id="fe" min="1" max="365" inputmode="numeric"><span>Tage</span></div></div>
@@ -1921,6 +2030,7 @@ html,body{transition:background-color .4s ease}
   /* ---------- boot ---------- */
   loadLocal(); norm(); cleanup(); render(); connectDb();
   if("serviceWorker" in navigator){ window.addEventListener("load", ()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); }); }
+  try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
   applyLook();
   let day = today();
   setInterval(()=>{ if(today()!==day){ day=today(); cleanup(); render(); } }, 60000);
