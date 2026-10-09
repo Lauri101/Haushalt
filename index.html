@@ -714,6 +714,7 @@ html,body{transition:background-color .4s ease}
   }
   /* streak banner */
   function showStreakBanner(n){
+    sfx("streak");
     const ban=document.getElementById("streakban");
     document.getElementById("sbnum").textContent=n;
     document.getElementById("sblbl").textContent=(n===1?"Tag":"Tage")+" in Folge"+(n>1 && n===state.best?" · Rekord":"");
@@ -746,7 +747,7 @@ html,body{transition:background-color .4s ease}
     const apply=(anim)=>{ rot.style.transition = anim ? "transform .9s cubic-bezier(.2,1.4,.4,1)" : "none";
       rot.style.transform="rotateX("+(N3D_BASE.x+rx)+"deg) rotateY("+(N3D_BASE.y+ry)+"deg)"; };
     apply(false);
-    const toggle=()=>{ done3dOpen=!done3dOpen; em.classList.toggle("open", done3dOpen); wrap.setAttribute("aria-expanded", done3dOpen?"true":"false"); };
+    const toggle=()=>{ sfx("tap"); done3dOpen=!done3dOpen; em.classList.toggle("open", done3dOpen); wrap.setAttribute("aria-expanded", done3dOpen?"true":"false"); };
     wrap.addEventListener("pointerdown", e=>{
       down=true; moved=false; sx=e.clientX; sy=e.clientY; pid=e.pointerId;
       try{ wrap.setPointerCapture(pid); }catch(_){}
@@ -1069,7 +1070,7 @@ html,body{transition:background-color .4s ease}
       a.p.scale.set(h.sx*sc, h.sy*sc, h.sz*sc);
       a.p.rotation.y += (1-k)*0.08;
       A.gold.emissive.setHex(k<1 ? 0x6a3c00 : 0x2c1700);
-      if(k>=1){ a.p.position.y=h.y; a.p.scale.set(h.sx,h.sy,h.sz); return false; }
+      if(k>=1){ a.p.position.y=h.y; a.p.scale.set(h.sx,h.sy,h.sz); sfx("part"); return false; }
       return true;
     });
     A.parts.forEach(p=>{ if(p.visible && p.userData.idle) p.userData.idle(p,t); });
@@ -1136,6 +1137,7 @@ html,body{transition:background-color .4s ease}
     renderAch(p2);
     function setPage(i, anim){
       const changed = i!==donePage; donePage=i;
+      if(changed && anim) sfx("page");
       tr.style.transition = anim ? "transform .7s cubic-bezier(.25,1,.5,1)" : "none";
       tr.style.transform = "translateY("+(-i*100)+"%)";
       btns.forEach((b,j)=>b.setAttribute("aria-current", j===i ? "true" : "false"));
@@ -1153,8 +1155,8 @@ html,body{transition:background-color .4s ease}
         const sc = sEl && sEl.closest(".empty");
         if(dy<0 && donePage<2){ if(donePage===0 && sc && sc.scrollTop+sc.clientHeight < sc.scrollHeight-2) return; setPage(donePage+1,true); }
         else if(dy>0 && donePage>0){ setPage(donePage-1,true); }
-      } else if(donePage===1 && ax>ay*1.3 && ax>60){ yearView += dx<0 ? 1 : -1; ySel=null; renderYear(p1); p1.classList.remove("on"); void p1.offsetWidth; p1.classList.add("on"); }
-      else if(donePage===2 && ax>ay*1.3 && ax>60){ const n=Math.max(0,Math.min(ACH.length-1,(achView||0)+(dx<0?1:-1))); if(n!==achView){ achView=n; renderAch(p2); } }
+      } else if(donePage===1 && ax>ay*1.3 && ax>60){ yearView += dx<0 ? 1 : -1; ySel=null; sfx("flip"); renderYear(p1); p1.classList.remove("on"); void p1.offsetWidth; p1.classList.add("on"); }
+      else if(donePage===2 && ax>ay*1.3 && ax>60){ const n=Math.max(0,Math.min(ACH.length-1,(achView||0)+(dx<0?1:-1))); if(n!==achView){ achView=n; sfx("flip"); renderAch(p2); } }
     };
     dv.addEventListener("touchstart", e=>{ const t=e.touches[0]; start(t.clientX,t.clientY,e.target); }, {passive:true});
     dv.addEventListener("touchend", e=>{ const t=e.changedTouches[0]; end(t.clientX,t.clientY); }, {passive:true});
@@ -1178,7 +1180,7 @@ html,body{transition:background-color .4s ease}
         if(items){
           b.style.setProperty("--h", Math.min(items.length,6)); b.style.setProperty("--dl", ((m-1)*0.035+d*0.006).toFixed(3)+"s");
           b.setAttribute("aria-label", d+". "+MONTHS[m-1]+", "+items.length+" erledigt");
-          b.onclick=()=>{ ySel = ySel===k ? null : k; renderYear(host); };
+          b.onclick=()=>{ sfx("cone", (m-1)%6 + (d>15?6:0)); ySel = ySel===k ? null : k; renderYear(host); };
         } else { b.tabIndex=-1; b.setAttribute("aria-hidden","true"); }
         g.appendChild(b);
       }
@@ -1285,7 +1287,7 @@ html,body{transition:background-color .4s ease}
         : "";
     }
     const resetTints = ()=>paint(null, 0);
-    card.addEventListener("pointerdown", e=>{
+    card.addEventListener("pointerdown", e=>{ sfx("grab");
       dragging=true; axis=null; sx=e.clientX; sy=e.clientY; dx=0; dy=0; t0=performance.now();
       card.classList.remove("back"); card.setPointerCapture(e.pointerId);
     });
@@ -1313,6 +1315,7 @@ html,body{transition:background-color .4s ease}
         if(Math.abs(dx) > W()*0.28 || (v>0.6 && Math.abs(dx)>40)) return commit(dx>0?"r":"l");
       }
       card.classList.add("back"); card.style.transform=""; resetTints();
+      if(axis) sfx("snap");
     };
     card.addEventListener("pointerup", end);
     card.addEventListener("pointercancel", end);
@@ -1322,6 +1325,7 @@ html,body{transition:background-color .4s ease}
       if(e.key==="ArrowDown"){ e.preventDefault(); commit("d"); }
     });
     function commit(dir){
+      sfx(dir==="r" ? (dueTasks().length<=1 ? "alldone" : "done") : dir==="l" ? "later" : "down");
       card.classList.add("fly");
       if(dir==="d"){
         card.style.transform = `translate(0,${H()+260}px) scale(.9)`; card.style.opacity = "0";
@@ -1462,7 +1466,7 @@ html,body{transition:background-color .4s ease}
     }, 230);
   }
   function switchTheme(v){ fadeApply(()=>LSset("haushalt-theme", v)); }
-  function switchSkin(id){ if(id===getSkin()) return; fadeApply(()=>LSset("haushalt-skin", id)); curTrackId = curTrackId===id ? null : curTrackId; musicPlay(id); }
+  function switchSkin(id){ if(id===getSkin()) return; sfx("theme"); fadeApply(()=>LSset("haushalt-skin", id)); curTrackId = curTrackId===id ? null : curTrackId; musicPlay(id); }
 
   /* ---------- background music ----------
      Preferred: fetch + Web Audio buffer (gapless loop, volume works on iOS).
@@ -1552,6 +1556,77 @@ html,body{transition:background-color .4s ease}
   // fetch the current track early, so the first touch can start it right away
   setTimeout(()=>{ try{ fetchRaw(SKINS.find(x=>x.id===getSkin())).catch(()=>{}); }catch(e){} }, 800);
 
+  /* ---------- UI sounds (synthesized live, same key as the music) ---------- */
+  function sfxOn(){ return LS("haushalt-sfx","on")!=="off"; }
+  function sfxVol(){ const v=parseFloat(LS("haushalt-sfxvol","0.6")); return isFinite(v) ? Math.max(0,Math.min(1,v)) : 0.6; }
+  let sfxOut=null, sfxNoise=null, sfxLast={};
+  function sfxSetVol(){ if(sfxOut) sfxOut.gain.setTargetAtTime(sfxOn() ? sfxVol()*sfxVol() : 0, actx.currentTime, 0.05); }
+  function sfx(id, arg){
+    if(!sfxOn()) return;
+    const c=ensureCtx(); if(!c) return;
+    if(c.state!=="running") c.resume().catch(()=>{});
+    if(!sfxOut){ sfxOut=c.createGain(); sfxOut.connect(c.destination); }
+    sfxSetVol();
+    const now=performance.now(); if(sfxLast[id] && now-sfxLast[id]<40) return; sfxLast[id]=now;
+    try{ SFX[id] && SFX[id](c.currentTime+0.01, arg); }catch(e){}
+  }
+  function sTone(f, t, dur, o){
+    o=o||{}; const c=actx, os=c.createOscillator(), g=c.createGain(), v=o.v||0.3, a=o.a||0.005;
+    os.type=o.type||"sine"; os.frequency.setValueAtTime(f,t);
+    if(o.glide) os.frequency.exponentialRampToValueAtTime(o.glide, t+dur*0.9);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(v,t+a); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    os.connect(g); g.connect(sfxOut); os.start(t); os.stop(t+dur+0.05);
+    if(o.partials) o.partials.forEach(q=>sTone(f*q[0], t, q[2]||dur*0.5, {v:v*q[1], a}));
+  }
+  function sNoise(t, dur, o){
+    o=o||{}; const c=actx;
+    if(!sfxNoise){ sfxNoise=c.createBuffer(1,c.sampleRate,c.sampleRate); const d=sfxNoise.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1; }
+    const src=c.createBufferSource(); src.buffer=sfxNoise; src.loop=true;
+    const fl=c.createBiquadFilter(); fl.type=o.type||"bandpass"; fl.Q.value=o.q||1; fl.frequency.setValueAtTime(o.f||1000,t);
+    if(o.f2) fl.frequency.exponentialRampToValueAtTime(o.f2, t+dur);
+    const g=c.createGain(), v=o.v||0.2, a=o.a||0.01;
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(v,t+a); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    src.connect(fl); fl.connect(g); g.connect(sfxOut); src.start(t, Math.random()*0.5); src.stop(t+dur+0.05);
+  }
+  const sBell=(f,t,v,dur)=>sTone(f,t,dur||0.9,{v:v||0.22, partials:[[2.76,0.35,0.35],[5.4,0.12,0.15]]});
+  const sWood=(f,t,v)=>{ v=v||0.25; sTone(f,t,0.09,{type:"triangle",v}); sTone(f*2.6,t,0.04,{v:v*0.4}); };
+  const NT={C4:261.6,G4:392,C5:523.3,D5:587.3,E5:659.3,G5:784,A5:880,C6:1046.5,D6:1174.7,E6:1318.5,G6:1568};
+  const SFX={
+    done(t){ sBell(NT.G5,t,0.2,0.7); sBell(NT.C6,t+0.075,0.22,0.9); },
+    later(t){ sWood(NT.C4,t,0.28); sNoise(t,0.22,{v:0.05,type:"lowpass",f:1800,f2:300}); },
+    down(t){ sTone(620,t,0.16,{v:0.22,glide:190}); sTone(310,t+0.02,0.12,{v:0.06,glide:120}); },
+    grab(t){ sNoise(t,0.025,{v:0.05,type:"highpass",f:3500,a:0.002}); },
+    snap(t){ sTone(300,t,0.08,{type:"triangle",v:0.12,glide:440}); sTone(440,t+0.07,0.12,{type:"triangle",v:0.1,glide:300}); },
+    alldone(t){ [NT.C5,NT.E5,NT.G5,NT.C6].forEach((f,k)=>sBell(f,t+k*0.09,0.18,1.1)); sBell(NT.E6,t+0.4,0.08,1.4); sNoise(t+0.3,0.9,{v:0.03,type:"highpass",f:6000,a:0.2}); },
+    streak(t){ [196,246.9,293.7].forEach((f,k)=>sTone(f,t+k*0.02,1.8,{type:"triangle",v:0.09,a:0.35})); sNoise(t,1.2,{v:0.09,type:"bandpass",f:300,f2:1400,q:0.7,a:0.4}); sBell(NT.G5,t+0.45,0.1,1.2); },
+    part(t){ sTone(1568,t,0.5,{v:0.14,partials:[[1.51,0.6,0.35],[2.93,0.3,0.2]]}); [NT.E6,NT.G6,NT.C6*2].forEach((f,k)=>sTone(f,t+0.12+k*0.07,0.25,{v:0.05})); },
+    tap(t){ sTone(1250,t,0.05,{v:0.08}); sNoise(t,0.012,{v:0.03,type:"highpass",f:4000,a:0.001}); },
+    on(t){ sTone(900,t,0.04,{v:0.09}); sTone(1350,t+0.05,0.05,{v:0.09}); },
+    off(t){ sTone(1350,t,0.04,{v:0.08}); sTone(900,t+0.05,0.05,{v:0.08}); },
+    open(t){ sNoise(t,0.28,{v:0.07,type:"bandpass",f:450,f2:2200,q:0.8,a:0.08}); },
+    close(t){ sNoise(t,0.24,{v:0.06,type:"bandpass",f:2000,f2:420,q:0.8,a:0.05}); },
+    save(t){ sWood(NT.G4,t,0.2); sBell(NT.E6,t+0.06,0.12,0.6); },
+    del(t){ sTone(150,t,0.22,{v:0.3,glide:70}); sNoise(t,0.12,{v:0.05,type:"lowpass",f:500}); },
+    undo(t){ sNoise(t,0.16,{v:0.06,type:"bandpass",f:600,f2:3000,q:1.2,a:0.1}); sTone(NT.C5,t+0.15,0.12,{v:0.08}); },
+    page(t){ sNoise(t,0.35,{v:0.07,type:"lowpass",f:900,f2:250,a:0.1}); sTone(180,t,0.3,{v:0.08,glide:250,a:0.08}); },
+    flip(t){ sNoise(t,0.05,{v:0.08,type:"bandpass",f:2400,q:1.5,a:0.003}); sNoise(t+0.03,0.04,{v:0.04,type:"bandpass",f:3200,q:1.5,a:0.003}); },
+    cone(t,k){ const sc=[NT.C5,NT.D5,NT.E5,NT.G5,NT.A5,NT.C6]; sTone(sc[(k||0)%sc.length]*((k||0)>=6?2:1),t,0.4,{v:0.18,partials:[[4,0.25,0.06],[10,0.06,0.02]]}); },
+    theme(t){ [NT.C6,NT.E6,NT.G6,NT.D6,NT.A5*2,NT.C6*2].forEach((f,k)=>sTone(f,t+k*0.06,0.5,{v:0.045})); sNoise(t,0.6,{v:0.025,type:"highpass",f:7000,a:0.2}); }
+  };
+  // which sound a plain button press makes; specific actions play their own sound in code
+  function sfxForClick(el){
+    const b=el.closest("button,.n3d"); if(!b) return null;
+    if(b.dataset.sfx) return b.dataset.sfx==="none" ? null : b.dataset.sfx;
+    if(b.id==="openSettings"||b.id==="openPrefs") return "open";
+    if(b.id==="undo") return "undo";
+    if(b.classList.contains("n3d")||b.classList.contains("yd")||b.classList.contains("skin")||b.closest(".dpager")) return null;
+    if(b.closest(".sheet .top")) return "close";
+    if(b.closest(".ach-nav")||b.classList.contains("yarr")) return "flip";
+    return "tap";
+  }
+  document.addEventListener("click", e=>{ const id=sfxForClick(e.target); if(id) sfx(id); }, true);
+  document.addEventListener("change", e=>{ const t=e.target; if(t && t.classList && t.classList.contains("switch")) sfx(t.checked ? "on" : "off"); }, true);
+
   function renderSettings(){
     sheetMode = "settings";
     inner.innerHTML='';
@@ -1577,11 +1652,11 @@ html,body{transition:background-color .4s ease}
     const g2=document.createElement("div"); g2.className="group glass";
     const mr=document.createElement("label"); mr.className="row static setrow";
     mr.innerHTML='<span class="ri" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></span><span class="t"><span class="tt">Musik</span><span class="ld" id="musicStatus"></span></span>';
-    const ms=document.createElement("input"); ms.type="checkbox"; ms.className="switch"; ms.setAttribute("role","switch"); ms.checked=musicOn();
+    const ms=document.createElement("input"); ms.type="checkbox"; ms.className="switch"; ms.setAttribute("role","switch"); ms.id="musicSwitch"; ms.checked=musicOn();
     mr.appendChild(ms); g2.appendChild(mr);
     const vr=document.createElement("div"); vr.className="row static volrow";
     vr.innerHTML='<span class="ri" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg></span>';
-    const vol=document.createElement("input"); vol.type="range"; vol.min="0"; vol.max="100"; vol.step="1"; vol.value=String(Math.round(musicVol()*100)); vol.className="vol"; vol.setAttribute("aria-label","Lautstärke");
+    const vol=document.createElement("input"); vol.id="musicVol"; vol.type="range"; vol.min="0"; vol.max="100"; vol.step="1"; vol.value=String(Math.round(musicVol()*100)); vol.className="vol"; vol.setAttribute("aria-label","Lautstärke");
     const vv=document.createElement("span"); vv.className="m volv"; vv.textContent=vol.value+" %";
     vr.append(vol,vv); g2.appendChild(vr);
     const syncVol=()=>{ vr.classList.toggle("off", !ms.checked); vol.disabled=!ms.checked; vol.style.setProperty("--v", vol.value+"%"); };
@@ -1590,6 +1665,22 @@ html,body{transition:background-color .4s ease}
     syncVol();
     list.appendChild(g2);
     setMusicState(musicState);
+    const g3=document.createElement("div"); g3.className="group glass";
+    const sr=document.createElement("label"); sr.className="row static setrow";
+    sr.innerHTML='<span class="ri" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.2 4.6 5 .7-3.6 3.5.9 5L12 14.4 7.5 16.8l.9-5L4.8 8.3l5-.7z"/></svg></span><span class="t"><span class="tt">Sounds</span><span class="ld">Klänge beim Wischen und Tippen</span></span>';
+    const ss=document.createElement("input"); ss.type="checkbox"; ss.className="switch"; ss.setAttribute("role","switch"); ss.id="sfxSwitch"; ss.checked=sfxOn();
+    sr.appendChild(ss); g3.appendChild(sr);
+    const svr=document.createElement("div"); svr.className="row static volrow";
+    svr.innerHTML='<span class="ri" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg></span>';
+    const sv=document.createElement("input"); sv.type="range"; sv.min="0"; sv.max="100"; sv.step="1"; sv.id="sfxVol"; sv.value=String(Math.round(sfxVol()*100)); sv.className="vol"; sv.setAttribute("aria-label","Lautstärke der Sounds");
+    const svv=document.createElement("span"); svv.className="m volv"; svv.textContent=sv.value+" %";
+    svr.append(sv,svv); g3.appendChild(svr);
+    const syncS=()=>{ svr.classList.toggle("off", !ss.checked); sv.disabled=!ss.checked; sv.style.setProperty("--v", sv.value+"%"); };
+    ss.onchange=()=>{ LSset("haushalt-sfx", ss.checked ? "on" : "off"); syncS(); sfxSetVol(); };
+    let svT=0;
+    sv.oninput=()=>{ svv.textContent=sv.value+" %"; LSset("haushalt-sfxvol", String(sv.value/100)); syncS(); sfxSetVol(); clearTimeout(svT); svT=setTimeout(()=>sfx("tap"),80); };
+    syncS();
+    list.appendChild(g3);
     // look
     const lg=document.createElement("div"); lg.className="setlbl"; lg.textContent="Darstellung & Daten"; list.appendChild(lg);
     const g=document.createElement("div"); g.className="group glass";
@@ -1782,10 +1873,12 @@ html,body{transition:background-color .4s ease}
 
     const acts=document.createElement("div"); acts.className="form-actions";
     if(task){ const del=document.createElement("button"); del.className="btn danger"; del.textContent="Löschen";
-      del.onclick=()=>{ if(del.dataset.c){ state.tasks=state.tasks.filter(x=>x.id!==task.id); save(); renderList(); } else { del.dataset.c="1"; del.textContent="Wirklich löschen?"; } };
+      del.dataset.sfx="none";
+      del.onclick=()=>{ if(del.dataset.c){ sfx("del"); state.tasks=state.tasks.filter(x=>x.id!==task.id); save(); renderList(); } else sfx("tap"); if(del.dataset.c) return; else { del.dataset.c="1"; del.textContent="Wirklich löschen?"; } };
       acts.appendChild(del); }
     const cancel=document.createElement("button"); cancel.className="btn ghost"; cancel.textContent="Abbrechen"; cancel.onclick=renderList;
     const ok=document.createElement("button"); ok.className="btn"; ok.textContent="Speichern";
+    ok.dataset.sfx="none";
     ok.onclick=()=>{
       const text=ft.value.trim();
       if(!text){ err.textContent="Gib der Aufgabe einen Text."; ft.focus(); return; }
@@ -1819,7 +1912,7 @@ html,body{transition:background-color .4s ease}
         if(needAi) aiIcon(t.id);
       }
       if(task && needAi) aiIcon(task.id);
-      save(); renderList();
+      sfx("save"); save(); renderList();
     };
     acts.append(cancel, ok); inner.appendChild(acts);
     if(!task) setTimeout(()=>ft.focus(),50);
