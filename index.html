@@ -590,6 +590,18 @@ svg.locked,.bdg.locked svg{filter:grayscale(1) brightness(.3) contrast(1.15)!imp
 .sfx2-leaf{position:absolute;top:-40px;width:18px;height:27px;opacity:0;transform:scale(var(--s));animation:sfxLeaf var(--t) var(--d) linear both}
 @keyframes sfxLeaf{0%{opacity:0;transform:translate(0,0) rotate(0) scale(var(--s))}8%{opacity:1}50%{transform:translate(var(--x),55vh) rotate(calc(var(--r)*.5)) scale(var(--s))}100%{opacity:.9;transform:translate(calc(var(--x)*-1),112vh) rotate(var(--r)) scale(var(--s))}}
 @media (prefers-reduced-motion:reduce){.sfx2-rays,.sfx2-leaf,.sfx2-star{display:none}.sfx2-coin{animation:none!important;transform:rotateY(180deg)}.sfx2.tease .sfx2-coin{transform:none}.sfx2 .r1{display:none}.sfx2 .r2,.sfx2-sub,.sfx2-btn,.sfx2-ribbon{animation:none;opacity:1}}
+
+/* sealed season: hazy grey objects behind a lock */
+.ach-h.sealed p{filter:blur(4.5px);user-select:none;opacity:.8}
+.ach-lock{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:2}
+.al-haze{position:absolute;inset:0;background:radial-gradient(ellipse 60% 48% at 50% 58%,rgba(150,140,175,.16),transparent 70%);animation:alHaze 6s ease-in-out infinite alternate}
+@keyframes alHaze{from{opacity:.6;transform:scale(.96)}to{opacity:1;transform:scale(1.04)}}
+.al-icon{position:relative;width:46px;height:54px;filter:drop-shadow(0 0 0 #fff) drop-shadow(0 8px 16px rgba(0,0,0,.55));animation:alFloat 3.2s ease-in-out infinite;margin-top:34%}
+.al-icon svg{width:100%;height:100%;display:block}
+.al-icon::before{content:"";position:absolute;inset:-6px;border-radius:14px;background:#fff;z-index:-1;clip-path:inset(30% 0 0 0 round 12px)}
+@keyframes alFloat{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-8px) rotate(3deg)}}
+.al-t{position:relative;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#f3e2b5;background:rgba(20,16,24,.6);padding:5px 10px;border-radius:10px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+@media (prefers-reduced-motion:reduce){.al-icon,.al-haze{animation:none}}
 </style>
 </head>
 <body>
@@ -1415,6 +1427,8 @@ svg.locked,.bdg.locked svg{filter:grayscale(1) brightness(.3) contrast(1.15)!imp
   }
   // dark landscape details on the base plate (always visible, never gold)
   const ACH_TERRAIN=["meadow","meadow","forest","field","rock","forestwater","rock","water","waterrock","forest","rockforest","meadow","rock","water","marsh","rock","rock","deadrock","field","field","ash","ash","ash","sea"];
+  function achSeasonNeed(se){ let n=0; for(let q=0;q<se;q++) n+=ACH_SEASONS[q].objs.length*ACH_PARTS; return n; }
+  function achSeasonLocked(i, total){ return total < achSeasonNeed(ACH[i].season); }
   const ACH_GREY = 4; // parts already standing in grey before they are earned
   function achDeco(i, T, mat){
     const g=new T.Group(); let sd=(i+1)*7919; const rnd=()=>{ sd=(sd*9301+49297)%233280; return sd/233280; };
@@ -1455,12 +1469,16 @@ svg.locked,.bdg.locked svg{filter:grayscale(1) brightness(.3) contrast(1.15)!imp
   function achSetObject(i, total){
     const A=achScene; if(!A) return;
     const filled=achFilled(i,total);
-    if(A.obj===i && A.filled===filled) return;
+    const locked=achSeasonLocked(i,total);
+    if(A.obj===i && A.filled===filled && A.locked===locked) return;
+    A.locked=locked;
+    if(!A.haze) A.haze=new A.T.MeshStandardMaterial({color:0xa9a6ba,emissive:0x1c1a26,roughness:1,flatShading:true,transparent:true,opacity:.62,side:A.T.DoubleSide});
+    A.sc.fog = locked ? new A.T.Fog(0x2a2532, 8, 26) : null;
     while(A.holder.children.length) A.holder.remove(A.holder.children[0]);
     A.parts=achBuild(i, A.T); A.anims=[];
     if(A.decoFor!==i){ if(A.deco) A.spin.remove(A.deco); A.deco=achDeco(i, A.T, A.dark); A.spin.add(A.deco); A.decoFor=i; }
     A.parts.forEach((p,k)=>{
-      const mat = k<filled ? A.gold : A.dark; p.visible = k<filled || k<ACH_GREY;
+      const mat = locked ? A.haze : (k<filled ? A.gold : A.dark); p.visible = locked || k<filled || k<ACH_GREY;
       p.traverse(o=>{ if(o.isMesh){ o.material=mat; o.castShadow=true; o.receiveShadow=true; } });
       p.userData.home={y:p.position.y, sx:p.scale.x, sy:p.scale.y, sz:p.scale.z};
       A.holder.add(p);
@@ -1527,7 +1545,7 @@ svg.locked,.bdg.locked svg{filter:grayscale(1) brightness(.3) contrast(1.15)!imp
     const hd=document.createElement("div"); hd.className="ach-h"+(renderAch.lastSeason!==undefined && renderAch.lastSeason!==o.season ? " newseason" : "");
     let seasonJump=false;
     if(renderAch.lastSeason!==undefined && renderAch.lastSeason!==o.season){
-      if(o.season===renderAch.lastSeason+1 && SEASON_FX[o.season]){ let need=0; for(let q=0;q<o.season;q++) need+=ACH_SEASONS[q].objs.length*ACH_PARTS; seasonFx(total>=need, Math.max(0,need-total), o.season); seasonJump=true; }
+      if(o.season===renderAch.lastSeason+1 && SEASON_FX[o.season] && total>=achSeasonNeed(o.season)){ seasonFx(true, 0, o.season); seasonJump=true; }
     }
     if(why && !seasonJump) playAmb(i); else if(why) ambStop();
     renderAch.lastSeason=o.season;
@@ -1538,6 +1556,15 @@ svg.locked,.bdg.locked svg{filter:grayscale(1) brightness(.3) contrast(1.15)!imp
     tg.textContent = filled===ACH_PARTS ? "Vollständig" : (i>cur ? "Noch gesperrt" : "Teil "+filled+" von "+ACH_PARTS);
     hd.append(sl,h2,pp,tg); host.appendChild(hd);
     const stg=document.createElement("div"); stg.className="ach-stage"; host.appendChild(stg);
+    const sLocked=achSeasonLocked(i,total);
+    if(sLocked){
+      hd.classList.add("sealed"); tg.textContent="Geheim";
+      const lk=document.createElement("div"); lk.className="ach-lock"; lk.setAttribute("aria-label", se.t+" ist noch versiegelt");
+      const left=achSeasonNeed(o.season)-total, prevT=ACH_SEASONS[o.season-1].t;
+      lk.innerHTML='<div class="al-haze"></div><div class="al-icon"><svg viewBox="0 0 40 46" aria-hidden="true"><rect x="4" y="18" width="32" height="25" rx="5" fill="#e8b83a" stroke="#2b1d14" stroke-width="3"/><path d="M11 18v-6a9 9 0 0 1 18 0v6" fill="none" stroke="#2b1d14" stroke-width="5"/><path d="M11 18v-6a9 9 0 0 1 18 0v6" fill="none" stroke="#c3ccd3" stroke-width="2.4"/><circle cx="20" cy="29" r="3.5" fill="#2b1d14"/><path d="M20 31v6" stroke="#2b1d14" stroke-width="3"/></svg></div><span class="al-t"></span>';
+      lk.querySelector(".al-t").textContent="Schaffe "+prevT+" · noch "+left+(left===1?" Tag":" Tage");
+      stg.appendChild(lk);
+    }
     const pr=document.createElement("div"); pr.className="ach-prog";
     pr.innerHTML='<span>'+sDone+' / '+(sCount*ACH_PARTS)+'</span><i style="--p:'+(sDone/(sCount*ACH_PARTS)*100).toFixed(1)+'%"></i>';
     host.appendChild(pr);
@@ -2184,6 +2211,8 @@ svg.locked,.bdg.locked svg{filter:grayscale(1) brightness(.3) contrast(1.15)!imp
     t=>{ aRumble(t,0.1); for(let k=0;k<8;k++){ const f=rr(120,240); sTone(f,t+rr(0.3,3.5),0.12,{v:0.035,glide:f*2.2}); } aEagle(t,2.6); }, // Der Schicksalsberg
     t=>{ aWaves(t,0.06); aGulls(t,3); aPad(t,[261.6,329.6,392,523.3],0.012); }                      // Die letzte Fahrt
   ];
+  // per object loudness boost (measured, so all ambiences end up about equally loud)
+  const AMB_GAIN=[9.8, 30.0, 20.5, 18.8, 23.7, 11.5, 7.8, 10.7, 10.7, 16.7, 11.0, 15.5, 12.5, 34.6, 25.0, 16.7, 13.2, 12.5, 7.5, 11.2, 40, 8.7, 25.0, 21.4];
   let ambNode=null;
   function ambStop(){ if(!ambNode || !actx) return; const g=ambNode; ambNode=null; try{ g.gain.cancelScheduledValues(actx.currentTime); g.gain.setTargetAtTime(0,actx.currentTime,0.08); }catch(e){} setTimeout(()=>{ try{ g.disconnect(); }catch(e){} }, 700); }
   function playAmb(i){
@@ -2192,9 +2221,10 @@ svg.locked,.bdg.locked svg{filter:grayscale(1) brightness(.3) contrast(1.15)!imp
     if(c.state!=="running") c.resume().catch(()=>{});
     if(!sfxOut){ sfxOut=c.createGain(); sfxOut.connect(c.destination); } sfxSetVol();
     ambStop();
-    const g=c.createGain(), t=c.currentTime+0.06;
-    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(1,t+0.5); g.gain.setValueAtTime(1,t+3.3); g.gain.linearRampToValueAtTime(0,t+4.0);
-    g.connect(sfxOut);
+    const g=c.createGain(), t=c.currentTime+0.06, L=(AMB_GAIN[i]||10)*1.0;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(L,t+0.5); g.gain.setValueAtTime(L,t+3.3); g.gain.linearRampToValueAtTime(0,t+4.0);
+    const comp=c.createDynamicsCompressor(); comp.threshold.value=-14; comp.knee.value=8; comp.ratio.value=4; comp.attack.value=0.005; comp.release.value=0.2;
+    g.connect(comp); comp.connect(sfxOut);
     const keep=sfxOut; sfxOut=g;
     try{ (AMB[i]||AMB[0])(t); }catch(e){}
     sfxOut=keep; ambNode=g;
