@@ -448,7 +448,8 @@ html,body{transition:background-color .4s ease}
 :root[data-app-skin="wiesenwind"][data-app-theme="light"]{--bg:#EFF6F0;--accent:#2E9A4C;--accent-rgb:46,154,76;--on-accent:#fff}
 :root[data-app-skin="huegelhoehle"][data-app-theme="light"]{--bg:#F6F1EA;--accent:#A86B2E;--accent-rgb:168,107,46;--on-accent:#fff}
 :root[data-app-skin="sternennacht"][data-app-theme="light"]{--bg:#F2F1F9;--accent:#6E4FE0;--accent-rgb:110,79,224;--on-accent:#fff}
-.setlist{display:flex;flex-direction:column;gap:10px}
+.setlist{display:flex;flex-direction:column;gap:10px;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+.setlist>*{flex-shrink:0}
 .setlbl{font-size:13px;color:var(--muted);margin:8px 6px 0}
 .skins{border-radius:22px;padding:14px 8px 12px;display:flex;justify-content:space-between;gap:4px}
 .skin{flex:1;min-width:0;border:0;background:none;padding:4px 0;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;color:var(--muted)}
