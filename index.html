@@ -630,15 +630,25 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
 .bdg-box .tchip{font-size:11px;margin-bottom:4px}
 @media (prefers-reduced-motion:reduce){.bs-sheen,.bs-spark,.bs-glow,.bs-nova,.bs-nova2,.bs-orbit,.bs-burst,.tchip{animation:none}.bs-spark{opacity:.8;transform:scale(.8)}}
 
-/* tier look inside + tilt light */
-.bsvg{transform:perspective(520px) rotateX(calc(var(--ly,0) * -13deg)) rotateY(calc(var(--lx,0) * 13deg));transition:transform .08s linear}
-.bs-foil{transform:translate(calc(var(--lx,0) * -46px),calc(var(--ly,0) * -46px))}
+/* tier look inside + tilt light (tilt only in the detail view) */
+.bdg-box .bsvg{transform:perspective(420px) rotateX(calc(var(--ly,0) * -16deg)) rotateY(calc(var(--lx,0) * 16deg));will-change:transform}
+.bdg-box svg{width:200px;height:200px;margin:8px 0 22px}
+.bs-foil{transform:translate(calc(var(--lx,0) * -80px),calc(var(--ly,0) * -80px))}
 .tier5 .bs-foil,.tier6 .bs-foil{animation:bsFoil 7s linear infinite}
+.tier6 .bs-foil{animation-duration:4.5s}
 @keyframes bsFoil{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(360deg)}}
-.bs-hot{transform:translate(calc(var(--lx,0) * 30px),calc(var(--ly,0) * 34px))}
-.bs-lt{transform:translate(calc(var(--lx,0) * 34px),calc(var(--ly,0) * 20px))}
+.bs-hot{transform:translate(calc(var(--lx,0) * 40px),calc(var(--ly,0) * 44px))}
+.bs-lt{transform:translate(calc(var(--lx,0) * 50px),calc(var(--ly,0) * 30px))}
+.bdg-box .bs-glow{animation-duration:1.6s}
 .bdg-motion{margin-top:10px;align-self:flex-start;padding:8px 14px;font-size:13px;width:auto}
-@media (prefers-reduced-motion:reduce){.bsvg{transform:none}.tier5 .bs-foil,.tier6 .bs-foil{animation:none}}
+@media (prefers-reduced-motion:reduce){.bdg-box .bsvg{transform:none}.tier5 .bs-foil,.tier6 .bs-foil{animation:none}}
+
+/* emblem depth: coin edge follows the light in the detail view, motif floats above the face */
+.bs-ext{transform:translate(calc(var(--lx,0) * var(--k) * -0.9px),calc(var(--k) * 0.7px + var(--ly,0) * var(--k) * -0.7px))}
+.bdg-box .bs-motif{transform:translate(calc(var(--lx,0) * 6px),calc(var(--ly,0) * 6px))}
+
+/* power saving: emblems only animate in the detail view */
+.bsvg:not(.live) *,.bdg .tchip,.bdg-near .tchip{animation:none!important}
 </style>
 </head>
 <body>
@@ -785,7 +795,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
   }
 
   /* ---------- storage ---------- */
-  const LOG_DAYS = 400;
+  const LOG_DAYS = 1095; // completed entries are kept for 3 years
   function norm(){
     if(!Array.isArray(state.log)) state.log = [];
     if(!state.days || typeof state.days!=="object") state.days = {};
@@ -865,13 +875,16 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
     const due = dueTasks().length;
     if(due>0) days[td]="open";
     else if(days[td]==="open" || state.log.some(e=>e.d===td)) days[td]="done";
-    const cut = addDays(td,-400);
-    for(const k in days){ if(k<cut) delete days[k]; }
+    // the day history is tiny (about 7 KB a year), so it is kept for 10 years; anything older is folded into a counter
+    const cut = addDays(td,-3650);
+    for(const k in days){ if(k<cut){ if(days[k]==="done"){ if(!state.stats) state.stats={}; state.stats.prunedDone=(state.stats.prunedDone||0)+1; } delete days[k]; } }
   }
+  let DEV=(()=>{ try{ return JSON.parse(localStorage.getItem("haushalt-dev")||"null"); }catch(e){ return null; } })() || {on:false};
   function streak(){
+    if(DEV.on && DEV.streak!=null) return DEV.streak;
     const days = state.days||{}, td = today();
     let n = days[td]==="done" ? 1 : 0, d = addDays(td,-1);
-    for(let i=0;i<400;i++,d=addDays(d,-1)){
+    for(let i=0;i<3700;i++,d=addDays(d,-1)){
       const st = days[d];
       if(st==="done") n++; else if(st==="empty") continue; else break;
     }
@@ -882,7 +895,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
     try{ checkBadges(); }catch(e){}
     const before = JSON.stringify(state.days||{}) + state.lastSeen;
     markToday();
-    const n = streak(); if(n > (state.best||0)) state.best = n;
+    const n = streak(); if(!(DEV.on && DEV.streak!=null) && n > (state.best||0)) state.best = n;
     if(JSON.stringify(state.days) + state.lastSeen !== before) save();
     render0(opts);
     if(n>0){
@@ -996,7 +1009,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
   const ACH = []; ACH_SEASONS.forEach((se,si)=>se.objs.forEach(o=>ACH.push(Object.assign({season:si}, o))));
   const ACH_TOTAL = ACH.length * ACH_PARTS;
   let achView = null, achScene = null, achLoading = null;
-  function achTotal(){ let n=0; const d=state.days||{}; for(const k in d) if(d[k]==="done") n++; return n; }
+  function achTotal(){ if(DEV.on && DEV.days!=null) return Math.max(0,Math.min(DEV.days,ACH_TOTAL)); let n=(state.stats&&state.stats.prunedDone)||0; const d=state.days||{}; for(const k in d) if(d[k]==="done") n++; return n; }
   function achCur(total){ return Math.min(Math.floor(total/ACH_PARTS), ACH.length-1); }
   function achFilled(i, total){ if(total>=ACH_TOTAL) return ACH_PARTS; const full=Math.floor(total/ACH_PARTS); return i<full ? ACH_PARTS : i===full ? total%ACH_PARTS : 0; }
   function loadThree(){
@@ -1528,8 +1541,10 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
   function achReveal(){
     const A=achScene; if(!A) return;
     const total=achTotal(), cur=achCur(total);
-    const seen = Math.min(typeof state.achSeen==="number" ? state.achSeen : 0, total);
-    if(total===seen || A.obj!==cur){ if(state.achSeen!==total && A.obj===cur){ state.achSeen=total; save(); } return; }
+    const dv=DEV.on && DEV.days!=null, seenRaw=dv ? (DEV.seen!=null?DEV.seen:total) : state.achSeen;
+    const setSeen=v=>{ if(dv){ DEV.seen=v; devSave(); } else { state.achSeen=v; save(); } };
+    const seen = Math.min(typeof seenRaw==="number" ? seenRaw : 0, total);
+    if(total===seen || A.obj!==cur){ if(seenRaw!==total && A.obj===cur) setSeen(total); return; }
     const filled=achFilled(cur,total), from=Math.max(0, filled-(total-seen));
     const now=performance.now();
     for(let k=from;k<filled;k++){
@@ -1537,7 +1552,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
       if(k<ACH_GREY){ A.anims.push({p, t:now+500+(k-from)*380, d:800, gold:true}); p.traverse(o=>{ if(o.isMesh) o.material=A.dark; }); }
       else { A.anims.push({p, t:now+500+(k-from)*380, d:950}); p.visible=false; }
     }
-    state.achSeen=total; save();
+    setSeen(total);
   }
   function achStart(){ const A=achScene; if(!A||A.running) return; A.running=true; achResize(); A.raf=requestAnimationFrame(achFrame); }
   function achStop(){ const A=achScene; if(!A) return; A.running=false; cancelAnimationFrame(A.raf); }
@@ -2369,25 +2384,31 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
   const TIER_OF={door:1,fire:1,pack:1,map:1,bread:1,stone:1,spade:1, lantern:2,tea:2,dawn:2,ranger:2,mug:2,mail:2,
     pass:3,beacon:3,anvil:3,boot:3,crown:3,troll:3,compass:3,eagle:3, wizard:4,sword:4,shoe:4,moon:4, tower:5,hoard:5,ship:5, ring:6,phial:6};
   const TIER_FX=[null,
-    {tint:.1, foil:.34, hot:.16, fc:["#ffd2a0","#6a3412"]},
-    {tint:.12, foil:.42, hot:.2, fc:["#ffffff","#6f7986"]},
-    {tint:.16, foil:.5, hot:.24, fc:["#fff6c8","#b97c08"]},
-    {tint:.18, foil:.58, hot:.28, fc:["#ffffff","#b8ccff","#ffffff","#8fa8d6"]},
-    {tint:.2, foil:.68, hot:.3, fc:["#ffffff","#8ff3ff","#ffd6ff","#b2ffd8","#9bc8ff"]},
-    {tint:.22, foil:.82, hot:.32, fc:["#ff3cac","#ffd65c","#2bd2ff","#a6ff7a","#7b4dff"]}];
+    {tint:.1,  holo:.16, foil:.5,  hot:.2,  fc:["#ff9e6b","#ffd29a","#ff7aa8","#ffc06b"]},
+    {tint:.12, holo:.2,  foil:.58, hot:.24, fc:["#ffffff","#a8f0ff","#e6c9ff","#dff7ff"]},
+    {tint:.16, holo:.25, foil:.66, hot:.28, fc:["#fff3a0","#ffb347","#d4ff8a","#ffe066"]},
+    {tint:.18, holo:.3,  foil:.74, hot:.32, fc:["#ffd6f5","#c8f7ff","#fff6c2","#d8ccff"]},
+    {tint:.2,  holo:.38, foil:.84, hot:.36, fc:["#ff8ad8","#8ff3ff","#b2ffd8","#fff38a","#b48cff"]},
+    {tint:.22, holo:.46, foil:.92, hot:.4,  fc:["#ff3cac","#ffd65c","#2bd2ff","#a6ff7a","#7b4dff","#ff6b3d"]}];
   let badgeUid=0;
   function badgeSvg(b, cls){
-    const shape=BSHAPE[b.shape], T=TIERS[TIER_OF[b.id]||1], u="bg"+(++badgeUid);
+    const shape=BSHAPE[b.shape], T=TIERS[TIER_OF[b.id]||1], u="bg"+(++badgeUid), live=/\blive\b/.test(cls||"");
     const rim='url(#'+u+'r)';
     let s='<svg viewBox="0 0 100 100" class="bsvg '+(cls||"")+' tier'+(TIER_OF[b.id]||1)+'" style="--sd:'+T.sd+';overflow:visible" aria-hidden="true" fill="none" stroke-linejoin="round" stroke-linecap="round"><defs>';
-    s+='<linearGradient id="'+u+'r" x1="0" y1="0" x2="1" y2="1">'+T.st.map((c,k)=>'<stop offset="'+(k/(T.st.length-1)).toFixed(2)+'" stop-color="'+c+'">'+(T.cosmic?'<animate attributeName="stop-color" values="'+[c,T.st[(k+1)%4],T.st[(k+2)%4],c].join(";")+'" dur="5s" repeatCount="indefinite"/>':'')+'</stop>').join("")
-      +(T.spin||T.cosmic?'<animateTransform attributeName="gradientTransform" type="rotate" from="0 .5 .5" to="360 .5 .5" dur="'+(T.cosmic?"6s":"9s")+'" repeatCount="indefinite"/>':'')+'</linearGradient>';
+    s+='<linearGradient id="'+u+'r" x1="0" y1="0" x2="1" y2="1">'+T.st.map((c,k)=>'<stop offset="'+(k/(T.st.length-1)).toFixed(2)+'" stop-color="'+c+'">'+(T.cosmic&&live?'<animate attributeName="stop-color" values="'+[c,T.st[(k+1)%4],T.st[(k+2)%4],c].join(";")+'" dur="5s" repeatCount="indefinite"/>':'')+'</stop>').join("")
+      +((T.spin||T.cosmic)&&live?'<animateTransform attributeName="gradientTransform" type="rotate" from="0 .5 .5" to="360 .5 .5" dur="'+(T.cosmic?"6s":"9s")+'" repeatCount="indefinite"/>':'')+'</linearGradient>';
     s+='<clipPath id="'+u+'c"><g transform="translate(50 50) scale(1.16) translate(-50 -50)">'+shape.replace("@","")+'</g></clipPath>';
     if(T.glow) s+='<radialGradient id="'+u+'g"><stop offset="0" stop-color="'+T.glow+'" stop-opacity=".95"/><stop offset=".55" stop-color="'+T.glow+'" stop-opacity=".35"/><stop offset="1" stop-color="'+T.glow+'" stop-opacity="0"/></radialGradient>';
     if(T.cosmic) s+='<radialGradient id="'+u+'n"><stop offset="0" stop-color="#fff"/><stop offset=".25" stop-color="#ffd65c"/><stop offset=".55" stop-color="#ff3cac" stop-opacity=".6"/><stop offset="1" stop-color="#5b2cff" stop-opacity="0"/></radialGradient>';
     const tn=TIER_OF[b.id]||1, FX=TIER_FX[tn];
-    s+='<linearGradient id="'+u+'f" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="'+(tn>=5?46:34)+'" y2="'+(tn>=5?46:34)+'" spreadMethod="repeat">'+FX.fc.concat([FX.fc[0]]).map((c,k,a)=>'<stop offset="'+(k/(a.length-1)).toFixed(2)+'" stop-color="'+c+'" stop-opacity="'+(k%2?(tn>=5?.85:.15):1)+'"/>').join("")+'</linearGradient>';
+    { const cs=FX.fc.concat([FX.fc[0]]), L=cs.length-1; let st=""; cs.forEach((c,k)=>{ st+='<stop offset="'+(k/L).toFixed(3)+'" stop-color="'+c+'" stop-opacity="1"/>'; if(k<L) st+='<stop offset="'+((k+0.5)/L).toFixed(3)+'" stop-color="'+c+'" stop-opacity="'+(tn>=4?.55:.2)+'"/>'; });
+      s+='<linearGradient id="'+u+'f" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="'+(28+tn*5)+'" y2="'+(20+tn*4)+'" spreadMethod="repeat">'+st+'</linearGradient>'; }
     s+='<radialGradient id="'+u+'h"><stop offset="0" stop-color="#fff" stop-opacity="1"/><stop offset=".45" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>';
+    s+='<linearGradient id="'+u+'b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></linearGradient>';
+    s+='<radialGradient id="'+u+'s" cx=".34" cy=".28" r=".85"><stop offset="0" stop-color="#fff" stop-opacity=".32"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset=".8" stop-color="#000" stop-opacity=".12"/><stop offset="1" stop-color="#000" stop-opacity=".38"/></radialGradient>';
+    s+='<filter id="'+u+'i" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="1.6"/></filter>';
+    s+='<filter id="'+u+'d" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="2.2" stdDeviation="1.3" flood-color="#000" flood-opacity=".5"/></filter>';
+    s+='<clipPath id="'+u+'k">'+shape.replace("@","")+'</clipPath>';
     s+='<mask id="'+u+'m" maskUnits="userSpaceOnUse" x="-20" y="-20" width="140" height="140"><rect x="-20" y="-20" width="140" height="140" fill="#000"/>'+BART[b.id]+'</mask>';
     s+='</defs>';
     if(T.cosmic){
@@ -2395,18 +2416,26 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
       s+='<g class="bsfx"><circle class="bs-burst" cx="50" cy="50" r="40" fill="url(#'+u+'n)"/><path class="bs-nova" d="'+ray+'Z" fill="url(#'+u+'n)" opacity=".75"/><path class="bs-nova2" d="'+ray+'Z" fill="url(#'+u+'g)" opacity=".6" transform="rotate(11 50 50)"/></g>';
     }
     if(T.glow) s+='<circle class="bsfx bs-glow" cx="50" cy="50" r="60" fill="url(#'+u+'g)"/>';
+    // coin edge: stacked layers below the rim give the emblem thickness
+    for(let k=3;k>=1;k--) s+='<g class="bs-ext" style="--k:'+k+'">'+shape.replace("@",'fill="'+(k===3?"#120c08":T.st[0])+'" stroke="'+(k===3?"#120c08":T.st[0])+'" stroke-width="15"')+'</g>';
+    s+='<g class="bs-ext" style="--k:1.5" opacity=".55">'+shape.replace("@",'fill="none" stroke="'+T.st[3]+'" stroke-width="13"')+'</g>';
     s+=shape.replace("@",'fill="#2b1d14" stroke="#2b1d14" stroke-width="15"');
     s+=shape.replace("@",'fill="'+rim+'" stroke="'+rim+'" stroke-width="11.5"');
+    s+=shape.replace("@",'fill="none" stroke="url(#'+u+'b)" stroke-width="11.5" opacity=".75"');
     s+=shape.replace("@",'fill="'+b.bg+'" stroke="#2b1d14" stroke-width="3"');
-    s+=BART[b.id];
+    s+=shape.replace("@",'fill="url(#'+u+'s)"');
+    s+='<g clip-path="url(#'+u+'k)"><g filter="url(#'+u+'i)">'+shape.replace("@",'fill="none" stroke="#000" stroke-opacity=".5" stroke-width="7"')+'</g></g>';
+    s+='<g class="bs-motif" filter="url(#'+u+'d)">'+BART[b.id]+'</g>';
     if(b.num){
       const w=Math.max(30, 14+b.num.length*9), x=50-w/2;
       const rb='M'+(x-5)+' 77H'+(x+w+5)+'L'+(x+w+1)+' 84L'+(x+w+5)+' 91H'+(x-5)+'L'+(x-1)+' 84Z';
-      s+='<path d="'+rb+'" fill="'+rim+'" stroke="'+rim+'" stroke-width="8"/><path d="'+rb+'" fill="#c8423a" stroke="#2b1d14" stroke-width="2.4"/>';
-      s+='<text x="50" y="88.2" text-anchor="middle" font-size="11" font-weight="800" fill="#fff" stroke="none" font-family="-apple-system,BlinkMacSystemFont,Inter,sans-serif">'+b.num+'</text>';
+      s+='<g class="bs-motif" filter="url(#'+u+'d)"><path d="'+rb+'" fill="'+rim+'" stroke="'+rim+'" stroke-width="8"/><path d="'+rb+'" fill="#c8423a" stroke="#2b1d14" stroke-width="2.4"/>';
+      s+='<path d="'+rb+'" fill="url(#'+u+'b)" opacity=".5"/>';
+      s+='<text x="50" y="88.2" text-anchor="middle" font-size="11" font-weight="800" fill="#fff" stroke="none" font-family="-apple-system,BlinkMacSystemFont,Inter,sans-serif">'+b.num+'</text></g>';
     }
     // tier look inside the emblem: tinted face, foil on the bright elements, light hotspot that follows the tilt
     s+='<g class="bsfx bs-tint" opacity="'+FX.tint+'">'+shape.replace("@",'fill="'+rim+'"')+'</g>';
+    s+='<g class="bsfx bs-holo" clip-path="url(#'+u+'c)" opacity="'+FX.holo+'"><rect class="bs-foil" x="-80" y="-80" width="260" height="260" fill="url(#'+u+'f)"/></g>';
     s+='<g class="bsfx bs-foilw" mask="url(#'+u+'m)" opacity="'+FX.foil+'"><rect class="bs-foil" x="-80" y="-80" width="260" height="260" fill="url(#'+u+'f)"/></g>';
     s+='<g class="bsfx" clip-path="url(#'+u+'c)" opacity="'+FX.hot+'"><circle class="bs-hot" cx="50" cy="42" r="34" fill="url(#'+u+'h)"/></g>';
     // moving shine over rim and face
@@ -2457,6 +2486,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
   function stats(){ if(!state.stats || typeof state.stats!=="object") state.stats={}; return state.stats; }
   let badgeQueue=[], badgeShowing=false, badgeTimer=0;
   function checkBadges(){
+    if(devOverrides()) return;
     clearTimeout(badgeTimer);
     badgeTimer=setTimeout(()=>{
       if(!state.badges || typeof state.badges!=="object") state.badges={};
@@ -2479,21 +2509,22 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
     el.querySelector(".bt-x").textContent= extra ? "und "+extra+" weitere" : b.cond;
     el.onclick=()=>{ el.classList.remove("show"); sheet.classList.add("open"); openBadges(b.id); };
     sfx("part");
-    requestAnimationFrame(()=>{ el.classList.add("show"); startLight(); });
+    requestAnimationFrame(()=>el.classList.add("show"));
     setTimeout(()=>{ el.classList.remove("show"); setTimeout(()=>{ badgeShowing=false; showBadgeToast(); }, 450); }, 3600);
   }
   /* tilt light: phone orientation (or finger / slow drift) moves the light over the emblems */
   const light={x:0,y:0,tx:0,ty:0,last:0,on:false,listen:false};
-  function onOri(e){ if(e.gamma==null) return; light.tx=Math.max(-1,Math.min(1,e.gamma/26)); light.ty=Math.max(-1,Math.min(1,(e.beta-50)/26)); light.last=performance.now(); }
+  function onOri(e){ if(e.gamma==null) return; light.tx=Math.max(-1,Math.min(1,e.gamma/22)); light.ty=Math.max(-1,Math.min(1,(e.beta-50)/22)); light.last=performance.now(); }
   function listenOri(){ if(light.listen) return; light.listen=true; window.addEventListener("deviceorientation", onOri); }
   function needMotionAsk(){ return typeof DeviceOrientationEvent!=="undefined" && typeof DeviceOrientationEvent.requestPermission==="function" && !light.listen; }
   function askMotion(cb){ try{ DeviceOrientationEvent.requestPermission().then(r=>{ if(r==="granted"){ listenOri(); LSset("haushalt-motion","on"); } if(cb) cb(r); }).catch(()=>{ if(cb) cb("denied"); }); }catch(e){ if(cb) cb("denied"); } }
   function lightLoop(){
-    if(!document.querySelector(".bdg-list,.btoast.show")){ light.on=false; return; }
+    const box=document.querySelector(".bdg-ov .bdg-box");
+    if(!box){ light.on=false; return; }
     const now=performance.now();
-    if(now-light.last>1600){ const t=now/1000; light.tx=Math.sin(t*0.55)*0.6; light.ty=Math.cos(t*0.41)*0.4; }
+    if(now-light.last>600 && !light.finger){ light.tx=0; light.ty=0; } // no input: rest flat, no automatic motion
     light.x+=(light.tx-light.x)*0.12; light.y+=(light.ty-light.y)*0.12;
-    const st=document.documentElement.style; st.setProperty("--lx",light.x.toFixed(3)); st.setProperty("--ly",light.y.toFixed(3));
+    box.style.setProperty("--lx",light.x.toFixed(3)); box.style.setProperty("--ly",light.y.toFixed(3));
     requestAnimationFrame(lightLoop);
   }
   function startLight(){
@@ -2507,18 +2538,17 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
     const top=document.createElement("div"); top.className="top";
     top.innerHTML='<h1>Abzeichen</h1><button class="icon-btn" aria-label="Zurück"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>';
     top.querySelector("button").onclick=renderSettings; inner.appendChild(top);
-    const S=badgeStats(), got=state.badges||{};
+    const S=badgeStats(), got=devAllGot()||state.badges||{};
     const n=BADGES.filter(b=>got[b.id]).length;
     const list=document.createElement("div"); list.className="list bdg-list";
     const head=document.createElement("div"); head.className="bdg-head";
-    head.innerHTML='<span class="bdg-n"><b>'+n+'</b>/'+BADGES.length+'</span><span class="bdg-sub">Tippe auf ein Abzeichen, um zu sehen, wie du es bekommst. Neige das Handy, um das Licht zu bewegen.</span>';
+    head.innerHTML='<span class="bdg-n"><b>'+n+'</b>/'+BADGES.length+'</span><span class="bdg-sub">Tippe auf ein Abzeichen, um zu sehen, wie du es bekommst. In der Detailansicht kannst du es durch Neigen ins Licht drehen.</span>';
     list.appendChild(head);
-    startLight();
     if(needMotionAsk()){
       if(LS("haushalt-motion","")==="on"){ list.addEventListener("click", ()=>askMotion(), {once:true, capture:true}); }
       else { const mb=document.createElement("button"); mb.className="btn ghost bdg-motion"; mb.textContent="✦ Licht durch Neigen aktivieren"; mb.dataset.sfx="tap"; mb.onclick=()=>askMotion(r=>{ mb.textContent = r==="granted" ? "✦ Neige dein Handy" : "Bewegung nicht erlaubt"; setTimeout(()=>{ if(r==="granted") mb.remove(); }, 1600); }); head.appendChild(mb); }
     }
-    list.addEventListener("pointermove", e=>{ if(e.pointerType==="touch" && light.listen) return; const rc=list.getBoundingClientRect(); light.tx=((e.clientX-rc.left)/rc.width-0.5)*2; light.ty=((e.clientY-rc.top)/rc.height-0.5)*1.6; light.last=performance.now(); });
+
     // closest locked badge
     let near=null, nr=-1;
     BADGES.forEach(b=>{ if(got[b.id]) return; const [c,g]=badgeProg(b,S); const r=c/g; if(r>nr && r<1){ nr=r; near=b; } });
@@ -2551,19 +2581,79 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
       const has=!!got[b.id], [c,g]=badgeProg(b,S);
       const ov=document.createElement("div"); ov.className="bdg-ov";
       const box=document.createElement("div"); box.className="bdg-box glass"; box.setAttribute("role","dialog"); box.setAttribute("aria-label", b.name);
-      box.innerHTML=badgeSvg(b, has?"pop":"locked")+'<span class="tchip t'+(TIER_OF[b.id]||1)+'">'+TIERS[TIER_OF[b.id]||1].n+'</span><span class="bx-k">'+(has?"Erreicht am "+fmtDate(got[b.id]):"Noch gesperrt")+'</span><h2></h2><p class="bx-s"></p><div class="bx-how"><span>So schaltest du es frei</span><b></b></div>'+(has?'':'<span class="bar"><i style="width:'+(c/g*100).toFixed(1)+'%"></i></span><span class="bp">'+c+' von '+g+(b.unit?' '+b.unit:'')+'</span>')+'<button class="btn full">Schließen</button>';
+      box.innerHTML=badgeSvg(b, has?"pop live":"locked")+'<span class="tchip t'+(TIER_OF[b.id]||1)+'">'+TIERS[TIER_OF[b.id]||1].n+'</span><span class="bx-k">'+(has?"Erreicht am "+fmtDate(got[b.id]):"Noch gesperrt")+'</span><h2></h2><p class="bx-s"></p><div class="bx-how"><span>So schaltest du es frei</span><b></b></div>'+(has?'':'<span class="bar"><i style="width:'+(c/g*100).toFixed(1)+'%"></i></span><span class="bp">'+c+' von '+g+(b.unit?' '+b.unit:'')+'</span>')+'<button class="btn full">Schließen</button>';
       box.querySelector("h2").textContent=b.name;
       box.querySelector(".bx-s").textContent=b.story;
       box.querySelector(".bx-how b").textContent=b.cond;
       const close=()=>{ ov.classList.remove("show"); setTimeout(()=>ov.remove(), 250); };
       box.querySelector("button").onclick=close; ov.onclick=e=>{ if(e.target===ov) close(); };
       ov.appendChild(box); inner.appendChild(ov);
+      startLight();
+      const art=box.querySelector("svg"); art.style.touchAction="none";
+      const aim=e=>{ const rc=art.getBoundingClientRect(); light.tx=Math.max(-1,Math.min(1,((e.clientX-rc.left)/rc.width-0.5)*2)); light.ty=Math.max(-1,Math.min(1,((e.clientY-rc.top)/rc.height-0.5)*2)); light.last=performance.now(); };
+      art.addEventListener("pointerdown", e=>{ light.finger=true; try{ art.setPointerCapture(e.pointerId); }catch(_){} aim(e); });
+      art.addEventListener("pointermove", e=>{ if(light.finger || e.pointerType==="mouse") aim(e); });
+      const lift=()=>{ light.finger=false; light.last=0; };
+      art.addEventListener("pointerup", lift); art.addEventListener("pointercancel", lift); art.addEventListener("pointerleave", e=>{ if(e.pointerType==="mouse") lift(); });
       requestAnimationFrame(()=>ov.classList.add("show"));
       if(has) sfx("part");
     }
     if(focusId){ const b=BADGES.find(x=>x.id===focusId); if(b) setTimeout(()=>showBadge(b), 120); }
   }
 
+  /* ---------- developer menu (test overrides, never touches real data) ---------- */
+  function devOverrides(){ return DEV.on && (DEV.days!=null || DEV.streak!=null || DEV.allBadges); }
+  function devSave(){ try{ localStorage.setItem("haushalt-dev", JSON.stringify(DEV)); }catch(e){} }
+  function devAllGot(){ if(!(DEV.on && DEV.allBadges)) return null; const g={}; BADGES.forEach(b=>g[b.id]=today()); return g; }
+  function openDev(){
+    sheetMode="dev";
+    inner.innerHTML="";
+    const top=document.createElement("div"); top.className="top";
+    top.innerHTML='<h1>Entwickler</h1><button class="icon-btn" aria-label="Zurück"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>';
+    top.querySelector("button").onclick=renderSettings; inner.appendChild(top);
+    const list=document.createElement("div"); list.className="list setlist";
+    const note=document.createElement("p"); note.className="bk-hint"; note.textContent="Nur zum Testen. Alles hier wird getrennt gespeichert und ändert deine echten Aufgaben, Serie und Abzeichen nicht. Wenn du den Entwickler-Schalter ausmachst, ist alles wieder wie vorher.";
+    list.appendChild(note);
+    const slider=(label, key, max, real, marks)=>{
+      const lb=document.createElement("div"); lb.className="setlbl"; lb.textContent=label; list.appendChild(lb);
+      const g=document.createElement("div"); g.className="group glass dev-g";
+      const row=document.createElement("div"); row.className="row static volrow";
+      const r=document.createElement("input"); r.type="range"; r.min="0"; r.max=String(max); r.step="1"; r.className="vol"; r.setAttribute("aria-label",label);
+      const v=document.createElement("span"); v.className="m volv dev-v";
+      const cur=()=> DEV[key]!=null ? DEV[key] : real();
+      const show=()=>{ r.value=String(cur()); v.textContent=r.value+(DEV[key]!=null?"":" (echt)"); r.style.setProperty("--v",(r.value/max*100)+"%"); };
+      r.oninput=()=>{ v.textContent=r.value; r.style.setProperty("--v",(r.value/max*100)+"%"); };
+      r.onchange=()=>{ DEV[key]=+r.value; devSave(); if(key==="days") achView=null; show(); render(); };
+      row.append(r,v); g.appendChild(row);
+      const chips=document.createElement("div"); chips.className="dev-chips";
+      marks.forEach(([t,val])=>{ const b=document.createElement("button"); b.className="chip"; b.textContent=t; b.onclick=()=>{ DEV[key]= val===null ? null : val; devSave(); if(key==="days") achView=null; show(); render(); }; chips.appendChild(b); });
+      g.appendChild(chips); list.appendChild(g); show();
+    };
+    slider("Geschaffte Tage (3D Erfolge, Seasons)", "days", ACH_TOTAL, ()=>{ const o=DEV.days; DEV.days=null; const n=achTotal(); DEV.days=o; return n; },
+      [["Echt",null],["0",0],["3",3],["7",7],["55",55],["56",56],["111",111],["112",112],["168",168]]);
+    slider("Serie in Tagen", "streak", 400, ()=>{ const o=DEV.streak; DEV.streak=null; const n=streak(); DEV.streak=o; return n; },
+      [["Echt",null],["0",0],["7",7],["30",30],["100",100],["365",365]]);
+    const lb=document.createElement("div"); lb.className="setlbl"; lb.textContent="Abzeichen"; list.appendChild(lb);
+    const g2=document.createElement("div"); g2.className="group glass";
+    const ar=document.createElement("label"); ar.className="row static setrow";
+    ar.innerHTML='<span class="ri" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="M8.5 13.8L7 22l5-3 5 3-1.5-8.2"/></svg></span><span class="t"><span class="tt">Alle Abzeichen freischalten</span><span class="ld">Nur Anzeige, wird nicht gespeichert</span></span>';
+    const as=document.createElement("input"); as.type="checkbox"; as.className="switch"; as.setAttribute("role","switch"); as.checked=!!DEV.allBadges;
+    as.onchange=()=>{ DEV.allBadges=as.checked; devSave(); render(); };
+    ar.appendChild(as); g2.appendChild(ar); list.appendChild(g2);
+    const lb3=document.createElement("div"); lb3.className="setlbl"; lb3.textContent="Animationen abspielen"; list.appendChild(lb3);
+    const g3=document.createElement("div"); g3.className="dev-btns";
+    const act=(t,fn)=>{ const b=document.createElement("button"); b.className="btn ghost"; b.textContent=t; b.onclick=fn; g3.appendChild(b); };
+    act("Season-Feier 1 → 2", ()=>seasonFx(true,0,1));
+    act("Season-Feier 2 → 3", ()=>seasonFx(true,0,2));
+    act("Streak-Banner", ()=>{ const n=DEV.streak!=null?DEV.streak:Math.max(1,streak()); closeSheet(); setTimeout(()=>showStreakBanner(n),350); });
+    act("Abzeichen-Hinweis", ()=>{ const b=BADGES[Math.floor(Math.random()*BADGES.length)]; badgeQueue.push(b); showBadgeToast(); });
+    act("Konfetti", ()=>{ closeSheet(); setTimeout(()=>{ celebrate(); confetti(true); sfx("alldone"); },300); });
+    act("Teile neu einfliegen lassen", ()=>{ const d=DEV.days!=null?DEV.days:achTotal(); DEV.seen=Math.max(0,d-Math.min(4,d%ACH_PARTS||ACH_PARTS)); if(DEV.days==null) DEV.days=d; devSave(); closeSheet(); });
+    list.appendChild(g3);
+    const rs=document.createElement("button"); rs.className="btn full"; rs.textContent="Alle Test-Werte zurücksetzen"; rs.onclick=()=>{ DEV={on:true}; devSave(); openDev(); render(); };
+    list.appendChild(rs);
+    inner.appendChild(list);
+  }
   function renderSettings(){
     sheetMode = "settings";
     inner.innerHTML='';
@@ -2575,7 +2665,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
     const lb0=document.createElement("div"); lb0.className="setlbl"; lb0.textContent="Erfolge"; list.appendChild(lb0);
     const gb=document.createElement("div"); gb.className="group glass";
     const brow=document.createElement("button"); brow.className="row";
-    const bn=BADGES.filter(b=>(state.badges||{})[b.id]).length;
+    const bn=BADGES.filter(b=>(devAllGot()||state.badges||{})[b.id]).length;
     brow.innerHTML='<span class="ri" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="M8.5 13.8L7 22l5-3 5 3-1.5-8.2"/></svg></span><span class="t"><span class="tt">Abzeichen</span><span class="ld">'+bn+' von '+BADGES.length+' freigeschaltet</span></span><span class="m">›</span>';
     brow.onclick=()=>openBadges(); gb.appendChild(brow); list.appendChild(gb);
     // themes
@@ -2640,7 +2730,17 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
     bk.innerHTML='<span class="ri" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></span><span class="t"><span class="tt">Sicherung</span><span class="ld"></span></span><span class="m">›</span>';
     { const a=backupAgeDays(); const ld=bk.querySelector(".ld"); ld.textContent = a===null ? "Noch nie gesichert" : a===0 ? "Zuletzt heute" : a===1 ? "Zuletzt gestern" : "Zuletzt vor "+a+" Tagen"; if(backupDue()) ld.classList.add("warn"); }
     bk.onclick=openBackup; g.appendChild(bk);
-    list.appendChild(g); inner.appendChild(list);
+    list.appendChild(g);
+    // developer (temporary, for testing)
+    const ld=document.createElement("div"); ld.className="setlbl"; ld.textContent="Entwickler"; list.appendChild(ld);
+    const gd=document.createElement("div"); gd.className="group glass";
+    const dr=document.createElement("label"); dr.className="row static setrow";
+    dr.innerHTML='<span class="ri" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg></span><span class="t"><span class="tt">Developer</span><span class="ld">Testmenü zum Freischalten</span></span>';
+    const ds=document.createElement("input"); ds.type="checkbox"; ds.className="switch"; ds.setAttribute("role","switch"); ds.checked=!!DEV.on;
+    ds.onchange=()=>{ DEV = ds.checked ? {on:true} : {on:false}; devSave(); achView=null; render(); renderSettings(); };
+    dr.appendChild(ds); gd.appendChild(dr);
+    if(DEV.on){ const dm=document.createElement("button"); dm.className="row"; dm.innerHTML='<span class="ri" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span><span class="t"><span class="tt">Entwicklermenü</span><span class="ld">'+(devOverrides()?"Test-Werte aktiv":"Keine Test-Werte")+'</span></span><span class="m">›</span>'; dm.onclick=openDev; gd.appendChild(dm); }
+    list.appendChild(gd); inner.appendChild(list);
   }
   function closeSheet(){ sheet.classList.remove("open"); render(); }
   function renderList(){ sheetMode = "list";
