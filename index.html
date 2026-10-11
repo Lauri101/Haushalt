@@ -649,6 +649,28 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
 
 /* power saving: emblems only animate in the detail view */
 .bsvg:not(.live) *,.bdg .tchip,.bdg-near .tchip{animation:none!important}
+
+/* very important tasks */
+.card.important:not(.behind)::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:3;
+  box-shadow:inset 0 0 0 3px rgba(255,59,48,.95),inset 0 0 60px rgba(255,40,25,.6),inset 0 0 120px rgba(255,40,25,.22),0 0 40px rgba(255,45,30,.65);animation:impPulse 1.7s ease-in-out infinite}
+@keyframes impPulse{0%,100%{opacity:.4}50%{opacity:1}}
+.card .ico{position:relative}
+.imp-ring{position:absolute;inset:-11px;width:calc(100% + 22px);height:calc(100% + 22px);overflow:visible;pointer-events:none}
+.imp-ring rect{fill:none;stroke-width:4.5;stroke-linecap:round}
+.imp-track{stroke-width:3.5!important}
+.imp-track{stroke:rgba(255,59,48,.18)}
+.imp-tail{filter:blur(1.1px) drop-shadow(0 0 5px rgba(255,59,48,.75))}
+.imp-arc{stroke:#ff3b30;stroke-dasharray:9 91;opacity:calc(1 - var(--i) * .17);stroke-width:calc(4.6px - var(--i) * .35px);
+  animation:impSpin 10s cubic-bezier(.45,.05,.4,1) infinite;animation-delay:calc(var(--i) * .2s)}
+@keyframes impSpin{0%{stroke-dashoffset:0}72%{stroke-dashoffset:-100}100%{stroke-dashoffset:-100}}
+.card.behind .imp-ring{display:none}
+.impfield{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;cursor:pointer}
+.impfield .t{flex:1;display:flex;flex-direction:column}
+.impfield .tt{font-weight:600}
+.impfield .ld{font-size:13px;color:var(--muted)}
+.imp-dot{width:12px;height:12px;border-radius:50%;background:#ff3b30;box-shadow:0 0 0 4px rgba(255,59,48,.22);flex:none}
+.row .tt.imp::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff3b30;margin-right:7px;vertical-align:1px;box-shadow:0 0 6px rgba(255,59,48,.8)}
+@media (prefers-reduced-motion:reduce){.card.important:not(.behind)::after{animation:none;opacity:.8}.imp-arc{animation:none;stroke-dasharray:30 70}.imp-arc:not([style*="--i:0"]){display:none}}
 </style>
 </head>
 <body>
@@ -858,7 +880,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
     const rel = n===0 ? "heute" : n===1 ? "gestern" : "vor "+n+" Tagen";
     return "zuletzt "+rel+" · "+d.getDate()+"."+(d.getMonth()+1)+".";
   }
-  function dueTasks(){ const t=today(); const key=x=>(x.qd===t && x.q) ? x.q : 0; return active().filter(x=>x.next<=t).map((x,i)=>[x,i]).sort((a,b)=>key(a[0])-key(b[0]) || a[1]-b[1]).map(p=>p[0]); }
+  function dueTasks(){ const t=today(); const key=x=>(x.qd===t && x.q) ? x.q : 0; const imp=x=>(x.important && !(x.qd===t && x.q)) ? 0 : 1; return active().filter(x=>x.next<=t).map((x,i)=>[x,i]).sort((a,b)=>imp(a[0])-imp(b[0]) || key(a[0])-key(b[0]) || a[1]-b[1]).map(p=>p[0]); }
   function cleanup(){ const t=today(); const n=state.tasks.length; state.tasks=state.tasks.filter(x=>!(x.done && x.done<t)); if(state.tasks.length!==n) save(); }
 
   /* ---------- streak ---------- */
@@ -1780,16 +1802,17 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
   }
   function makeCard(t, behind){
     const c = document.createElement("div");
-    c.className = "card glass"+(behind?" behind":"");
+    c.className = "card glass"+(behind?" behind":"")+(t.important?" important":"");
     c.innerHTML = '<div class="tint r"></div><div class="tint l"></div><div class="tint d"></div>'
       + '<div class="stamp r">✓ Erledigt</div><div class="stamp l">Morgen ↺</div><div class="stamp d">↓ Später</div>';
     const wrap = document.createElement("div"); wrap.className="inner";
     const ic = document.createElement("div"); ic.className="ico"; ic.setAttribute("aria-hidden","true"); ic.textContent=iconOf(t);
+    // very important: only the red pulse on the card (no ring around the icon)
     const tx = document.createElement("div"); tx.className="text"; tx.textContent=t.text;
     wrap.append(ic,tx); c.appendChild(wrap);
     const od = overdueDays(t);
     if(od >= 1){ const o=document.createElement("div"); o.className="overdue"; o.textContent = od===1 ? "Seit 1 Tag offen" : "Seit "+od+" Tagen offen"; c.appendChild(o); }
-    if(!behind){ c.tabIndex=0; c.setAttribute("aria-label", t.text+". Rechts wischen für erledigt, links für morgen wieder, nach unten für später heute."); }
+    if(!behind){ c.tabIndex=0; c.setAttribute("aria-label", (t.important?"Sehr wichtig: ":"")+t.text+". Rechts wischen für erledigt, links für morgen wieder, nach unten für später heute."); }
     return c;
   }
   function attachSwipe(card, task){
@@ -2756,7 +2779,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
       const b = document.createElement("button"); b.className="row";
       const s0=document.createElement("span"); s0.className="ri"; s0.setAttribute("aria-hidden","true"); s0.textContent=iconOf(t);
       const s1=document.createElement("span"); s1.className="t";
-      const s1a=document.createElement("span"); s1a.className="tt"; s1a.textContent=t.text;
+      const s1a=document.createElement("span"); s1a.className="tt"+(t.important?" imp":""); s1a.textContent=t.text;
       const s1b=document.createElement("span"); s1b.className="ld"; s1b.textContent=lastDoneLabel(t);
       s1.append(s1a,s1b);
       const s2=document.createElement("span"); s2.className="m"; s2.textContent=rhythmLabel(t);
@@ -2965,6 +2988,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
         <input type="text" id="ft" maxlength="80" placeholder="z. B. Pflanzen gießen"></div>
       <div><label class="lbl" for="fi">Icon</label>
         <div class="icofield"><input type="text" id="fi" maxlength="8" aria-label="Icon"><span>Wird automatisch gewählt. Zum Ändern ein eigenes Emoji eintippen.</span></div></div>
+      <label class="impfield glass"><span class="imp-dot" aria-hidden="true"></span><span class="t"><span class="tt">Sehr wichtig</span><span class="ld">Kommt zuerst und pulsiert rot</span></span><input type="checkbox" class="switch" id="fimp" role="switch"></label>
       <div><label class="lbl">Wie oft?</label>
         <div class="seg" role="group"><button type="button" data-m="every">Alle X Tage</button><button type="button" data-m="days">Wochentage</button><button type="button" data-m="once">Einmalig</button></div></div>
       <div id="modeEvery"><div class="every"><span>Alle</span><input type="number" id="fe" min="1" max="365" inputmode="numeric"><span>Tage</span></div></div>
@@ -2979,6 +3003,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
     const ft=f.querySelector("#ft"), fe=f.querySelector("#fe"), err=f.querySelector("#ferr");
     ft.value=draft.text; fe.value=draft.every||1;
     const fi=f.querySelector("#fi"); let iconTouched=false;
+    const fimp=f.querySelector("#fimp"); fimp.checked=!!draft.important;
     const autoIcon = () => keywordIcon(ft.value) || (task && !task.iconManual && task.text===ft.value.trim() && task.icon) || "🏠";
     fi.value = (task && task.iconManual) ? task.icon : autoIcon();
     ft.addEventListener("input", ()=>{ if(!iconTouched) fi.value = autoIcon(); });
@@ -3036,6 +3061,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
         const t=state.tasks.find(x=>x.id===task.id);
         setIcon(t);
         const rhythmChanged = t.mode!==draft.mode || t.every!==every || rep(t)!==draft.repeat || (t.mpos||1)!==draft.mpos || (draft.mode==="once" && t.date!==date) || JSON.stringify([...t.days].sort())!==JSON.stringify([...draft.days].sort());
+        if(fimp.checked) t.important=true; else delete t.important;
         t.text=text; t.mode=draft.mode; t.every=every; t.days=[...draft.days]; t.date=date; t.repeat=draft.repeat; t.mpos=draft.mpos;
         if(rhythmChanged) delete t.since;
         if(rhythmChanged && t.mode==="once"){ t.next=date; }
@@ -3043,6 +3069,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
         else if(rhythmChanged){ t.next = t.last ? (t.mode==="days" ? nextWeekday(t.last,t.days,false) : addDays(t.last,t.every)) : firstDue(t); if(t.next<today() && t.mode==="days") t.next=nextWeekday(today(),t.days,true); }
       } else {
         const t={ id:Date.now().toString(36)+Math.random().toString(36).slice(2,6), text, mode:draft.mode, every, days:[...draft.days], date, repeat:draft.repeat, mpos:draft.mpos, last:null };
+        if(fimp.checked) t.important=true;
         if(t.mode==="days") setAnchor(t);
         t.next=firstDue(t); setIcon(t); { const st=stats(); st.created=Math.max(st.created||0, state.tasks.length)+1; } state.tasks.push(t);
         if(needAi) aiIcon(t.id);
