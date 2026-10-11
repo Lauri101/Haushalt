@@ -518,7 +518,7 @@ svg.locked,.bdg.locked svg{filter:grayscale(1) brightness(.3) contrast(1.15)!imp
 .bdg-box{width:100%;max-width:360px;border-radius:28px;padding:22px 20px 18px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;transform:scale(.92) translateY(10px);transition:transform .35s var(--ease)}
 .bdg-ov.show .bdg-box{transform:none}
 .bdg-box svg{width:170px;height:170px;margin-bottom:6px;filter:drop-shadow(0 10px 18px rgba(0,0,0,.4))}
-.bdg-box svg.pop{animation:bpop .7s cubic-bezier(.2,1.4,.4,1) both}
+.bdg-box svg.pop{animation:bpop .7s cubic-bezier(.2,1.4,.4,1) backwards}
 @keyframes bpop{0%{transform:scale(.4) rotate(-12deg);opacity:0}100%{transform:none;opacity:1}}
 .bx-k{font-size:12px;color:var(--accent);letter-spacing:.04em}
 .bdg-box h2{margin:0;font-size:24px;letter-spacing:-.02em}
@@ -603,6 +603,42 @@ svg.locked,.bdg.locked svg{filter:grayscale(1) brightness(.3) contrast(1.15)!imp
 @keyframes alFloat{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-8px) rotate(3deg)}}
 .al-t{position:relative;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#f3e2b5;background:rgba(20,16,24,.6);padding:5px 10px;border-radius:10px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 @media (prefers-reduced-motion:reduce){.al-icon,.al-haze{animation:none}}
+
+/* badge tiers: animated accents */
+.bs-sheen{animation:bsSheen var(--sd,6s) ease-in-out infinite}
+@keyframes bsSheen{0%,55%{transform:translateX(0)}100%{transform:translateX(190px)}}
+.bs-spark{transform-box:fill-box;transform-origin:center;opacity:0;animation:bsSpark 2.8s ease-in-out infinite}
+@keyframes bsSpark{0%,100%{transform:scale(0) rotate(0);opacity:0}45%{transform:scale(1.1) rotate(45deg);opacity:1}60%{transform:scale(.7) rotate(70deg);opacity:.8}}
+.bs-glow{transform-origin:50px 50px;animation:bsGlow 2.4s ease-in-out infinite alternate}
+@keyframes bsGlow{from{opacity:.35;transform:scale(.9)}to{opacity:.95;transform:scale(1.06)}}
+.bs-nova{transform-origin:50px 50px;animation:bsSpin 16s linear infinite}
+.bs-nova2{transform-origin:50px 50px;animation:bsSpin 10s linear infinite reverse}
+.bs-orbit{transform-origin:50px 50px;animation:bsSpin 7s linear infinite}
+.bs-burst{transform-origin:50px 50px;animation:bsBurst 3s ease-out infinite}
+@keyframes bsSpin{to{transform:rotate(360deg)}}
+@keyframes bsBurst{0%{transform:scale(.55);opacity:.95}100%{transform:scale(1.6);opacity:0}}
+svg.locked .bsfx,.bdg.locked .bsfx{display:none}
+.tchip{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:7px;color:#2b1d14;margin-bottom:2px}
+.tchip.t1{background:linear-gradient(135deg,#b87337,#f1c08a)}
+.tchip.t2{background:linear-gradient(135deg,#a9b1bc,#ffffff)}
+.tchip.t3{background:linear-gradient(135deg,#f0b93a,#fff3b8)}
+.tchip.t4{background:linear-gradient(135deg,#c9d6ea,#ffffff)}
+.tchip.t5{background:linear-gradient(135deg,#7fd8ff,#e9fbff,#d6b8ff);background-size:200% 200%;animation:tchipShift 3s ease-in-out infinite alternate}
+.tchip.t6{background:linear-gradient(135deg,#5b2cff,#ff3cac,#2bd2ff,#ffd65c);background-size:300% 300%;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5);animation:tchipShift 2.4s ease-in-out infinite alternate}
+@keyframes tchipShift{from{background-position:0% 50%}to{background-position:100% 50%}}
+.bdg.locked .tchip{filter:grayscale(.6);opacity:.75;animation:none}
+.bdg-box .tchip{font-size:11px;margin-bottom:4px}
+@media (prefers-reduced-motion:reduce){.bs-sheen,.bs-spark,.bs-glow,.bs-nova,.bs-nova2,.bs-orbit,.bs-burst,.tchip{animation:none}.bs-spark{opacity:.8;transform:scale(.8)}}
+
+/* tier look inside + tilt light */
+.bsvg{transform:perspective(520px) rotateX(calc(var(--ly,0) * -13deg)) rotateY(calc(var(--lx,0) * 13deg));transition:transform .08s linear}
+.bs-foil{transform:translate(calc(var(--lx,0) * -46px),calc(var(--ly,0) * -46px))}
+.tier5 .bs-foil,.tier6 .bs-foil{animation:bsFoil 7s linear infinite}
+@keyframes bsFoil{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(360deg)}}
+.bs-hot{transform:translate(calc(var(--lx,0) * 30px),calc(var(--ly,0) * 34px))}
+.bs-lt{transform:translate(calc(var(--lx,0) * 34px),calc(var(--ly,0) * 20px))}
+.bdg-motion{margin-top:10px;align-self:flex-start;padding:8px 14px;font-size:13px;width:auto}
+@media (prefers-reduced-motion:reduce){.bsvg{transform:none}.tier5 .bs-foil,.tier6 .bs-foil{animation:none}}
 </style>
 </head>
 <body>
@@ -2322,18 +2358,65 @@ svg.locked,.bdg.locked svg{filter:grayscale(1) brightness(.3) contrast(1.15)!imp
     {id:"compass",cat:"selten",shape:"rose",bg:"#c9b48a",name:"Fünf Lande bereist",cond:"Probiere alle 5 Themes in den Einstellungen aus.",story:"Morgentau, Laternenlicht, Wiesenwind, Hügelhöhle und Sternennacht. Du kennst sie alle.",p:S=>[S.skins,5]},
     {id:"ship",cat:"selten",shape:"rose",bg:"#f08a5d",name:"Segel gen Westen",cond:"Vollende alle Erfolge von Season 1 (56 geschaffte Tage).",story:"Die erste große Fahrt ist zu Ende erzählt. Das Schiff wartet auf die nächste.",p:S=>[S.doneDays,ACH_SEASONS[0].objs.length*ACH_PARTS]}
   ];
+  // tiers: 1 Bronze, 2 Silber, 3 Gold, 4 Platin, 5 Diamant, 6 Kosmisch
+  const TIERS=[null,
+    {n:"Bronze",  st:["#5e3016","#b87337","#f1c08a","#8f5427"], sd:"8s", sp:1},
+    {n:"Silber",  st:["#5d646f","#cfd5dd","#ffffff","#8e96a1"], sd:"6s", sp:2},
+    {n:"Gold",    st:["#7a4c00","#f0b93a","#fff3b8","#b97f0c"], sd:"4.5s", sp:3},
+    {n:"Platin",  st:["#6f7f99","#e3ebf7","#ffffff","#a9bad4"], sd:"3.6s", sp:4, glow:"#cfe0ff"},
+    {n:"Diamant", st:["#2a8fd0","#bff0ff","#ffffff","#d6b8ff"], sd:"3s", sp:6, glow:"#9be8ff", spin:true},
+    {n:"Kosmisch",st:["#5b2cff","#ff3cac","#2bd2ff","#ffd65c"], sd:"2.6s", sp:6, glow:"#c77dff", cosmic:true}];
+  const TIER_OF={door:1,fire:1,pack:1,map:1,bread:1,stone:1,spade:1, lantern:2,tea:2,dawn:2,ranger:2,mug:2,mail:2,
+    pass:3,beacon:3,anvil:3,boot:3,crown:3,troll:3,compass:3,eagle:3, wizard:4,sword:4,shoe:4,moon:4, tower:5,hoard:5,ship:5, ring:6,phial:6};
+  const TIER_FX=[null,
+    {tint:.1, foil:.34, hot:.16, fc:["#ffd2a0","#6a3412"]},
+    {tint:.12, foil:.42, hot:.2, fc:["#ffffff","#6f7986"]},
+    {tint:.16, foil:.5, hot:.24, fc:["#fff6c8","#b97c08"]},
+    {tint:.18, foil:.58, hot:.28, fc:["#ffffff","#b8ccff","#ffffff","#8fa8d6"]},
+    {tint:.2, foil:.68, hot:.3, fc:["#ffffff","#8ff3ff","#ffd6ff","#b2ffd8","#9bc8ff"]},
+    {tint:.22, foil:.82, hot:.32, fc:["#ff3cac","#ffd65c","#2bd2ff","#a6ff7a","#7b4dff"]}];
+  let badgeUid=0;
   function badgeSvg(b, cls){
-    const shape=BSHAPE[b.shape];
-    let s='<svg viewBox="0 0 100 100" class="'+(cls||"")+'" aria-hidden="true" fill="none" stroke-linejoin="round" stroke-linecap="round">';
-    s+=shape.replace("@",'fill="#fff" stroke="#fff" stroke-width="11"');
+    const shape=BSHAPE[b.shape], T=TIERS[TIER_OF[b.id]||1], u="bg"+(++badgeUid);
+    const rim='url(#'+u+'r)';
+    let s='<svg viewBox="0 0 100 100" class="bsvg '+(cls||"")+' tier'+(TIER_OF[b.id]||1)+'" style="--sd:'+T.sd+';overflow:visible" aria-hidden="true" fill="none" stroke-linejoin="round" stroke-linecap="round"><defs>';
+    s+='<linearGradient id="'+u+'r" x1="0" y1="0" x2="1" y2="1">'+T.st.map((c,k)=>'<stop offset="'+(k/(T.st.length-1)).toFixed(2)+'" stop-color="'+c+'">'+(T.cosmic?'<animate attributeName="stop-color" values="'+[c,T.st[(k+1)%4],T.st[(k+2)%4],c].join(";")+'" dur="5s" repeatCount="indefinite"/>':'')+'</stop>').join("")
+      +(T.spin||T.cosmic?'<animateTransform attributeName="gradientTransform" type="rotate" from="0 .5 .5" to="360 .5 .5" dur="'+(T.cosmic?"6s":"9s")+'" repeatCount="indefinite"/>':'')+'</linearGradient>';
+    s+='<clipPath id="'+u+'c"><g transform="translate(50 50) scale(1.16) translate(-50 -50)">'+shape.replace("@","")+'</g></clipPath>';
+    if(T.glow) s+='<radialGradient id="'+u+'g"><stop offset="0" stop-color="'+T.glow+'" stop-opacity=".95"/><stop offset=".55" stop-color="'+T.glow+'" stop-opacity=".35"/><stop offset="1" stop-color="'+T.glow+'" stop-opacity="0"/></radialGradient>';
+    if(T.cosmic) s+='<radialGradient id="'+u+'n"><stop offset="0" stop-color="#fff"/><stop offset=".25" stop-color="#ffd65c"/><stop offset=".55" stop-color="#ff3cac" stop-opacity=".6"/><stop offset="1" stop-color="#5b2cff" stop-opacity="0"/></radialGradient>';
+    const tn=TIER_OF[b.id]||1, FX=TIER_FX[tn];
+    s+='<linearGradient id="'+u+'f" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="'+(tn>=5?46:34)+'" y2="'+(tn>=5?46:34)+'" spreadMethod="repeat">'+FX.fc.concat([FX.fc[0]]).map((c,k,a)=>'<stop offset="'+(k/(a.length-1)).toFixed(2)+'" stop-color="'+c+'" stop-opacity="'+(k%2?(tn>=5?.85:.15):1)+'"/>').join("")+'</linearGradient>';
+    s+='<radialGradient id="'+u+'h"><stop offset="0" stop-color="#fff" stop-opacity="1"/><stop offset=".45" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>';
+    s+='<mask id="'+u+'m" maskUnits="userSpaceOnUse" x="-20" y="-20" width="140" height="140"><rect x="-20" y="-20" width="140" height="140" fill="#000"/>'+BART[b.id]+'</mask>';
+    s+='</defs>';
+    if(T.cosmic){
+      let ray=""; for(let k=0;k<32;k++){ const a=k/32*Math.PI*2, r=k%2?34:(k%4?58:66); ray+=(k?"L":"M")+(50+Math.cos(a)*r).toFixed(1)+" "+(50+Math.sin(a)*r).toFixed(1); }
+      s+='<g class="bsfx"><circle class="bs-burst" cx="50" cy="50" r="40" fill="url(#'+u+'n)"/><path class="bs-nova" d="'+ray+'Z" fill="url(#'+u+'n)" opacity=".75"/><path class="bs-nova2" d="'+ray+'Z" fill="url(#'+u+'g)" opacity=".6" transform="rotate(11 50 50)"/></g>';
+    }
+    if(T.glow) s+='<circle class="bsfx bs-glow" cx="50" cy="50" r="60" fill="url(#'+u+'g)"/>';
+    s+=shape.replace("@",'fill="#2b1d14" stroke="#2b1d14" stroke-width="15"');
+    s+=shape.replace("@",'fill="'+rim+'" stroke="'+rim+'" stroke-width="11.5"');
     s+=shape.replace("@",'fill="'+b.bg+'" stroke="#2b1d14" stroke-width="3"');
     s+=BART[b.id];
     if(b.num){
       const w=Math.max(30, 14+b.num.length*9), x=50-w/2;
       const rb='M'+(x-5)+' 77H'+(x+w+5)+'L'+(x+w+1)+' 84L'+(x+w+5)+' 91H'+(x-5)+'L'+(x-1)+' 84Z';
-      s+='<path d="'+rb+'" fill="#fff" stroke="#fff" stroke-width="8"/><path d="'+rb+'" fill="#c8423a" stroke="#2b1d14" stroke-width="2.4"/>';
+      s+='<path d="'+rb+'" fill="'+rim+'" stroke="'+rim+'" stroke-width="8"/><path d="'+rb+'" fill="#c8423a" stroke="#2b1d14" stroke-width="2.4"/>';
       s+='<text x="50" y="88.2" text-anchor="middle" font-size="11" font-weight="800" fill="#fff" stroke="none" font-family="-apple-system,BlinkMacSystemFont,Inter,sans-serif">'+b.num+'</text>';
     }
+    // tier look inside the emblem: tinted face, foil on the bright elements, light hotspot that follows the tilt
+    s+='<g class="bsfx bs-tint" opacity="'+FX.tint+'">'+shape.replace("@",'fill="'+rim+'"')+'</g>';
+    s+='<g class="bsfx bs-foilw" mask="url(#'+u+'m)" opacity="'+FX.foil+'"><rect class="bs-foil" x="-80" y="-80" width="260" height="260" fill="url(#'+u+'f)"/></g>';
+    s+='<g class="bsfx" clip-path="url(#'+u+'c)" opacity="'+FX.hot+'"><circle class="bs-hot" cx="50" cy="42" r="34" fill="url(#'+u+'h)"/></g>';
+    // moving shine over rim and face
+    s+='<g class="bsfx" clip-path="url(#'+u+'c)"><g class="bs-lt"><g transform="rotate(28 50 50)"><rect class="bs-sheen" x="-34" y="-30" width="'+(TIERS.indexOf(T)>=4?20:13)+'" height="160" fill="#fff" opacity="'+(TIERS.indexOf(T)>=3?.55:.4)+'"/></g></g></g>';
+    // sparkles on the rim
+    const SP=[[16,22],[84,30],[80,82],[20,76],[50,5],[93,58]];
+    let sp='';
+    for(let k=0;k<T.sp;k++){ const q=SP[k], sz=TIERS.indexOf(T)>=5?1.25:1; sp+='<g transform="translate('+q[0]+' '+q[1]+') scale('+sz+')"><path class="bs-spark" style="animation-delay:'+(k*0.47).toFixed(2)+'s" d="M0-6L1.4-1.4L6 0L1.4 1.4L0 6L-1.4 1.4L-6 0L-1.4-1.4Z" fill="#fff"/></g>'; }
+    if(sp) s+='<g class="bsfx">'+sp+'</g>';
+    if(T.cosmic){ s+='<g class="bsfx bs-orbit">'+[0,1,2,3,4].map(k=>{ const a=k/5*Math.PI*2; return '<circle cx="'+(50+Math.cos(a)*54).toFixed(1)+'" cy="'+(50+Math.sin(a)*54).toFixed(1)+'" r="'+(k%2?1.6:2.4)+'" fill="'+["#fff","#2bd2ff","#ffd65c","#ff3cac","#fff"][k]+'"/>'; }).join("")+'</g>'; }
     return s+'</svg>';
   }
   function badgeStats(){
@@ -2396,8 +2479,26 @@ svg.locked,.bdg.locked svg{filter:grayscale(1) brightness(.3) contrast(1.15)!imp
     el.querySelector(".bt-x").textContent= extra ? "und "+extra+" weitere" : b.cond;
     el.onclick=()=>{ el.classList.remove("show"); sheet.classList.add("open"); openBadges(b.id); };
     sfx("part");
-    requestAnimationFrame(()=>el.classList.add("show"));
+    requestAnimationFrame(()=>{ el.classList.add("show"); startLight(); });
     setTimeout(()=>{ el.classList.remove("show"); setTimeout(()=>{ badgeShowing=false; showBadgeToast(); }, 450); }, 3600);
+  }
+  /* tilt light: phone orientation (or finger / slow drift) moves the light over the emblems */
+  const light={x:0,y:0,tx:0,ty:0,last:0,on:false,listen:false};
+  function onOri(e){ if(e.gamma==null) return; light.tx=Math.max(-1,Math.min(1,e.gamma/26)); light.ty=Math.max(-1,Math.min(1,(e.beta-50)/26)); light.last=performance.now(); }
+  function listenOri(){ if(light.listen) return; light.listen=true; window.addEventListener("deviceorientation", onOri); }
+  function needMotionAsk(){ return typeof DeviceOrientationEvent!=="undefined" && typeof DeviceOrientationEvent.requestPermission==="function" && !light.listen; }
+  function askMotion(cb){ try{ DeviceOrientationEvent.requestPermission().then(r=>{ if(r==="granted"){ listenOri(); LSset("haushalt-motion","on"); } if(cb) cb(r); }).catch(()=>{ if(cb) cb("denied"); }); }catch(e){ if(cb) cb("denied"); } }
+  function lightLoop(){
+    if(!document.querySelector(".bdg-list,.btoast.show")){ light.on=false; return; }
+    const now=performance.now();
+    if(now-light.last>1600){ const t=now/1000; light.tx=Math.sin(t*0.55)*0.6; light.ty=Math.cos(t*0.41)*0.4; }
+    light.x+=(light.tx-light.x)*0.12; light.y+=(light.ty-light.y)*0.12;
+    const st=document.documentElement.style; st.setProperty("--lx",light.x.toFixed(3)); st.setProperty("--ly",light.y.toFixed(3));
+    requestAnimationFrame(lightLoop);
+  }
+  function startLight(){
+    if(typeof DeviceOrientationEvent!=="undefined" && typeof DeviceOrientationEvent.requestPermission!=="function") listenOri();
+    if(!light.on){ light.on=true; requestAnimationFrame(lightLoop); }
   }
   function fmtDate(s){ const d=parse(s); return d.getDate()+"."+(d.getMonth()+1)+"."+d.getFullYear(); }
   function openBadges(focusId){
@@ -2410,8 +2511,14 @@ svg.locked,.bdg.locked svg{filter:grayscale(1) brightness(.3) contrast(1.15)!imp
     const n=BADGES.filter(b=>got[b.id]).length;
     const list=document.createElement("div"); list.className="list bdg-list";
     const head=document.createElement("div"); head.className="bdg-head";
-    head.innerHTML='<span class="bdg-n"><b>'+n+'</b>/'+BADGES.length+'</span><span class="bdg-sub">Tippe auf ein Abzeichen, um zu sehen, wie du es bekommst.</span>';
+    head.innerHTML='<span class="bdg-n"><b>'+n+'</b>/'+BADGES.length+'</span><span class="bdg-sub">Tippe auf ein Abzeichen, um zu sehen, wie du es bekommst. Neige das Handy, um das Licht zu bewegen.</span>';
     list.appendChild(head);
+    startLight();
+    if(needMotionAsk()){
+      if(LS("haushalt-motion","")==="on"){ list.addEventListener("click", ()=>askMotion(), {once:true, capture:true}); }
+      else { const mb=document.createElement("button"); mb.className="btn ghost bdg-motion"; mb.textContent="✦ Licht durch Neigen aktivieren"; mb.dataset.sfx="tap"; mb.onclick=()=>askMotion(r=>{ mb.textContent = r==="granted" ? "✦ Neige dein Handy" : "Bewegung nicht erlaubt"; setTimeout(()=>{ if(r==="granted") mb.remove(); }, 1600); }); head.appendChild(mb); }
+    }
+    list.addEventListener("pointermove", e=>{ if(e.pointerType==="touch" && light.listen) return; const rc=list.getBoundingClientRect(); light.tx=((e.clientX-rc.left)/rc.width-0.5)*2; light.ty=((e.clientY-rc.top)/rc.height-0.5)*1.6; light.last=performance.now(); });
     // closest locked badge
     let near=null, nr=-1;
     BADGES.forEach(b=>{ if(got[b.id]) return; const [c,g]=badgeProg(b,S); const r=c/g; if(r>nr && r<1){ nr=r; near=b; } });
@@ -2431,7 +2538,7 @@ svg.locked,.bdg.locked svg{filter:grayscale(1) brightness(.3) contrast(1.15)!imp
       items.forEach(b=>{
         const has=!!got[b.id], [c,g]=badgeProg(b,S);
         const card=document.createElement("button"); card.className="bdg glass"+(has?"":" locked"); card.dataset.sfx="none"; card.dataset.id=b.id;
-        card.innerHTML=badgeSvg(b)+'<b></b><span class="bc"></span>'+(has ? '<span class="bd">Erreicht am '+fmtDate(got[b.id])+'</span>' : '<span class="bar"><i style="width:'+(c/g*100).toFixed(1)+'%"></i></span><span class="bp">'+c+' / '+g+'</span>');
+        card.innerHTML=badgeSvg(b)+'<span class="tchip t'+(TIER_OF[b.id]||1)+'">'+TIERS[TIER_OF[b.id]||1].n+'</span><b></b><span class="bc"></span>'+(has ? '<span class="bd">Erreicht am '+fmtDate(got[b.id])+'</span>' : '<span class="bar"><i style="width:'+(c/g*100).toFixed(1)+'%"></i></span><span class="bp">'+c+' / '+g+'</span>');
         card.querySelector("b").textContent=b.name; card.querySelector(".bc").textContent=b.cond;
         card.setAttribute("aria-label", b.name+", "+(has?"freigeschaltet":"gesperrt, "+c+" von "+g));
         card.onclick=()=>{ sfx("tap"); showBadge(b); };
@@ -2444,7 +2551,7 @@ svg.locked,.bdg.locked svg{filter:grayscale(1) brightness(.3) contrast(1.15)!imp
       const has=!!got[b.id], [c,g]=badgeProg(b,S);
       const ov=document.createElement("div"); ov.className="bdg-ov";
       const box=document.createElement("div"); box.className="bdg-box glass"; box.setAttribute("role","dialog"); box.setAttribute("aria-label", b.name);
-      box.innerHTML=badgeSvg(b, has?"pop":"locked")+'<span class="bx-k">'+(has?"Erreicht am "+fmtDate(got[b.id]):"Noch gesperrt")+'</span><h2></h2><p class="bx-s"></p><div class="bx-how"><span>So schaltest du es frei</span><b></b></div>'+(has?'':'<span class="bar"><i style="width:'+(c/g*100).toFixed(1)+'%"></i></span><span class="bp">'+c+' von '+g+(b.unit?' '+b.unit:'')+'</span>')+'<button class="btn full">Schließen</button>';
+      box.innerHTML=badgeSvg(b, has?"pop":"locked")+'<span class="tchip t'+(TIER_OF[b.id]||1)+'">'+TIERS[TIER_OF[b.id]||1].n+'</span><span class="bx-k">'+(has?"Erreicht am "+fmtDate(got[b.id]):"Noch gesperrt")+'</span><h2></h2><p class="bx-s"></p><div class="bx-how"><span>So schaltest du es frei</span><b></b></div>'+(has?'':'<span class="bar"><i style="width:'+(c/g*100).toFixed(1)+'%"></i></span><span class="bp">'+c+' von '+g+(b.unit?' '+b.unit:'')+'</span>')+'<button class="btn full">Schließen</button>';
       box.querySelector("h2").textContent=b.name;
       box.querySelector(".bx-s").textContent=b.story;
       box.querySelector(".bx-how b").textContent=b.cond;
