@@ -1032,7 +1032,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
       }
       document.addEventListener("visibilitychange", async ()=>{
         if(document.visibilityState!=="visible" || !dbRef) return;
-        try{ await writing; const s=await dbRef.get(); if(s.exists){ const d=s.data(); if(d&&Array.isArray(d.tasks)){ state=JSON.parse(JSON.stringify(d)); norm(); render(); } } }catch(e){}
+        try{ await writing; const s=await dbRef.get(); if(s.exists){ const d=s.data(); if(d&&Array.isArray(d.tasks) && JSON.stringify(d)!==JSON.stringify(state)){ state=JSON.parse(JSON.stringify(d)); norm(); render(); } } }catch(e){}
       });
     }catch(e){}
   }
@@ -1964,18 +1964,27 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
     setTimeout(()=>{ const c=document.querySelector(".dring .dr-fg"); if(c) c.style.strokeDasharray=p+" 100"; }, 30);
     return '<span class="dring'+(p>=100?" full":"")+'" role="img" aria-label="'+done+' of '+tot+' done today"><svg viewBox="0 0 20 20" aria-hidden="true"><circle class="dr-bg" cx="10" cy="10" r="7.5"/><circle class="dr-fg" cx="10" cy="10" r="7.5" pathLength="100" style="stroke-dasharray:'+from+' 100"/></svg></span>';
   }
-  // first look at the cards each day: they are dealt like a deck, with a short greeting
-  function dealCards(n){
-    LSset("haushalt-greet", today());
+  // every time the app is opened the open cards are dealt like a deck; the greeting comes once per day
+  let dealPending = true, hiddenAt = 0;
+  document.addEventListener("visibilitychange", ()=>{
+    if(document.hidden){ hiddenAt = Date.now(); return; }
+    // back from the background (not just a quick glance at another app): deal again
+    if(hiddenAt && Date.now()-hiddenAt > 20000 && !document.getElementById("sheet").classList.contains("open")){ dealPending = true; render(); }
+  });
+  function dealCards(n, greet){
+    dealPending = false;
+    clearTimeout(dealCards.t);
     stage.classList.remove("deal"); void stage.offsetWidth; stage.classList.add("deal");
-    setTimeout(()=>stage.classList.remove("deal"), 1600);
+    dealCards.t = setTimeout(()=>stage.classList.remove("deal"), 1600);
+    sfx("deal", Math.min(n,4));
+    if(!greet) return;
+    LSset("haushalt-greet", today());
     const h=new Date().getHours(), hi = h<11 ? "Good morning" : h<17 ? "Hello" : "Good evening";
     const bar=countEl.parentElement, old=bar.querySelector(".greet"); if(old) old.remove();
     const g=document.createElement("div"); g.className="greet"; g.setAttribute("aria-live","polite");
     g.innerHTML='<b></b><span></span>'; g.querySelector("b").textContent=hi; g.querySelector("span").textContent = n===1 ? "1 task for today" : n+" tasks for today";
     bar.classList.add("greeting"); bar.appendChild(g);
     setTimeout(()=>{ bar.classList.remove("greeting"); g.remove(); }, 3300);
-    sfx("deal", Math.min(n,4));
   }
   function render0(opts){ opts = opts || {};
     if(document.getElementById("sheet").classList.contains("open")){ if(sheetMode==="list") renderList(); else if(sheetMode==="cal") renderCal(); else if(sheetMode==="settings") renderSettings(); }
@@ -1989,6 +1998,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
       return;
     }
     if(!due.length){
+      dealPending = false;
       // the ring fills up once more and then disappears when the day is complete
       if(ringLast!==null && ringLast<100){ countEl.innerHTML=dayRing(0).replace('class="dring','class="dring vanish'); setTimeout(()=>{ const v=countEl.querySelector(".dring.vanish"); if(v) v.remove(); }, 2200); }
       else { countEl.innerHTML=""; ringLast=100; }
@@ -2024,7 +2034,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
     if(opts.requeued && due.length===1 && due[0].id===opts.requeued) top.classList.add("reappear");
     top.addEventListener("animationend", ()=>top.classList.remove("reappear"), {once:true});
     stage.appendChild(top);
-    if(greet) dealCards(due.length);
+    if(dealPending || greet) dealCards(due.length, greet);
     attachSwipe(top, due[0]);
   }
   function makeCard(t, behind){
