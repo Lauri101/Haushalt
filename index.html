@@ -433,6 +433,7 @@ html,body{transition:background-color .4s ease}
 [data-app-theme="light"] .donelist li span{opacity:.75}
 [data-app-theme="light"] .undo{color:var(--ink)}
 [data-app-theme="light"] .sheet{background:var(--bg)}
+@supports (overflow:clip){.sheet{overflow:clip}}
 
 /* ---------- skins ---------- */
 :root{--amb-a:10,132,255;--amb-b:94,92,230;--amb-c:48,209,88;--accent-rgb:10,132,255;--on-accent:#fff}
@@ -473,6 +474,15 @@ html,body{transition:background-color .4s ease}
 .volv{min-width:40px;text-align:right}
 
 .bk{gap:12px}
+.share-code b{font-family:"Bebas Neue","Oswald","Impact","Arial Narrow",sans-serif;font-weight:400;font-size:34px;letter-spacing:.08em;line-height:1.05}
+.row .ld .by{color:inherit}
+.row .tt .shr{display:inline-block;vertical-align:-2px;margin-left:6px;opacity:.55}
+.syncnote{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 74px);transform:translate(-50%,-14px);opacity:0;z-index:60;padding:10px 16px;border-radius:999px;font-size:14px;font-weight:600;white-space:nowrap;max-width:88vw;overflow:hidden;text-overflow:ellipsis;transition:opacity .3s ease,transform .35s var(--spring);pointer-events:none}
+.syncnote.show{opacity:1;transform:translate(-50%,0)}
+.form.share>*{flex-shrink:0}
+.sharelist{flex:none;max-height:none;overflow:visible}
+.sharelist .row{min-height:52px}
+.shr-ri{width:28px;flex:none;display:grid;place-items:center;color:var(--accent)}
 .bk-stat,.bk-prev{border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
 .bk-stat b,.bk-prev b{font-size:16px}
 .bk-stat span,.bk-prev span{font-size:13px;color:var(--muted);line-height:1.4}
@@ -744,6 +754,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
 .icofield input#fi{width:76px;font-size:22px}
 .icofield input#fi::placeholder{font-size:15px}
 </style>
+<script src="sync-config.js"></script>
 </head>
 <body>
 <div class="amb" aria-hidden="true"><i class="a"></i><i class="b"></i><i class="c"></i></div>
@@ -1015,7 +1026,9 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
     try{ const raw=localStorage.getItem(LS_KEY); if(raw){ const s=JSON.parse(raw); if(s&&Array.isArray(s.tasks)) state=s; } }catch(e){}
   }
   function save(){
+    try{ Sync.stamp(); }catch(e){}
     try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
+    try{ Sync.schedule(); }catch(e){}
     if(dbRef){
       const snapshot = JSON.parse(JSON.stringify(state));
       writing = writing.then(()=>dbRef.set(snapshot)).catch(()=>{});
@@ -1044,6 +1057,212 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
         try{ await writing; const s=await dbRef.get(); if(s.exists){ const d=s.data(); if(d&&Array.isArray(d.tasks) && JSON.stringify(d)!==JSON.stringify(state)){ state=JSON.parse(JSON.stringify(d)); norm(); render(); } } }catch(e){}
       });
     }catch(e){}
+  }
+
+  /* ---------- sharing: tasks are synced between phones through a Firebase household ---------- */
+  const Sync = (()=>{
+    const KEY="haushalt-sync", LOCAL={q:1,qd:1,_u:1,_h:1};
+    let meta={}; try{ meta=JSON.parse(localStorage.getItem(KEY)||"{}")||{}; }catch(e){ meta={}; }
+    meta.known=meta.known||{}; meta.tomb=meta.tomb||{}; meta.acked=meta.acked||{};
+    let be=null, unsub=null, status="off", errMsg="", first=true, pushing=false, pushAgain=false, timer=0;
+    const saveMeta=()=>{ try{ localStorage.setItem(KEY, JSON.stringify(meta)); }catch(e){} };
+    const cfg=()=>window.__SYNC_FAKE__ ? {fake:1} : (window.HAUSHALT_SYNC && window.HAUSHALT_SYNC.projectId ? window.HAUSHALT_SYNC : null);
+    const pick=t=>{ const o={}; Object.keys(t).sort().forEach(k=>{ if(!LOCAL[k] && t[k]!==undefined) o[k]=t[k]; }); return o; };
+    const hash=t=>JSON.stringify(pick(t));
+    const ALPHA="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const newCode=()=>{ const a=new Uint32Array(16); crypto.getRandomValues(a); return Array.from(a,x=>ALPHA[x%ALPHA.length]).join(""); };
+    const fmt=c=>(c||"").replace(/(.{4})(?=.)/g,"$1-");
+    const clean=c=>String(c||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+    function setStatus(s,e){ status=s; if(e!==undefined) errMsg=e; const el=document.getElementById("syncStatus"); if(el) el.textContent=statusText(); const r=document.getElementById("syncRowLd"); if(r) r.textContent=rowText(); }
+    const isShared=t=>!!(t && t.shared);
+    function pendingCount(){ let n=0; state.tasks.forEach(t=>{ if(isShared(t) && (meta.acked[t.id]||0)<(t._u||0)) n++; }); for(const id in meta.tomb) if((meta.acked[id]||0)<meta.tomb[id]) n++; return n; }
+    function statusText(){
+      if(status==="error") return "Error: "+errMsg;
+      if(status==="connecting") return "Connecting …";
+      if(status==="live"){ const p=pendingCount(); return p ? (navigator.onLine===false ? "Offline, changes will sync later" : "Syncing …") : "Synced"; }
+      return "";
+    }
+    function rowText(){ if(!cfg()) return "Not set up yet"; if(!meta.hid) return "Not connected"; const n=state.tasks.filter(isShared).length; return (n===1?"1 shared task":n+" shared tasks")+" · "+(statusText()||"…"); }
+    // record which tasks changed since the last save (called inside save())
+    function stamp(){
+      if(!meta.hid) return;
+      const now=Date.now(), ids={};
+      state.tasks.forEach(t=>{
+        if(!isShared(t)){ delete t._h; return; } // private: stays on this phone
+        ids[t.id]=1; const h=hash(t);
+        if(!meta.known[t.id] && meta.tomb[t.id]){ delete meta.tomb[t.id]; t._h=h; t._u=now; } // shared again after it was taken out
+        else if(t._h===undefined){ t._h=h; t._u=Math.max(t._u||0, now); }
+        else if(t._h!==h){ t._h=h; t._u=now; }
+      });
+      for(const id in meta.known) if(!ids[id] && !meta.tomb[id]) meta.tomb[id]=now;
+      meta.known=ids; saveMeta();
+    }
+    function schedule(){ if(!meta.hid || !be) return; clearTimeout(timer); timer=setTimeout(push, 250); }
+    async function push(){
+      if(!be || !meta.hid || first) return;
+      if(pushing){ pushAgain=true; return; }
+      pushing=true; setStatus("live");
+      const hid=meta.hid, jobs=[];
+      state.tasks.forEach(t=>{ if(!isShared(t)) return; const u=t._u||1; if((meta.acked[t.id]||0)<u){ const d=JSON.parse(JSON.stringify(pick(t))); d._u=u; jobs.push([t.id,d,u]); } });
+      for(const id in meta.tomb){ const u=meta.tomb[id]; if((meta.acked[id]||0)<u) jobs.push([id,{deleted:true,_u:u},u]); }
+      try{
+        await Promise.all(jobs.map(([id,d,u])=>be.put(hid,id,d).then(()=>{ if((meta.acked[id]||0)<u) meta.acked[id]=u; })));
+        saveMeta(); setStatus("live");
+      }catch(e){ setStatus("error", (e&&e.code)||(e&&e.message)||String(e)); }
+      pushing=false; if(pushAgain){ pushAgain=false; push(); }
+    }
+    // remote snapshot: newest change per task wins
+    function receive(docs){
+      let changed=false, hasMeta=false; const notices=[];
+      const byId={}; state.tasks.forEach(t=>byId[t.id]=t);
+      docs.forEach(({id,data,pending})=>{
+        if(id==="_meta"){ hasMeta=true; return; }
+        const u=data._u||0, t=byId[id];
+        if(!pending) meta.acked[id]=u;
+        if(data.deleted){
+          if(t && !isShared(t)) return; // a private task on this phone with the same id is never touched
+          if(t && (t._u||0)>u) return; // edited here after it was deleted there: this phone wins and pushes again
+          if(t && (t._u||0)<=u){ state.tasks=state.tasks.filter(x=>x.id!==id); delete byId[id]; delete meta.known[id]; changed=true; }
+          if(!meta.tomb[id] || meta.tomb[id]<u) meta.tomb[id]=u;
+          return;
+        }
+        if(meta.tomb[id] && meta.tomb[id]>=u) return; // deleted here later than it was changed there
+        if(t && !isShared(t)) return;
+        if(!t || (t._u||0)<u){
+          const n=JSON.parse(JSON.stringify(data)); delete n.deleted; n.shared=true;
+          if(t){ n.q=t.q; n.qd=t.qd; if(n.q===undefined) delete n.q; if(n.qd===undefined) delete n.qd; }
+          if(!Array.isArray(n.days)) n.days=[];
+          n._u=u; n._h=hash(n);
+          if(!first && t && n.last===today() && t.last!==today() && n.lastBy && n.lastBy!==meta.name) notices.push(n.lastBy+" ✓ "+n.text);
+          if(t) state.tasks[state.tasks.indexOf(t)]=n; else state.tasks.push(n);
+          byId[id]=n; meta.known[id]=1; delete meta.tomb[id]; changed=true;
+        }
+      });
+      if(first){
+        first=false;
+        if(meta.joining && !hasMeta){ const c=meta.hid; leave(true); setStatus("error","No household with the code "+fmt(c)); renderSharingIfOpen(); return; }
+        delete meta.joining;
+      }
+      saveMeta();
+      if(changed){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} cleanup(); safeRender(); }
+      notices.slice(0,3).forEach((m,i)=>setTimeout(()=>syncNotice(m), i*1400));
+      setStatus("live"); push();
+    }
+    async function backend(){
+      if(window.__SYNC_FAKE__) return window.__SYNC_FAKE__;
+      const c=cfg(), V="10.12.2";
+      const [A,F]=await Promise.all([import("https://www.gstatic.com/firebasejs/"+V+"/firebase-app.js"), import("https://www.gstatic.com/firebasejs/"+V+"/firebase-firestore.js")]);
+      const app=A.getApps().length ? A.getApp() : A.initializeApp(c), db=F.getFirestore(app);
+      return {
+        listen:(hid,cb,err)=>F.onSnapshot(F.collection(db,"households",hid,"tasks"), s=>cb(s.docs.map(d=>({id:d.id, data:d.data(), pending:d.metadata.hasPendingWrites}))), err),
+        put:(hid,id,data)=>F.setDoc(F.doc(db,"households",hid,"tasks",id), data)
+      };
+    }
+    async function connect(){
+      if(!meta.hid || !cfg()) return;
+      setStatus("connecting"); first=true;
+      try{
+        if(!be) be=await backend();
+        if(unsub){ try{ unsub(); }catch(e){} }
+        stamp();
+        unsub=be.listen(meta.hid, receive, e=>setStatus("error",(e&&e.code)||(e&&e.message)||String(e)));
+      }catch(e){ setStatus("error", "Could not load the sync service"); }
+    }
+    function prepareLocal(){ // tasks marked as shared are offered to the household once
+      meta.known={}; meta.tomb={}; meta.acked={};
+      state.tasks.forEach(t=>{ delete t._h; });
+    }
+    async function create(){
+      if(!cfg()) return;
+      meta.hid=newCode(); prepareLocal(); saveMeta();
+      try{ if(!be) be=await backend(); await be.put(meta.hid,"_meta",{created:Date.now(), by:meta.name||""}); }catch(e){ setStatus("error",(e&&e.code)||String(e)); }
+      await connect();
+    }
+    async function join(code){
+      const c=clean(code); if(c.length<16) return false;
+      meta.hid=c; meta.joining=1; prepareLocal(); saveMeta(); await connect(); return true;
+    }
+    function leave(silent){
+      if(unsub){ try{ unsub(); }catch(e){} } unsub=null;
+      delete meta.hid; delete meta.joining; meta.known={}; meta.tomb={}; meta.acked={}; saveMeta();
+      state.tasks.forEach(t=>{ delete t.shared; delete t._h; delete t._u; }); try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
+      if(!silent) setStatus("off","");
+    }
+    function afterRestore(){ if(meta.hid){ prepareLocal(); saveMeta(); connect(); } }
+    window.addEventListener("online", ()=>{ setStatus(status); push(); });
+    window.addEventListener("offline", ()=>setStatus(status));
+    return { stamp, schedule, connect, create, join, leave, afterRestore, statusText, rowText,
+      get configured(){ return !!cfg(); }, get joined(){ return !!meta.hid; }, get code(){ return fmt(meta.hid); },
+      get name(){ return meta.name||""; }, set name(v){ meta.name=String(v||"").trim().slice(0,24); saveMeta(); } };
+  })();
+  let cardDragging=false;
+  function safeRender(){
+    if(cardDragging || (sheetMode==="form" && sheet.classList.contains("open"))){ clearTimeout(safeRender.t); safeRender.t=setTimeout(safeRender, 800); return; }
+    render();
+  }
+  function syncNotice(text){
+    const el=document.createElement("div"); el.className="syncnote glass"; el.setAttribute("role","status"); el.translate=false; el.textContent=text;
+    document.body.appendChild(el); requestAnimationFrame(()=>el.classList.add("show"));
+    setTimeout(()=>{ el.classList.remove("show"); setTimeout(()=>el.remove(), 400); }, 2600);
+  }
+  function renderSharingIfOpen(){ if(sheetMode==="sharing" && sheet.classList.contains("open")) openSharing(); }
+  function openSharing(){ sheetMode="sharing";
+    inner.innerHTML="";
+    const top=document.createElement("div"); top.className="top";
+    top.innerHTML='<h1>Sharing</h1><button class="icon-btn" aria-label="Back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>';
+    top.querySelector("button").onclick=renderSettings; inner.appendChild(top);
+    const f=document.createElement("div"); f.className="form bk share";
+    const p=(cls,txt)=>{ const e=document.createElement("p"); e.className=cls; e.textContent=txt; return e; };
+    if(!Sync.configured){
+      f.appendChild(p("bk-hint","Sharing needs a one-time setup: a free Firebase project and the file sync-config.js on GitHub. Follow the setup guide, then come back here."));
+      inner.appendChild(f); return;
+    }
+    const nl=document.createElement("label"); nl.className="lbl"; nl.htmlFor="syncName"; nl.textContent="Your name";
+    const ni=document.createElement("input"); ni.type="text"; ni.id="syncName"; ni.maxLength=24; ni.placeholder="e.g. Lauri"; ni.value=Sync.name; ni.translate=false;
+    ni.addEventListener("change", ()=>{ Sync.name=ni.value; });
+    const nh=p("bk-hint","Shown to the other person when you complete a shared task.");
+    f.append(nl,ni,nh);
+    const msg=p("bk-msg",""); msg.id="syncStatus"; msg.setAttribute("aria-live","polite");
+    if(Sync.joined){
+      const box=document.createElement("div"); box.className="bk-stat glass share-code";
+      box.innerHTML='<span>Household code</span><b translate="no"></b><span>Tasks you mark as shared are visible to everyone with this code. Keep it private.</span>';
+      box.querySelector("b").textContent=Sync.code;
+      msg.textContent=Sync.statusText();
+      const sh=document.createElement("button"); sh.className="btn full"; sh.textContent="Share code";
+      sh.onclick=async()=>{ const txt=I18N.t("Join my household in the Haushalt app with this code:")+" "+Sync.code;
+        try{ if(navigator.share){ await navigator.share({text:txt}); return; } }catch(e){ if(e && e.name==="AbortError") return; }
+        try{ await navigator.clipboard.writeText(Sync.code); sh.textContent="Code copied"; }catch(e){} };
+      const lv=document.createElement("button"); lv.className="btn ghost full"; lv.textContent="Leave household"; lv.dataset.sfx="none";
+      lv.onclick=()=>{ if(!lv.dataset.c){ lv.dataset.c="1"; lv.textContent="Really leave? Your tasks stay on this phone"; sfx("tap"); return; } Sync.leave(); sfx("del"); openSharing(); };
+      f.append(box,msg,sh);
+      // choose which tasks are shared
+      const sl=document.createElement("label"); sl.className="lbl"; sl.textContent="Shared tasks"; f.appendChild(sl);
+      f.appendChild(p("bk-hint","Switch on what belongs to the household. Private tasks like supplements or bank accounts stay on this phone."));
+      const g=document.createElement("div"); g.className="group glass sharelist";
+      active().slice().sort((a,b)=>a.text.localeCompare(b.text)).forEach(t=>{
+        const r=document.createElement("label"); r.className="row static setrow";
+        const ic=document.createElement("span"); ic.className="ri"; ic.setAttribute("aria-hidden","true"); putIcon(ic, iconOf(t));
+        const tx=document.createElement("span"); tx.className="t"; const tt=document.createElement("span"); tt.className="tt"; tt.translate=false; tt.textContent=t.text; tx.appendChild(tt);
+        const sw=document.createElement("input"); sw.type="checkbox"; sw.className="switch"; sw.setAttribute("role","switch"); sw.checked=!!t.shared; sw.setAttribute("aria-label", t.text);
+        sw.onchange=()=>{ const x=state.tasks.find(y=>y.id===t.id); if(!x) return; if(sw.checked) x.shared=true; else delete x.shared; save(); const r2=document.getElementById("syncRowLd"); if(r2) r2.textContent=Sync.rowText(); };
+        r.append(ic,tx,sw); g.appendChild(r);
+      });
+      if(!g.children.length) f.appendChild(p("bk-hint","No tasks yet."));
+      else f.appendChild(g);
+      f.appendChild(lv);
+    } else {
+      f.appendChild(p("bk-hint","Share selected tasks with another person. You choose which ones, everything else stays private on this phone. A shared task done by one of you is done for both. Streaks, badges and achievements stay personal."));
+      const cr=document.createElement("button"); cr.className="btn full"; cr.textContent="Create household";
+      cr.onclick=async()=>{ if(!ni.value.trim()){ ni.focus(); msg.textContent="Enter your name first."; return; } Sync.name=ni.value; cr.disabled=true; await Sync.create(); sfx("save"); openSharing(); };
+      const jl=document.createElement("label"); jl.className="lbl"; jl.htmlFor="syncCode"; jl.textContent="Or join with a code";
+      const ji=document.createElement("input"); ji.type="text"; ji.id="syncCode"; ji.placeholder="XXXX-XXXX-XXXX-XXXX"; ji.autocapitalize="characters"; ji.autocomplete="off"; ji.spellcheck=false; ji.translate=false;
+      const jb=document.createElement("button"); jb.className="btn ghost full"; jb.textContent="Join household";
+      jb.onclick=async()=>{ if(!ni.value.trim()){ ni.focus(); msg.textContent="Enter your name first."; return; } Sync.name=ni.value;
+        if(!(await Sync.join(ji.value))){ msg.textContent="The code has 16 characters."; return; } sfx("save"); openSharing(); };
+      f.append(cr,jl,ji,jb,msg);
+      if(Sync.statusText().indexOf("Error")===0) msg.textContent=Sync.statusText();
+    }
+    inner.appendChild(f);
   }
 
   /* ---------- deck ---------- */
@@ -2104,7 +2323,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
     }
     const resetTints = ()=>paint(null, 0);
     card.addEventListener("pointerdown", e=>{ sfx("grab");
-      dragging=true; axis=null; sx=e.clientX; sy=e.clientY; dx=0; dy=0; t0=performance.now();
+      dragging=true; cardDragging=true; axis=null; sx=e.clientX; sy=e.clientY; dx=0; dy=0; t0=performance.now();
       card.classList.remove("back"); card.setPointerCapture(e.pointerId);
     });
     card.addEventListener("pointermove", e=>{
@@ -2122,7 +2341,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
       }
     });
     const end = ()=>{
-      if(!dragging) return; dragging=false;
+      if(!dragging) return; dragging=false; cardDragging=false;
       const dt = Math.max(1, performance.now()-t0);
       if(axis==="y"){
         if(dy > H()*0.22 || (dy/dt > 0.6 && dy > 40)) return commit("d");
@@ -2162,7 +2381,8 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
     lastAction = { id, next:t.next, last:t.last||null, lastAt:t.lastAt||null, done:t.done||null, q:t.q, qd:t.qd, since:t.since||null, best:state.best||0, st:JSON.stringify(state.stats||{}) };
     const od = overdueDays(t);
     const wasDone = (state.days||{})[today()]==="done";
-    if(dir==="r"){ state.log.push({d:today(), id:t.id, t:t.text, i:iconOf(t), h:new Date().getHours()}); lastAction.logged = true;
+    lastAction.lastBy = t.lastBy;
+    if(dir==="r"){ if(Sync.joined && Sync.name) t.lastBy=Sync.name; else delete t.lastBy; state.log.push({d:today(), id:t.id, t:t.text, i:iconOf(t), h:new Date().getHours()}); lastAction.logged = true;
       { const st=stats(), h=new Date().getHours(); st.total=Math.max((st.total||0)+1, state.log.length); if(od>=7) st.rescued=(st.rescued||0)+1; if(h>=5 && h<8) st.early=1; if(h>=21 || h<3) st.late=1; if((t.mode==="days" && (rep(t)==="m3"||rep(t)==="m6")) || (t.mode!=="days" && t.mode!=="once" && t.every>=90)) st.rare=(st.rare||0)+1; } t.last = today(); t.lastAt = Date.now(); delete t.since; if(t.mode==="once") t.done = today(); else t.next = afterDone(t); }
     else if(dir==="d"){ t.q = Date.now(); t.qd = today(); }
     else { if(!t.since) t.since = t.next < today() ? t.next : today(); t.next = addDays(today(),1); }
@@ -2228,7 +2448,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
     if(lastAction.logged){ for(let k=state.log.length-1;k>=0;k--){ if(state.log[k].id===lastAction.id && state.log[k].d===today()){ state.log.splice(k,1); break; } } }
     if(t){ t.next=lastAction.next; t.last=lastAction.last; if(lastAction.lastAt) t.lastAt=lastAction.lastAt; else delete t.lastAt; if(lastAction.done) t.done=lastAction.done; else delete t.done;
       if(lastAction.q) { t.q=lastAction.q; t.qd=lastAction.qd; } else { delete t.q; delete t.qd; }
-      if(lastAction.since) t.since=lastAction.since; else delete t.since; save(); }
+      if(lastAction.since) t.since=lastAction.since; else delete t.since; if(lastAction.lastBy) t.lastBy=lastAction.lastBy; else delete t.lastBy; save(); }
     if(lastAction) state.best = lastAction.best;
     lastAction=null; undoBtn.classList.remove("show"); render();
   };
@@ -3059,6 +3279,10 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
     bk.innerHTML='<span class="ri" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></span><span class="t"><span class="tt">Backup</span><span class="ld"></span></span><span class="m">›</span>';
     { const a=backupAgeDays(); const ld=bk.querySelector(".ld"); ld.textContent = a===null ? "Never backed up" : a===0 ? "Last: today" : a===1 ? "Last: yesterday" : "Last: "+a+" days ago"; if(backupDue()) ld.classList.add("warn"); }
     bk.onclick=openBackup; g.appendChild(bk);
+    const shr=document.createElement("button"); shr.className="row";
+    shr.innerHTML='<span class="ri" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9.5" r="2.6"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5M14.5 14.6c.8-.4 1.6-.6 2.5-.6 2.2 0 3.9 1.4 4.4 4"/></svg></span><span class="t"><span class="tt">Sharing</span><span class="ld" id="syncRowLd"></span></span><span class="m">›</span>';
+    shr.querySelector("#syncRowLd").textContent=Sync.rowText();
+    shr.onclick=openSharing; g.appendChild(shr);
     list.appendChild(g);
     // developer (temporary, for testing)
     const ld=document.createElement("div"); ld.className="setlbl"; ld.textContent="Developer"; list.appendChild(ld);
@@ -3086,7 +3310,9 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
       const s0=document.createElement("span"); s0.className="ri"; s0.setAttribute("aria-hidden","true"); putIcon(s0, iconOf(t));
       const s1=document.createElement("span"); s1.className="t";
       const s1a=document.createElement("span"); s1a.className="tt"+(t.important?" imp":""); s1a.translate=false; s1a.textContent=t.text;
+      if(t.shared && Sync.joined) s1a.insertAdjacentHTML("beforeend", '<svg class="shr" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9.5" r="2.6"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5M14.5 14.6c.8-.4 1.6-.6 2.5-.6 2.2 0 3.9 1.4 4.4 4"/></svg>');
       const s1b=document.createElement("span"); s1b.className="ld"; s1b.textContent=lastDoneLabel(t);
+      if(t.last && t.lastBy && t.lastBy!==Sync.name){ const by=document.createElement("span"); by.className="by"; by.translate=false; by.textContent=" · "+t.lastBy; s1b.appendChild(by); }
       s1.append(s1a,s1b);
       const s2=document.createElement("span"); s2.className="m"; s2.textContent=rhythmLabel(t);
       b.append(s0,s1,s2); b.onclick=()=>openForm(t); group.appendChild(b);
@@ -3192,7 +3418,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
     try{ localStorage.setItem("haushalt-prev", JSON.stringify(backupPayload())); }catch(e){}
     state = JSON.parse(JSON.stringify(bk.state));
     if(!Array.isArray(state.log)) state.log=[];
-    norm(); cleanup(); save();
+    norm(); cleanup(); save(); Sync.afterRestore();
     if(bk.settings) Object.keys(bk.settings).forEach(k=>{ if(SETTING_KEYS.includes(k)) LSset(k, bk.settings[k]); });
     applyLook(); musicSetVol(); if(typeof sfxSetVol==="function") sfxSetVol();
     I18N.setLang(LS("haushalt-lang","en"));
@@ -3298,6 +3524,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
       <div><label class="lbl" for="fi">Icon</label>
         <div class="icofield"><span class="icoprev" id="fip" aria-hidden="true"></span><input type="text" id="fi" maxlength="8" aria-label="Own emoji (optional)" placeholder="Emoji"><span>Chosen automatically from the text. Type an emoji to use your own instead.</span></div></div>
       <label class="impfield glass"><span class="imp-dot" aria-hidden="true"></span><span class="t"><span class="tt">Very important</span><span class="ld">Comes first and pulses red</span></span><input type="checkbox" class="switch" id="fimp" role="switch"></label>
+      <label class="impfield glass" id="fshrRow"><span class="shr-ri" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9.5" r="2.6"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5M14.5 14.6c.8-.4 1.6-.6 2.5-.6 2.2 0 3.9 1.4 4.4 4"/></svg></span><span class="t"><span class="tt">Shared with household</span><span class="ld">Visible and done for both of you</span></span><input type="checkbox" class="switch" id="fshr" role="switch"></label>
       <div><label class="lbl">How often?</label>
         <div class="seg" role="group"><button type="button" data-m="every">Every X days</button><button type="button" data-m="days">Weekdays</button><button type="button" data-m="once">Once</button></div></div>
       <div id="modeEvery"><div class="every"><span>Every</span><input type="number" id="fe" min="1" max="365" inputmode="numeric"><span>days</span></div></div>
@@ -3313,6 +3540,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
     ft.value=draft.text; fe.value=draft.every||1;
     const fi=f.querySelector("#fi"); let iconTouched=false;
     const fimp=f.querySelector("#fimp"); fimp.checked=!!draft.important;
+    const fshr=f.querySelector("#fshr"); fshr.checked=!!draft.shared; if(!Sync.joined) f.querySelector("#fshrRow").style.display="none";
     const fip=f.querySelector("#fip");
     const autoIcon = () => stickerFor(ft.value) || (task && !task.iconManual && task.text===ft.value.trim() && task.icon) || "@home";
     fi.value = (task && task.iconManual && task.icon && task.icon[0]!=="@") ? task.icon : "";
@@ -3374,6 +3602,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
         setIcon(t);
         const rhythmChanged = t.mode!==draft.mode || t.every!==every || rep(t)!==draft.repeat || (t.mpos||1)!==draft.mpos || (draft.mode==="once" && t.date!==date) || JSON.stringify([...t.days].sort())!==JSON.stringify([...draft.days].sort());
         if(fimp.checked) t.important=true; else delete t.important;
+        if(Sync.joined){ if(fshr.checked) t.shared=true; else delete t.shared; }
         t.text=text; t.mode=draft.mode; t.every=every; t.days=[...draft.days]; t.date=date; t.repeat=draft.repeat; t.mpos=draft.mpos;
         if(rhythmChanged) delete t.since;
         if(rhythmChanged && t.mode==="once"){ t.next=date; }
@@ -3382,6 +3611,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
       } else {
         const t={ id:Date.now().toString(36)+Math.random().toString(36).slice(2,6), text, mode:draft.mode, every, days:[...draft.days], date, repeat:draft.repeat, mpos:draft.mpos, last:null };
         if(fimp.checked) t.important=true;
+        if(Sync.joined && fshr.checked) t.shared=true;
         if(t.mode==="days") setAnchor(t);
         t.next=firstDue(t); setIcon(t); { const st=stats(); st.created=Math.max(st.created||0, state.tasks.length)+1; } state.tasks.push(t);
         if(needAi) aiIcon(t.id);
@@ -3395,7 +3625,14 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
 
   /* ---------- language: English is written in the code, German is applied on top ---------- */
   const I18N = (()=>{
-    const D = {"Tomorrow":"Morgen","Later":"Später","No tasks yet": "Noch keine Aufgaben", "All done for today": "Für heute alles erledigt", "More tasks tomorrow.": "Morgen kommen die nächsten Aufgaben.", "Set up what you want to keep on top of at home, and how often.": "Leg fest, was du regelmäßig im Haushalt prüfen willst und wie oft.","Mon": "Mo", "Tue": "Di", "Wed": "Mi", "Thu": "Do", "Fri": "Fr", "Sat": "Sa", "Sun": "So", "Every week": "Jede Woche", "Every 2 weeks": "Alle 2 Wochen", "Every 3 weeks": "Alle 3 Wochen", "Every 3 months": "Alle 3 Monate", "Every 6 months": "Alle 6 Monate", "first": "ersten", "second": "zweiten", "third": "dritten", "fourth": "vierten", "last": "letzten", "Monday": "Montag", "Tuesday": "Dienstag", "Wednesday": "Mittwoch", "Thursday": "Donnerstag", "Friday": "Freitag", "Saturday": "Samstag", "Sunday": "Sonntag", "days": "Tage", "never done yet": "noch nie erledigt", "day in a row": "Tag in Folge", "Record": "Rekord", "The Journey Begins": "Die Reise beginnt", "Paths Apart": "Getrennte Wege", "The End of the Road": "Das Ende des Weges", "The Great Feast": "Das große Fest", "A birthday, fireworks and a guest who suddenly vanishes.": "Ein Geburtstag, ein Feuerwerk und ein Gast, der plötzlich verschwindet.", "The Departure": "Der Aufbruch", "A ring in the fire reveals its secret. High time to leave.": "Ein Ring im Feuer verrät sein Geheimnis. Höchste Zeit zu gehen.", "The Old Forest": "Der alte Wald", "A gnarled willow, ancient barrows and a cheerful rescuer.": "Eine knorrige Weide, uralte Gräber und ein fröhlicher Retter.", "The Inn": "Das Gasthaus", "At the crossroads a man of few words is waiting.": "Am Kreuzweg wartet ein wortkarger Waldläufer.", "The Windy Peak": "Die Wetterspitze", "Five shadows in the moonlight. A blade that will not heal.": "Fünf Schatten im Mondlicht. Eine Klinge, die nicht heilen will.", "The Council": "Der Rat", "By the waterfall the decision is made. Nine set out.": "Am Wasserfall fällt die Entscheidung. Neun ziehen los.", "The Bridge in the Mountain": "Die Brücke im Berg", "Deep in the rock an old friend stands against the fire.": "Tief im Fels stellt sich ein alter Freund dem Feuer.", "The Farewell": "Der Abschied", "A silver mirror, a boat in the mist and two who go on alone.": "Ein silberner Spiegel, ein Boot im Nebel und zwei, die allein weitergehen.", "The Breaking": "Der Zerfall", "A horn shatters by the great river. The fellowship scatters in three directions.": "Ein Horn zerbricht am großen Fluss. Die Gemeinschaft zieht in drei Richtungen auseinander.", "The Shepherds' Forest": "Der Wald der Hirten", "Ancient trees that can speak. They are slow to anger, but then they mean it.": "Uralte Bäume, die sprechen können. Sie werden langsam wütend, aber dann richtig.", "The White Rider": "Der weiße Reiter", "Thought lost, he returns. All in white, on a horse faster than the wind.": "Totgeglaubt kehrt er zurück. Ganz in Weiß, mit einem Pferd schneller als der Wind.", "The Golden Hall": "Die goldene Halle", "A king wakes from an evil sleep. The serpent flees down the hill.": "Ein König erwacht aus bösem Schlaf. Die Schlange flieht den Hügel hinab.", "The Gorge": "Die Klamm", "A night of rain and ladders. At dawn the horn sounds.": "Eine Nacht aus Regen und Leitern. Im Morgengrauen erklingt das Horn.", "The Flood": "Die Flut", "The trees march. The river takes back the fortress.": "Die Bäume marschieren. Der Fluss holt sich die Festung zurück.", "The Marshes": "Die Sümpfe", "Lights over dead water. Two eyes in the rock know the way.": "Lichter über totem Wasser. Zwei Augen im Fels kennen den Weg.", "The Lair": "Die Lauer", "A stair into darkness, a web in the tunnel. A small light against the great dark.": "Eine Treppe ins Dunkel, ein Netz im Tunnel. Ein kleines Licht gegen die große Finsternis.", "The Beacons": "Die Leuchtfeuer", "From peak to peak the fire leaps. A call for help that cannot go unheard.": "Von Gipfel zu Gipfel springt das Feuer. Ein Hilferuf, der nicht überhört werden kann.", "The Paths of the Dead": "Die Pfade der Toten", "A gate in the mountain, an old oath. A silent host follows the rightful heir.": "Ein Tor im Berg, ein alter Eid. Ein schweigendes Heer folgt dem rechtmäßigen Erben.", "The Fields Before the City": "Die Felder vor der Stadt", "The gate breaks, the riders come at dawn. And black sails bring hope.": "Das Tor bricht, im Morgengrauen kommen die Reiter. Und schwarze Segel bringen Hoffnung.", "The White City": "Die weiße Stadt", "Seven rings of stone on the mountain's flank. At the top a white tower watches over the plain.": "Sieben Ringe aus Stein an der Flanke des Berges. Ganz oben wacht ein weißer Turm über die Ebene.", "Through the Black Land": "Durch das schwarze Land", "Ash, thirst and no way back. When he can go no further, his friend carries him.": "Asche, Durst und kein Weg zurück. Wenn er nicht mehr kann, trägt ihn sein Freund.", "At the Black Gate": "Am Schwarzen Tor", "A hopeless attack, only to buy time. Then wings rush across the sky.": "Ein aussichtsloser Angriff, nur um Zeit zu gewinnen. Dann rauschen Flügel am Himmel.", "The Mountain of Fate": "Der Schicksalsberg", "One last step at the edge of the fire. The ring falls, and a dark tower crumbles.": "Ein letzter Schritt am Rand des Feuers. Der Ring fällt, und ein dunkler Turm stürzt in sich zusammen.", "The Last Voyage": "Die letzte Fahrt", "A white ship in the evening light. Some roads end at the sea, and that is good.": "Ein weißes Schiff im Abendlicht. Manche Wege enden am Meer, und das ist gut so.", "Complete": "Vollständig", "Locked": "Noch gesperrt", "Secret": "Geheim", "The 3D view loads from the internet the first time you open it.": "Die 3D Ansicht lädt beim ersten Öffnen aus dem Internet.", "3D object, drag to rotate": "3D Objekt, zum Drehen ziehen", "Today": "Heute", "Year overview": "Jahresübersicht", "Year": "Jahr", "Achievements": "Erfolge", "Previous year": "Vorheriges Jahr", "Next year": "Nächstes Jahr", "1 task": "1 Aufgabe", "Season 1 complete!": "Season 1 geschafft!", "Season 2 · Paths Apart": "Season 2 · Getrennte Wege", "The first journey has been told. 8 new adventures await.": "Die erste Fahrt ist erzählt. 8 neue Abenteuer warten.", "On to Season 2": "Weiter zu Season 2", "Season 2 complete!": "Season 2 geschafft!", "Season 3 · The End of the Road": "Season 3 · Das Ende des Weges", "The parted paths come together again. 8 final adventures await.": "Die getrennten Wege führen wieder zusammen. 8 letzte Abenteuer warten.", "On to Season 3": "Weiter zu Season 3", "View": "Ansehen", "Preview the celebration": "Feier schon mal ansehen", "Good morning": "Guten Morgen", "Hello": "Hallo", "Good evening": "Guten Abend", "1 task for today": "1 Aufgabe für heute", "Done today": "Heute geschafft", "done today": "heute erledigt", "open": "offen", "Very important": "Sehr wichtig", "Open for 1 day": "Seit 1 Tag offen", ". Swipe right for done, left for again tomorrow, down for later today.": ". Rechts wischen für erledigt, links für morgen wieder, nach unten für später heute.", "Done": "Erledigt", "Moved to the back": "Hinten angestellt", "Undo": "Rückgängig", "Manage tasks": "Aufgaben verwalten", "Settings": "Einstellungen", "Morning Dew": "Morgentau", "Lantern Light": "Laternenlicht", "Meadow Breeze": "Wiesenwind", "Hillside Burrow": "Hügelhöhle", "Starry Night": "Sternennacht", "Starts with your next touch": "Startet bei der nächsten Berührung", "Loading …": "Lädt …", "Playing on loop": "Spielt im Loop", "Music file could not be loaded": "Musikdatei nicht ladbar", "This device cannot play audio": "Dieses Gerät unterstützt keine Wiedergabe", "Tap anywhere once to start": "Einmal irgendwo tippen, um zu starten", "Off": "Aus", "First steps": "Erste Schritte", "Unbroken streak": "Serie am Stück", "Diligence": "Fleiß", "A day's work": "Tageswerk", "Special moments": "Besondere Momente", "Complete your first task.": "Erledige deine erste Aufgabe.", "Every great journey begins with one step out of your own front door.": "Jede große Fahrt beginnt mit einem Schritt vor die eigene Tür.", "First Rest": "Erste Rast", "Finish everything that was due on one day.": "Erledige an einem Tag alles, was fällig war.", "At the first campfire even dry bread tastes like a feast.": "Am ersten Lagerfeuer schmeckt selbst trockenes Brot wie ein Festmahl.", "The Pack": "Das Gepäck", "Create 5 tasks.": "Lege 5 Aufgaben an.", "Pack well and you never have to turn back.": "Wer gut packt, muss unterwegs nicht umkehren.", "Map Reader": "Kartenleser", "Complete 5 different tasks.": "Erledige 5 verschiedene Aufgaben.", "Now you know the paths through your own realm.": "Jetzt kennst du die Wege durch dein eigenes Reich.", "Waybread": "Wegbrot", "Save your first backup.": "Speichere deine erste Sicherung.", "One bite carries you through any bad day. Just like a backup.": "Ein Bissen davon trägt dich durch jeden schlechten Tag. Genau wie eine Sicherung.", "Three Miles": "Drei Meilen", "Keep a 3 day streak.": "Halte eine Serie von 3 Tagen.", "The first milestone is behind you. The road goes on.": "Der erste Meilenstein liegt hinter dir. Die Straße geht weiter.", "Wanderer's Lantern": "Wanderlaterne", "Keep a 7 day streak.": "Halte eine Serie von 7 Tagen.", "For a whole week your light has not flickered.": "Eine ganze Woche lang hat dein Licht nicht geflackert.", "Over the Pass": "Über den Pass", "Keep a 14 day streak.": "Halte eine Serie von 14 Tagen.", "Snow, wind and weariness. You made it over anyway.": "Schnee, Wind und Müdigkeit. Du bist trotzdem drüber.", "The Beacons Are Lit": "Die Leuchtfeuer brennen", "Keep a 30 day streak.": "Halte eine Serie von 30 Tagen.", "From hill to hill your fire leaps. A whole month without a gap.": "Von Hügel zu Hügel springt dein Feuer. Ein ganzer Monat ohne Lücke.", "Grey Pilgrim": "Grauer Pilger", "Keep a 60 day streak.": "Halte eine Serie von 60 Tagen.", "A wizard is never late. And neither, it seems, are you.": "Ein Zauberer kommt nie zu spät. Und du offenbar auch nicht.", "The White Tower": "Der weiße Turm", "Keep a 100 day streak.": "Halte eine Serie von 100 Tagen.", "A hundred days, stone upon stone. That is how fortresses are built.": "Hundert Tage, Stein auf Stein. So entstehen Festungen.", "The Ring Closes": "Der Ring schließt sich", "Keep a 365 day streak.": "Halte eine Serie von 365 Tagen.", "A whole year, a closed circle. This ring belongs to you alone.": "Ein ganzes Jahr, ein geschlossener Kreis. Dieser Ring gehört nur dir.", "Gardener's Apprentice": "Gärtnerlehrling", "Complete 10 tasks in total.": "Erledige insgesamt 10 Aufgaben.", "Whoever tends their garden has already understood what matters most.": "Wer seinen Garten pflegt, hat das Wichtigste schon verstanden.", "Silver Shirt": "Silberhemd", "Complete 50 tasks in total.": "Erledige insgesamt 50 Aufgaben.", "Light as cloth, hard as steel. Fifty times seen through.": "Leicht wie Stoff, hart wie Stahl. Fünfzig Mal durchgezogen.", "Dwarven Forge": "Zwergenschmiede", "Complete 100 tasks in total.": "Erledige insgesamt 100 Aufgaben.", "A hundred blows on the anvil. Now every move sits right.": "Hundert Schläge auf den Amboss. Jetzt sitzt jede Bewegung.", "Glowing Blade": "Leuchtende Klinge", "Complete 250 tasks in total.": "Erledige insgesamt 250 Aufgaben.", "It glows blue whenever mess draws near.": "Sie leuchtet blau, wenn sich Unordnung nähert.", "Dragon's Hoard": "Drachenhort", "Complete 500 tasks in total.": "Erledige insgesamt 500 Aufgaben.", "Five hundred things done, piled into a golden mountain.": "Fünfhundert erledigte Dinge, aufgetürmt zu einem goldenen Berg.", "Starlight in a Glass": "Sternenlicht im Glas", "Complete 1000 tasks in total.": "Erledige insgesamt 1000 Aufgaben.", "A light for dark places, when all other lights go out.": "Ein Licht für dunkle Orte, wenn alle anderen Lichter ausgehen.", "Second Breakfast": "Zweites Frühstück", "Complete 5 tasks in one day.": "Erledige 5 Aufgaben an einem Tag.", "Anyone who gets this much done has earned a second pot of tea.": "Wer so viel schafft, hat sich eine zweite Kanne Tee verdient.", "Forced March": "Gewaltmarsch", "Complete 10 tasks in one day.": "Erledige 10 Aufgaben an einem Tag.", "Three days and nights on the march. Fine, one day did the job too.": "Drei Tage und Nächte durchgelaufen. Na gut, ein Tag hat auch gereicht.", "At First Light": "Im ersten Licht", "Complete a task between 5 and 8 in the morning.": "Erledige eine Aufgabe zwischen 5 und 8 Uhr morgens.", "Look to the east when the sun rises. Something is already done.": "Schau nach Osten, wenn die Sonne aufgeht. Dann ist schon etwas erledigt.", "Ranger of the Night": "Waldläufer der Nacht", "Complete a task after 9 in the evening.": "Erledige eine Aufgabe nach 21 Uhr abends.", "Quietly, in the dark, without anyone noticing. But it is done.": "Leise, im Dunkeln, ohne dass es jemand merkt. Aber es ist erledigt.", "Evening in the Hills": "Feierabend im Hügelland", "Finish both Saturday and Sunday of the same weekend.": "Schaffe Samstag und Sonntag desselben Wochenendes komplett.", "A whole weekend with nothing left over. Raise a big mug to that.": "Ein ganzes Wochenende ohne Rückstand. Darauf einen großen Krug.", "The Return": "Die Rückkehr", "Finish a full day right after missing one.": "Schaffe einen Tag komplett, direkt nachdem du einen Tag verpasst hast.", "Falling down is part of it. Coming back is what makes the difference.": "Hinfallen gehört dazu. Wiederkommen macht den Unterschied.", "Stone at Sunrise": "Zu Stein im Morgenlicht", "Complete a task that was open for 7 days or more.": "Erledige eine Aufgabe, die seit 7 Tagen oder länger offen war.", "Argued too long about who goes first. Then the sun came up.": "Zu lange gestritten, wer zuerst anfängt. Dann kam die Sonne.", "Moon Runes": "Mondrunen", "Finish a whole calendar month without missing a day.": "Schaffe einen ganzen Kalendermonat ohne verpassten Tag.", "Some signs only show when the moon plays along for a whole month.": "Manche Zeichen sieht man nur, wenn der Mond einen ganzen Monat lang mitspielt.", "Faithful Companion": "Treuer Gefährte", "Complete the same task 20 times.": "Erledige dieselbe Aufgabe 20 Mal.", "Not fast, not pretty, but always there. The best companions are like that.": "Nicht schnell, nicht schön, aber immer da. Die besten Gefährten sind so.", "Rare Guest": "Seltener Gast", "Complete a task that is due only every 3 months or less often.": "Erledige eine Aufgabe, die nur alle 3 Monate oder seltener fällig ist.", "They come rarely. But when they come, they come at the right time.": "Sie kommen selten. Aber wenn sie kommen, dann zur rechten Zeit.", "Five Lands Travelled": "Fünf Lande bereist", "Try all 5 themes in Settings.": "Probiere alle 5 Themes in den Einstellungen aus.", "Morning Dew, Lantern Light, Meadow Breeze, Hillside Burrow and Starry Night. You know them all.": "Morgentau, Laternenlicht, Wiesenwind, Hügelhöhle und Sternennacht. Du kennst sie alle.", "Sailing West": "Segel gen Westen", "Complete all of Season 1 (56 days done).": "Vollende alle Erfolge von Season 1 (56 geschaffte Tage).", "The first great journey has been told. The ship waits for the next.": "Die erste große Fahrt ist zu Ende erzählt. Das Schiff wartet auf die nächste.", "days this month": "Tage in diesem Monat", "Silver": "Silber", "Platinum": "Platin", "Diamond": "Diamant", "Cosmic": "Kosmisch", "Badge unlocked": "Abzeichen freigeschaltet", "Back": "Zurück", "Tap a badge to see how to earn it. In the detail view you can tilt it into the light.": "Tippe auf ein Abzeichen, um zu sehen, wie du es bekommst. In der Detailansicht kannst du es durch Neigen ins Licht drehen.", "✦ Turn on tilt lighting": "✦ Licht durch Neigen aktivieren", "✦ Tilt your phone": "✦ Neige dein Handy", "Motion not allowed": "Bewegung nicht erlaubt", "Up next": "Als Nächstes", "How to unlock it": "So schaltest du es frei", "Close": "Schließen", "For testing only. Everything here is stored separately and never changes your real tasks, streak or badges. Turn the Developer switch off and everything is back to how it was.": "Nur zum Testen. Alles hier wird getrennt gespeichert und ändert deine echten Aufgaben, Serie und Abzeichen nicht. Wenn du den Entwickler-Schalter ausmachst, ist alles wieder wie vorher.", "Days done (3D achievements, seasons)": "Geschaffte Tage (3D Erfolge, Seasons)", "Streak in days": "Serie in Tagen", "Real": "Echt", "Badges": "Abzeichen", "Unlock all badges": "Alle Abzeichen freischalten", "Display only, not saved": "Nur Anzeige, wird nicht gespeichert", "Play animations": "Animationen abspielen", "Season celebration 1 → 2": "Season-Feier 1 → 2", "Season celebration 2 → 3": "Season-Feier 2 → 3", "Streak banner": "Streak-Banner", "Badge notice": "Abzeichen-Hinweis", "Confetti": "Konfetti", "Replay parts flying in": "Teile neu einfliegen lassen", "Reset all test values": "Alle Test-Werte zurücksetzen", "Theme & Music": "Theme & Musik", "Music": "Musik", "Volume": "Lautstärke", "Sounds when swiping and tapping": "Klänge beim Wischen und Tippen", "Sound volume": "Lautstärke der Sounds", "Display & Data": "Darstellung & Daten", "Light mode": "Heller Modus", "Backup": "Sicherung", "Never backed up": "Noch nie gesichert", "Last: today": "Zuletzt heute", "Last: yesterday": "Zuletzt gestern", "Developer": "Entwickler", "Test menu for unlocking": "Testmenü zum Freischalten", "Test values active": "Test-Werte aktiv", "No test values": "Keine Test-Werte", "Tasks": "Aufgaben", "Nothing added yet.": "Noch nichts angelegt.", "Add task": "Aufgabe anlegen", "Previous month": "Vorheriger Monat", "Next month": "Nächster Monat", "1 task done": "1 Aufgabe erledigt", "Nothing done on this day.": "An diesem Tag nichts erledigt.", "Saved. Put the file in iCloud Drive or Files.": "Gesichert. Lege die Datei in iCloud Drive oder „Dateien“ ab.", "Saving as a file does not work here. Use “Copy as text” below.": "Speichern als Datei geht hier nicht. Nutze unten „Als Text kopieren“.", "Last backup: today": "Zuletzt gesichert: heute", "Last backup: yesterday": "Zuletzt gesichert: gestern", "days done. The backup contains everything, including streak, achievements and settings.": "geschaffte Tage. Die Sicherung enthält alles, auch Streak, Erfolge und Einstellungen.", "Save backup": "Sicherung speichern", "Opens the share menu. Choose “Save to Files” and then iCloud Drive. That way the backup survives even a new phone.": "Öffnet das Teilen‑Menü. Wähle „In Dateien sichern“ und dann iCloud Drive. So überlebt die Sicherung auch einen Handywechsel.", "Load backup": "Sicherung laden", "Cancel": "Abbrechen", "Restore": "Wiederherstellen", "Restored. Your previous data has been kept, just in case.": "Wiederhergestellt. Dein vorheriger Stand ist zur Sicherheit gemerkt.", "This file is not a household backup.": "Diese Datei ist keine Haushalt‑Sicherung.", "The file could not be read.": "Die Datei konnte nicht gelesen werden.", "Bring back data from before the last import": "Stand vor dem letzten Import zurückholen", "Your previous data is back.": "Vorheriger Stand ist zurück.", "Back up or paste as text": "Als Text sichern oder einfügen", "Copy as text": "Als Text kopieren", "Copied. Paste it into Notes.": "Kopiert. In die Notizen einfügen.", "Text is selected, copy it by hand now": "Text ist markiert, jetzt manuell kopieren", "Paste backup text here": "Gesicherten Text hier einfügen", "Check text": "Text prüfen", "This text is not a household backup.": "Der Text ist keine Haushalt‑Sicherung.", "Edit task": "Aufgabe bearbeiten", "New task": "Neue Aufgabe", "e.g. Pflanzen gießen": "z. B. Pflanzen gießen", "Comes first and pulses red": "Kommt zuerst und pulsiert rot", "Repeat": "Wiederholung", "Position in the month": "Position im Monat", "Which weekday?": "Welcher Wochentag?", "On which days?": "An welchen Tagen?", "Delete": "Löschen", "Really delete?": "Wirklich löschen?", "Save": "Speichern", "Give the task a name.": "Gib der Aufgabe einen Text.", "Pick at least one weekday.": "Wähle mindestens einen Wochentag.", "Pick a date.": "Wähle ein Datum.", "open ·": "offen ·", "✓ Done": "✓ Erledigt", "Tomorrow ↺": "Morgen ↺", "↓ Later": "↓ Später", "Very important: Bad putzen. Swipe right for done, left for again tomorrow, down for later today.": "Sehr wichtig: Bad putzen. Rechts wischen für erledigt, links für morgen wieder, nach unten für später heute.", "← Tomorrow": "← Morgen", "Done →": "Erledigt →", "What should the card say?": "Was soll auf der Karte stehen?", "How often?": "Wie oft?", "Every X days": "Alle X Tage", "Weekdays": "Wochentage", "Once": "Einmalig", "Every": "Alle", "On the": "Am", "of the month": "im Monat", "On which day?": "An welchem Tag?", "Developer menu": "Entwicklermenü", "Müll rausbringen. Swipe right for done, left for again tomorrow, down for later today.": "Müll rausbringen. Rechts wischen für erledigt, links für morgen wieder, nach unten für später heute.", "days in a row": "Tage in Folge", "Monthly": "Monatlich", "Own emoji (optional)": "Eigenes Emoji (optional)", "Chosen automatically from the text. Type an emoji to use your own instead.": "Wird automatisch aus dem Text gewählt. Tippe ein Emoji ein, um ein eigenes zu nutzen.", "Language": "Sprache", "Cancelled, nothing saved.": "Abgebrochen, nichts gesichert.", "History": "Verlauf", "Replaces your current data.": "Ersetzt deinen aktuellen Stand.", "The backup contains everything, including streak, achievements and settings.": "Die Sicherung enthält alles, auch Streak, Erfolge und Einstellungen.", "Backup found": "Sicherung gefunden"};
+    const D = {"Share selected tasks with another person. You choose which ones, everything else stays private on this phone. A shared task done by one of you is done for both. Streaks, badges and achievements stay personal.": "Teile ausgewählte Aufgaben mit einer anderen Person. Du entscheidest, welche, alles andere bleibt privat auf diesem Handy. Eine geteilte Aufgabe, die einer von euch erledigt, ist für beide erledigt. Serie, Abzeichen und Erfolge bleiben persönlich.", "Tasks you mark as shared are visible to everyone with this code. Keep it private.": "Aufgaben, die du als geteilt markierst, sieht jeder mit diesem Code. Behalte ihn für dich.", "Shared tasks": "Geteilte Aufgaben", "Switch on what belongs to the household. Private tasks like supplements or bank accounts stay on this phone.": "Schalte ein, was zum Haushalt gehört. Private Aufgaben wie Nahrungsergänzung oder Bankkonten bleiben auf diesem Handy.", "No tasks yet.": "Noch keine Aufgaben.", "Shared with household": "Mit dem Haushalt geteilt", "Visible and done for both of you": "Für euch beide sichtbar und erledigt","Sharing":"Teilen","Not set up yet":"Noch nicht eingerichtet","Not connected":"Nicht verbunden","Connecting …":"Verbinde …","Synced":"Synchronisiert","Syncing …":"Synchronisiere …","Offline, changes will sync later":"Offline, Änderungen werden später übertragen",
+"Sharing needs a one-time setup: a free Firebase project and the file sync-config.js on GitHub. Follow the setup guide, then come back here.":"Teilen braucht eine einmalige Einrichtung: ein kostenloses Firebase-Projekt und die Datei sync-config.js auf GitHub. Folge der Anleitung und komm dann hierher zurück.",
+"Your name":"Dein Name","Shown to the other person when you complete a shared task.":"Wird der anderen Person angezeigt, wenn du eine geteilte Aufgabe erledigst.","Household code":"Haushaltscode",
+"Everything on this phone is shared with everyone who has this code. Keep it private.":"Alles auf diesem Handy wird mit allen geteilt, die diesen Code haben. Gib ihn nicht weiter.",
+"Share code":"Code teilen","Code copied":"Code kopiert","Leave household":"Haushalt verlassen","Really leave? Your tasks stay on this phone":"Wirklich verlassen? Deine Aufgaben bleiben auf diesem Handy",
+"Share all tasks with another person. A task done by one of you is done for both. Streaks, badges and achievements stay personal.":"Teile alle Aufgaben mit einer anderen Person. Was einer von euch erledigt, ist für beide erledigt. Serie, Abzeichen und Erfolge bleiben persönlich.",
+"Create household":"Haushalt erstellen","Or join with a code":"Oder mit Code beitreten","Join household":"Haushalt beitreten","Enter your name first.":"Gib zuerst deinen Namen ein.","The code has 16 characters.":"Der Code hat 16 Zeichen.",
+"Join my household in the Haushalt app with this code:":"Tritt meinem Haushalt in der Haushalt-App mit diesem Code bei:","Could not load the sync service":"Der Sync-Dienst konnte nicht geladen werden","e.g. Lauri":"z. B. Lauri","Tomorrow":"Morgen","Later":"Später","No tasks yet": "Noch keine Aufgaben", "All done for today": "Für heute alles erledigt", "More tasks tomorrow.": "Morgen kommen die nächsten Aufgaben.", "Set up what you want to keep on top of at home, and how often.": "Leg fest, was du regelmäßig im Haushalt prüfen willst und wie oft.","Mon": "Mo", "Tue": "Di", "Wed": "Mi", "Thu": "Do", "Fri": "Fr", "Sat": "Sa", "Sun": "So", "Every week": "Jede Woche", "Every 2 weeks": "Alle 2 Wochen", "Every 3 weeks": "Alle 3 Wochen", "Every 3 months": "Alle 3 Monate", "Every 6 months": "Alle 6 Monate", "first": "ersten", "second": "zweiten", "third": "dritten", "fourth": "vierten", "last": "letzten", "Monday": "Montag", "Tuesday": "Dienstag", "Wednesday": "Mittwoch", "Thursday": "Donnerstag", "Friday": "Freitag", "Saturday": "Samstag", "Sunday": "Sonntag", "days": "Tage", "never done yet": "noch nie erledigt", "day in a row": "Tag in Folge", "Record": "Rekord", "The Journey Begins": "Die Reise beginnt", "Paths Apart": "Getrennte Wege", "The End of the Road": "Das Ende des Weges", "The Great Feast": "Das große Fest", "A birthday, fireworks and a guest who suddenly vanishes.": "Ein Geburtstag, ein Feuerwerk und ein Gast, der plötzlich verschwindet.", "The Departure": "Der Aufbruch", "A ring in the fire reveals its secret. High time to leave.": "Ein Ring im Feuer verrät sein Geheimnis. Höchste Zeit zu gehen.", "The Old Forest": "Der alte Wald", "A gnarled willow, ancient barrows and a cheerful rescuer.": "Eine knorrige Weide, uralte Gräber und ein fröhlicher Retter.", "The Inn": "Das Gasthaus", "At the crossroads a man of few words is waiting.": "Am Kreuzweg wartet ein wortkarger Waldläufer.", "The Windy Peak": "Die Wetterspitze", "Five shadows in the moonlight. A blade that will not heal.": "Fünf Schatten im Mondlicht. Eine Klinge, die nicht heilen will.", "The Council": "Der Rat", "By the waterfall the decision is made. Nine set out.": "Am Wasserfall fällt die Entscheidung. Neun ziehen los.", "The Bridge in the Mountain": "Die Brücke im Berg", "Deep in the rock an old friend stands against the fire.": "Tief im Fels stellt sich ein alter Freund dem Feuer.", "The Farewell": "Der Abschied", "A silver mirror, a boat in the mist and two who go on alone.": "Ein silberner Spiegel, ein Boot im Nebel und zwei, die allein weitergehen.", "The Breaking": "Der Zerfall", "A horn shatters by the great river. The fellowship scatters in three directions.": "Ein Horn zerbricht am großen Fluss. Die Gemeinschaft zieht in drei Richtungen auseinander.", "The Shepherds' Forest": "Der Wald der Hirten", "Ancient trees that can speak. They are slow to anger, but then they mean it.": "Uralte Bäume, die sprechen können. Sie werden langsam wütend, aber dann richtig.", "The White Rider": "Der weiße Reiter", "Thought lost, he returns. All in white, on a horse faster than the wind.": "Totgeglaubt kehrt er zurück. Ganz in Weiß, mit einem Pferd schneller als der Wind.", "The Golden Hall": "Die goldene Halle", "A king wakes from an evil sleep. The serpent flees down the hill.": "Ein König erwacht aus bösem Schlaf. Die Schlange flieht den Hügel hinab.", "The Gorge": "Die Klamm", "A night of rain and ladders. At dawn the horn sounds.": "Eine Nacht aus Regen und Leitern. Im Morgengrauen erklingt das Horn.", "The Flood": "Die Flut", "The trees march. The river takes back the fortress.": "Die Bäume marschieren. Der Fluss holt sich die Festung zurück.", "The Marshes": "Die Sümpfe", "Lights over dead water. Two eyes in the rock know the way.": "Lichter über totem Wasser. Zwei Augen im Fels kennen den Weg.", "The Lair": "Die Lauer", "A stair into darkness, a web in the tunnel. A small light against the great dark.": "Eine Treppe ins Dunkel, ein Netz im Tunnel. Ein kleines Licht gegen die große Finsternis.", "The Beacons": "Die Leuchtfeuer", "From peak to peak the fire leaps. A call for help that cannot go unheard.": "Von Gipfel zu Gipfel springt das Feuer. Ein Hilferuf, der nicht überhört werden kann.", "The Paths of the Dead": "Die Pfade der Toten", "A gate in the mountain, an old oath. A silent host follows the rightful heir.": "Ein Tor im Berg, ein alter Eid. Ein schweigendes Heer folgt dem rechtmäßigen Erben.", "The Fields Before the City": "Die Felder vor der Stadt", "The gate breaks, the riders come at dawn. And black sails bring hope.": "Das Tor bricht, im Morgengrauen kommen die Reiter. Und schwarze Segel bringen Hoffnung.", "The White City": "Die weiße Stadt", "Seven rings of stone on the mountain's flank. At the top a white tower watches over the plain.": "Sieben Ringe aus Stein an der Flanke des Berges. Ganz oben wacht ein weißer Turm über die Ebene.", "Through the Black Land": "Durch das schwarze Land", "Ash, thirst and no way back. When he can go no further, his friend carries him.": "Asche, Durst und kein Weg zurück. Wenn er nicht mehr kann, trägt ihn sein Freund.", "At the Black Gate": "Am Schwarzen Tor", "A hopeless attack, only to buy time. Then wings rush across the sky.": "Ein aussichtsloser Angriff, nur um Zeit zu gewinnen. Dann rauschen Flügel am Himmel.", "The Mountain of Fate": "Der Schicksalsberg", "One last step at the edge of the fire. The ring falls, and a dark tower crumbles.": "Ein letzter Schritt am Rand des Feuers. Der Ring fällt, und ein dunkler Turm stürzt in sich zusammen.", "The Last Voyage": "Die letzte Fahrt", "A white ship in the evening light. Some roads end at the sea, and that is good.": "Ein weißes Schiff im Abendlicht. Manche Wege enden am Meer, und das ist gut so.", "Complete": "Vollständig", "Locked": "Noch gesperrt", "Secret": "Geheim", "The 3D view loads from the internet the first time you open it.": "Die 3D Ansicht lädt beim ersten Öffnen aus dem Internet.", "3D object, drag to rotate": "3D Objekt, zum Drehen ziehen", "Today": "Heute", "Year overview": "Jahresübersicht", "Year": "Jahr", "Achievements": "Erfolge", "Previous year": "Vorheriges Jahr", "Next year": "Nächstes Jahr", "1 task": "1 Aufgabe", "Season 1 complete!": "Season 1 geschafft!", "Season 2 · Paths Apart": "Season 2 · Getrennte Wege", "The first journey has been told. 8 new adventures await.": "Die erste Fahrt ist erzählt. 8 neue Abenteuer warten.", "On to Season 2": "Weiter zu Season 2", "Season 2 complete!": "Season 2 geschafft!", "Season 3 · The End of the Road": "Season 3 · Das Ende des Weges", "The parted paths come together again. 8 final adventures await.": "Die getrennten Wege führen wieder zusammen. 8 letzte Abenteuer warten.", "On to Season 3": "Weiter zu Season 3", "View": "Ansehen", "Preview the celebration": "Feier schon mal ansehen", "Good morning": "Guten Morgen", "Hello": "Hallo", "Good evening": "Guten Abend", "1 task for today": "1 Aufgabe für heute", "Done today": "Heute geschafft", "done today": "heute erledigt", "open": "offen", "Very important": "Sehr wichtig", "Open for 1 day": "Seit 1 Tag offen", ". Swipe right for done, left for again tomorrow, down for later today.": ". Rechts wischen für erledigt, links für morgen wieder, nach unten für später heute.", "Done": "Erledigt", "Moved to the back": "Hinten angestellt", "Undo": "Rückgängig", "Manage tasks": "Aufgaben verwalten", "Settings": "Einstellungen", "Morning Dew": "Morgentau", "Lantern Light": "Laternenlicht", "Meadow Breeze": "Wiesenwind", "Hillside Burrow": "Hügelhöhle", "Starry Night": "Sternennacht", "Starts with your next touch": "Startet bei der nächsten Berührung", "Loading …": "Lädt …", "Playing on loop": "Spielt im Loop", "Music file could not be loaded": "Musikdatei nicht ladbar", "This device cannot play audio": "Dieses Gerät unterstützt keine Wiedergabe", "Tap anywhere once to start": "Einmal irgendwo tippen, um zu starten", "Off": "Aus", "First steps": "Erste Schritte", "Unbroken streak": "Serie am Stück", "Diligence": "Fleiß", "A day's work": "Tageswerk", "Special moments": "Besondere Momente", "Complete your first task.": "Erledige deine erste Aufgabe.", "Every great journey begins with one step out of your own front door.": "Jede große Fahrt beginnt mit einem Schritt vor die eigene Tür.", "First Rest": "Erste Rast", "Finish everything that was due on one day.": "Erledige an einem Tag alles, was fällig war.", "At the first campfire even dry bread tastes like a feast.": "Am ersten Lagerfeuer schmeckt selbst trockenes Brot wie ein Festmahl.", "The Pack": "Das Gepäck", "Create 5 tasks.": "Lege 5 Aufgaben an.", "Pack well and you never have to turn back.": "Wer gut packt, muss unterwegs nicht umkehren.", "Map Reader": "Kartenleser", "Complete 5 different tasks.": "Erledige 5 verschiedene Aufgaben.", "Now you know the paths through your own realm.": "Jetzt kennst du die Wege durch dein eigenes Reich.", "Waybread": "Wegbrot", "Save your first backup.": "Speichere deine erste Sicherung.", "One bite carries you through any bad day. Just like a backup.": "Ein Bissen davon trägt dich durch jeden schlechten Tag. Genau wie eine Sicherung.", "Three Miles": "Drei Meilen", "Keep a 3 day streak.": "Halte eine Serie von 3 Tagen.", "The first milestone is behind you. The road goes on.": "Der erste Meilenstein liegt hinter dir. Die Straße geht weiter.", "Wanderer's Lantern": "Wanderlaterne", "Keep a 7 day streak.": "Halte eine Serie von 7 Tagen.", "For a whole week your light has not flickered.": "Eine ganze Woche lang hat dein Licht nicht geflackert.", "Over the Pass": "Über den Pass", "Keep a 14 day streak.": "Halte eine Serie von 14 Tagen.", "Snow, wind and weariness. You made it over anyway.": "Schnee, Wind und Müdigkeit. Du bist trotzdem drüber.", "The Beacons Are Lit": "Die Leuchtfeuer brennen", "Keep a 30 day streak.": "Halte eine Serie von 30 Tagen.", "From hill to hill your fire leaps. A whole month without a gap.": "Von Hügel zu Hügel springt dein Feuer. Ein ganzer Monat ohne Lücke.", "Grey Pilgrim": "Grauer Pilger", "Keep a 60 day streak.": "Halte eine Serie von 60 Tagen.", "A wizard is never late. And neither, it seems, are you.": "Ein Zauberer kommt nie zu spät. Und du offenbar auch nicht.", "The White Tower": "Der weiße Turm", "Keep a 100 day streak.": "Halte eine Serie von 100 Tagen.", "A hundred days, stone upon stone. That is how fortresses are built.": "Hundert Tage, Stein auf Stein. So entstehen Festungen.", "The Ring Closes": "Der Ring schließt sich", "Keep a 365 day streak.": "Halte eine Serie von 365 Tagen.", "A whole year, a closed circle. This ring belongs to you alone.": "Ein ganzes Jahr, ein geschlossener Kreis. Dieser Ring gehört nur dir.", "Gardener's Apprentice": "Gärtnerlehrling", "Complete 10 tasks in total.": "Erledige insgesamt 10 Aufgaben.", "Whoever tends their garden has already understood what matters most.": "Wer seinen Garten pflegt, hat das Wichtigste schon verstanden.", "Silver Shirt": "Silberhemd", "Complete 50 tasks in total.": "Erledige insgesamt 50 Aufgaben.", "Light as cloth, hard as steel. Fifty times seen through.": "Leicht wie Stoff, hart wie Stahl. Fünfzig Mal durchgezogen.", "Dwarven Forge": "Zwergenschmiede", "Complete 100 tasks in total.": "Erledige insgesamt 100 Aufgaben.", "A hundred blows on the anvil. Now every move sits right.": "Hundert Schläge auf den Amboss. Jetzt sitzt jede Bewegung.", "Glowing Blade": "Leuchtende Klinge", "Complete 250 tasks in total.": "Erledige insgesamt 250 Aufgaben.", "It glows blue whenever mess draws near.": "Sie leuchtet blau, wenn sich Unordnung nähert.", "Dragon's Hoard": "Drachenhort", "Complete 500 tasks in total.": "Erledige insgesamt 500 Aufgaben.", "Five hundred things done, piled into a golden mountain.": "Fünfhundert erledigte Dinge, aufgetürmt zu einem goldenen Berg.", "Starlight in a Glass": "Sternenlicht im Glas", "Complete 1000 tasks in total.": "Erledige insgesamt 1000 Aufgaben.", "A light for dark places, when all other lights go out.": "Ein Licht für dunkle Orte, wenn alle anderen Lichter ausgehen.", "Second Breakfast": "Zweites Frühstück", "Complete 5 tasks in one day.": "Erledige 5 Aufgaben an einem Tag.", "Anyone who gets this much done has earned a second pot of tea.": "Wer so viel schafft, hat sich eine zweite Kanne Tee verdient.", "Forced March": "Gewaltmarsch", "Complete 10 tasks in one day.": "Erledige 10 Aufgaben an einem Tag.", "Three days and nights on the march. Fine, one day did the job too.": "Drei Tage und Nächte durchgelaufen. Na gut, ein Tag hat auch gereicht.", "At First Light": "Im ersten Licht", "Complete a task between 5 and 8 in the morning.": "Erledige eine Aufgabe zwischen 5 und 8 Uhr morgens.", "Look to the east when the sun rises. Something is already done.": "Schau nach Osten, wenn die Sonne aufgeht. Dann ist schon etwas erledigt.", "Ranger of the Night": "Waldläufer der Nacht", "Complete a task after 9 in the evening.": "Erledige eine Aufgabe nach 21 Uhr abends.", "Quietly, in the dark, without anyone noticing. But it is done.": "Leise, im Dunkeln, ohne dass es jemand merkt. Aber es ist erledigt.", "Evening in the Hills": "Feierabend im Hügelland", "Finish both Saturday and Sunday of the same weekend.": "Schaffe Samstag und Sonntag desselben Wochenendes komplett.", "A whole weekend with nothing left over. Raise a big mug to that.": "Ein ganzes Wochenende ohne Rückstand. Darauf einen großen Krug.", "The Return": "Die Rückkehr", "Finish a full day right after missing one.": "Schaffe einen Tag komplett, direkt nachdem du einen Tag verpasst hast.", "Falling down is part of it. Coming back is what makes the difference.": "Hinfallen gehört dazu. Wiederkommen macht den Unterschied.", "Stone at Sunrise": "Zu Stein im Morgenlicht", "Complete a task that was open for 7 days or more.": "Erledige eine Aufgabe, die seit 7 Tagen oder länger offen war.", "Argued too long about who goes first. Then the sun came up.": "Zu lange gestritten, wer zuerst anfängt. Dann kam die Sonne.", "Moon Runes": "Mondrunen", "Finish a whole calendar month without missing a day.": "Schaffe einen ganzen Kalendermonat ohne verpassten Tag.", "Some signs only show when the moon plays along for a whole month.": "Manche Zeichen sieht man nur, wenn der Mond einen ganzen Monat lang mitspielt.", "Faithful Companion": "Treuer Gefährte", "Complete the same task 20 times.": "Erledige dieselbe Aufgabe 20 Mal.", "Not fast, not pretty, but always there. The best companions are like that.": "Nicht schnell, nicht schön, aber immer da. Die besten Gefährten sind so.", "Rare Guest": "Seltener Gast", "Complete a task that is due only every 3 months or less often.": "Erledige eine Aufgabe, die nur alle 3 Monate oder seltener fällig ist.", "They come rarely. But when they come, they come at the right time.": "Sie kommen selten. Aber wenn sie kommen, dann zur rechten Zeit.", "Five Lands Travelled": "Fünf Lande bereist", "Try all 5 themes in Settings.": "Probiere alle 5 Themes in den Einstellungen aus.", "Morning Dew, Lantern Light, Meadow Breeze, Hillside Burrow and Starry Night. You know them all.": "Morgentau, Laternenlicht, Wiesenwind, Hügelhöhle und Sternennacht. Du kennst sie alle.", "Sailing West": "Segel gen Westen", "Complete all of Season 1 (56 days done).": "Vollende alle Erfolge von Season 1 (56 geschaffte Tage).", "The first great journey has been told. The ship waits for the next.": "Die erste große Fahrt ist zu Ende erzählt. Das Schiff wartet auf die nächste.", "days this month": "Tage in diesem Monat", "Silver": "Silber", "Platinum": "Platin", "Diamond": "Diamant", "Cosmic": "Kosmisch", "Badge unlocked": "Abzeichen freigeschaltet", "Back": "Zurück", "Tap a badge to see how to earn it. In the detail view you can tilt it into the light.": "Tippe auf ein Abzeichen, um zu sehen, wie du es bekommst. In der Detailansicht kannst du es durch Neigen ins Licht drehen.", "✦ Turn on tilt lighting": "✦ Licht durch Neigen aktivieren", "✦ Tilt your phone": "✦ Neige dein Handy", "Motion not allowed": "Bewegung nicht erlaubt", "Up next": "Als Nächstes", "How to unlock it": "So schaltest du es frei", "Close": "Schließen", "For testing only. Everything here is stored separately and never changes your real tasks, streak or badges. Turn the Developer switch off and everything is back to how it was.": "Nur zum Testen. Alles hier wird getrennt gespeichert und ändert deine echten Aufgaben, Serie und Abzeichen nicht. Wenn du den Entwickler-Schalter ausmachst, ist alles wieder wie vorher.", "Days done (3D achievements, seasons)": "Geschaffte Tage (3D Erfolge, Seasons)", "Streak in days": "Serie in Tagen", "Real": "Echt", "Badges": "Abzeichen", "Unlock all badges": "Alle Abzeichen freischalten", "Display only, not saved": "Nur Anzeige, wird nicht gespeichert", "Play animations": "Animationen abspielen", "Season celebration 1 → 2": "Season-Feier 1 → 2", "Season celebration 2 → 3": "Season-Feier 2 → 3", "Streak banner": "Streak-Banner", "Badge notice": "Abzeichen-Hinweis", "Confetti": "Konfetti", "Replay parts flying in": "Teile neu einfliegen lassen", "Reset all test values": "Alle Test-Werte zurücksetzen", "Theme & Music": "Theme & Musik", "Music": "Musik", "Volume": "Lautstärke", "Sounds when swiping and tapping": "Klänge beim Wischen und Tippen", "Sound volume": "Lautstärke der Sounds", "Display & Data": "Darstellung & Daten", "Light mode": "Heller Modus", "Backup": "Sicherung", "Never backed up": "Noch nie gesichert", "Last: today": "Zuletzt heute", "Last: yesterday": "Zuletzt gestern", "Developer": "Entwickler", "Test menu for unlocking": "Testmenü zum Freischalten", "Test values active": "Test-Werte aktiv", "No test values": "Keine Test-Werte", "Tasks": "Aufgaben", "Nothing added yet.": "Noch nichts angelegt.", "Add task": "Aufgabe anlegen", "Previous month": "Vorheriger Monat", "Next month": "Nächster Monat", "1 task done": "1 Aufgabe erledigt", "Nothing done on this day.": "An diesem Tag nichts erledigt.", "Saved. Put the file in iCloud Drive or Files.": "Gesichert. Lege die Datei in iCloud Drive oder „Dateien“ ab.", "Saving as a file does not work here. Use “Copy as text” below.": "Speichern als Datei geht hier nicht. Nutze unten „Als Text kopieren“.", "Last backup: today": "Zuletzt gesichert: heute", "Last backup: yesterday": "Zuletzt gesichert: gestern", "days done. The backup contains everything, including streak, achievements and settings.": "geschaffte Tage. Die Sicherung enthält alles, auch Streak, Erfolge und Einstellungen.", "Save backup": "Sicherung speichern", "Opens the share menu. Choose “Save to Files” and then iCloud Drive. That way the backup survives even a new phone.": "Öffnet das Teilen‑Menü. Wähle „In Dateien sichern“ und dann iCloud Drive. So überlebt die Sicherung auch einen Handywechsel.", "Load backup": "Sicherung laden", "Cancel": "Abbrechen", "Restore": "Wiederherstellen", "Restored. Your previous data has been kept, just in case.": "Wiederhergestellt. Dein vorheriger Stand ist zur Sicherheit gemerkt.", "This file is not a household backup.": "Diese Datei ist keine Haushalt‑Sicherung.", "The file could not be read.": "Die Datei konnte nicht gelesen werden.", "Bring back data from before the last import": "Stand vor dem letzten Import zurückholen", "Your previous data is back.": "Vorheriger Stand ist zurück.", "Back up or paste as text": "Als Text sichern oder einfügen", "Copy as text": "Als Text kopieren", "Copied. Paste it into Notes.": "Kopiert. In die Notizen einfügen.", "Text is selected, copy it by hand now": "Text ist markiert, jetzt manuell kopieren", "Paste backup text here": "Gesicherten Text hier einfügen", "Check text": "Text prüfen", "This text is not a household backup.": "Der Text ist keine Haushalt‑Sicherung.", "Edit task": "Aufgabe bearbeiten", "New task": "Neue Aufgabe", "e.g. Pflanzen gießen": "z. B. Pflanzen gießen", "Comes first and pulses red": "Kommt zuerst und pulsiert rot", "Repeat": "Wiederholung", "Position in the month": "Position im Monat", "Which weekday?": "Welcher Wochentag?", "On which days?": "An welchen Tagen?", "Delete": "Löschen", "Really delete?": "Wirklich löschen?", "Save": "Speichern", "Give the task a name.": "Gib der Aufgabe einen Text.", "Pick at least one weekday.": "Wähle mindestens einen Wochentag.", "Pick a date.": "Wähle ein Datum.", "open ·": "offen ·", "✓ Done": "✓ Erledigt", "Tomorrow ↺": "Morgen ↺", "↓ Later": "↓ Später", "Very important: Bad putzen. Swipe right for done, left for again tomorrow, down for later today.": "Sehr wichtig: Bad putzen. Rechts wischen für erledigt, links für morgen wieder, nach unten für später heute.", "← Tomorrow": "← Morgen", "Done →": "Erledigt →", "What should the card say?": "Was soll auf der Karte stehen?", "How often?": "Wie oft?", "Every X days": "Alle X Tage", "Weekdays": "Wochentage", "Once": "Einmalig", "Every": "Alle", "On the": "Am", "of the month": "im Monat", "On which day?": "An welchem Tag?", "Developer menu": "Entwicklermenü", "Müll rausbringen. Swipe right for done, left for again tomorrow, down for later today.": "Müll rausbringen. Rechts wischen für erledigt, links für morgen wieder, nach unten für später heute.", "days in a row": "Tage in Folge", "Monthly": "Monatlich", "Own emoji (optional)": "Eigenes Emoji (optional)", "Chosen automatically from the text. Type an emoji to use your own instead.": "Wird automatisch aus dem Text gewählt. Tippe ein Emoji ein, um ein eigenes zu nutzen.", "Language": "Sprache", "Cancelled, nothing saved.": "Abgebrochen, nichts gesichert.", "History": "Verlauf", "Replaces your current data.": "Ersetzt deinen aktuellen Stand.", "The backup contains everything, including streak, achievements and settings.": "Die Sicherung enthält alles, auch Streak, Erfolge und Einstellungen.", "Backup found": "Sicherung gefunden"};
     const MF=["January","February","March","April","May","June","July","August","September","October","November","December"];
     const MG=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
     const M3=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -3416,11 +3653,15 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
     const T=s=>{ const r=tr(s); return r==null ? s : r; };
     const RX=[
       [/^last (today|yesterday|(\d+) days ago) · ([A-Z][a-z]{2}) (\d+)$/, m=>"zuletzt "+(m[1]==="today"?"heute":m[1]==="yesterday"?"gestern":"vor "+m[2]+" Tagen")+" · "+dm(m[3],m[4])],
+      [/^Shared · (.+)$/, m=>"Geteilt · "+T(m[1])],
+      [/^Error: (.+)$/, m=>"Fehler: "+T(m[1])],
+      [/^No household with the code (.+)$/, m=>"Kein Haushalt mit dem Code "+m[1]],
       [/^Earned (.+)$/, m=>full(m[1]) && "Erreicht am "+full(m[1])],
       [/^Backup from (.+)$/, m=>full(m[1]) && "Sicherung vom "+full(m[1])],
       [/^Streak (\d+) days?$/, m=>"Streak "+m[1]+pl(m[1]," Tag"," Tage")],
       [/^(\d+) days? in a row$/, m=>m[1]+pl(m[1]," Tag"," Tage")+" in Folge"],
       [/^(\d+) tasks? done today\. Tap to show the list\.$/, m=>m[1]+pl(m[1]," Aufgabe"," Aufgaben")+" heute erledigt. Tippen zeigt die Liste."],
+      [/^(\d+) shared tasks?$/, m=>m[1]+pl(m[1]," geteilte Aufgabe"," geteilte Aufgaben")],
       [/^(\d+) of (\d+) done today$/, m=>m[1]+" von "+m[2]+" heute erledigt"],
       [/^(\d+) tasks? for today$/, m=>m[1]+pl(m[1]," Aufgabe"," Aufgaben")+" für heute"],
       [/^(\d+) tasks? done$/, m=>m[1]+pl(m[1]," Aufgabe"," Aufgaben")+" erledigt"],
@@ -3513,7 +3754,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
   })();
 
   /* ---------- boot ---------- */
-  I18N.init(); loadLocal(); norm(); cleanup(); render(); connectDb();
+  I18N.init(); loadLocal(); norm(); cleanup(); render(); connectDb(); Sync.connect();
   if("serviceWorker" in navigator){ window.addEventListener("load", ()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); }); }
   try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
   applyLook();
