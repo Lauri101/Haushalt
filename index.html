@@ -696,6 +696,12 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
 .stage.deal .card{animation:dealIn .7s var(--spring) both}
 .stage.deal .card.behind{animation-delay:.05s}
 .stage.deal .card:not(.behind){animation-delay:.22s}
+.ghostcard{position:absolute;inset:0;border-radius:32px;pointer-events:none;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  animation:ghostDeal .7s var(--spring) both;transition:opacity .45s ease}
+[data-app-theme="light"] .ghostcard{background:rgba(255,255,255,.55);border-color:rgba(0,0,0,.05)}
+.ghostcard.out{opacity:0!important}
+@keyframes ghostDeal{from{opacity:0;transform:translate(-30px,60vh) rotate(-14deg) scale(.9)}to{opacity:.45;transform:translateY(16px) rotate(var(--r)) scale(.93)}}
+@media (prefers-reduced-motion:reduce){.ghostcard{display:none}}
 @keyframes dealIn{from{opacity:0;transform:translate(-30px,60vh) rotate(-14deg) scale(.9)}to{opacity:1;transform:none}}
 .app .top{position:relative}
 .greet{position:absolute;left:60px;right:60px;top:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;pointer-events:none;animation:greetIn 3.3s var(--spring) both}
@@ -1973,10 +1979,21 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
   });
   function dealCards(n, greet){
     dealPending = false;
-    clearTimeout(dealCards.t);
+    clearTimeout(dealCards.t); clearTimeout(dealCards.t2);
+    stage.querySelectorAll(".ghostcard").forEach(g=>g.remove());
+    // the whole pile is dealt: one card per open task, the more tasks the longer it takes
+    const total = Math.min(n, 20), gap = Math.max(0.09, Math.min(0.17, 1.7/total));
+    const ghosts = Math.max(0, total-2), first = stage.firstChild;
+    for(let k=0;k<ghosts;k++){ const g=document.createElement("div"); g.className="ghostcard"; g.setAttribute("aria-hidden","true");
+      g.style.animationDelay=(k*gap).toFixed(3)+"s"; g.style.setProperty("--r", (((k*37)%9)-4)*0.7+"deg"); stage.insertBefore(g, first); }
+    const bc=stage.querySelector(".card.behind"), tc=stage.querySelector(".card:not(.behind)");
+    if(bc) bc.style.animationDelay=(ghosts*gap).toFixed(3)+"s";
+    if(tc) tc.style.animationDelay=((ghosts+(bc?1:0))*gap+0.05).toFixed(3)+"s";
+    const end = ((ghosts+1)*gap+0.75)*1000;
     stage.classList.remove("deal"); void stage.offsetWidth; stage.classList.add("deal");
-    dealCards.t = setTimeout(()=>stage.classList.remove("deal"), 1600);
-    sfx("deal", Math.min(n,4));
+    dealCards.t = setTimeout(()=>{ stage.classList.remove("deal"); stage.querySelectorAll(".card").forEach(c=>c.style.animationDelay=""); }, end+100);
+    dealCards.t2 = setTimeout(()=>{ stage.querySelectorAll(".ghostcard").forEach(g=>{ g.classList.add("out"); setTimeout(()=>g.remove(), 500); }); }, end-250);
+    sfx("deal", {n:total, gap});
     if(!greet) return;
     LSset("haushalt-greet", today());
     const h=new Date().getHours(), hi = h<11 ? "Good morning" : h<17 ? "Hello" : "Good evening";
@@ -2412,7 +2429,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
     save(t){ sWood(NT.G4,t,0.2); sBell(NT.E6,t+0.06,0.12,0.6); },
     del(t){ sTone(150,t,0.22,{v:0.3,glide:70}); sNoise(t,0.12,{v:0.05,type:"lowpass",f:500}); },
     undo(t){ sNoise(t,0.16,{v:0.06,type:"bandpass",f:600,f2:3000,q:1.2,a:0.1}); sTone(NT.C5,t+0.15,0.12,{v:0.08}); },
-    deal(t,n){ for(let k=0;k<(n||2);k++){ sNoise(t+k*0.13,0.07,{v:0.07,type:"bandpass",f:2600,f2:1400,q:1.2,a:0.004}); sTone(320+k*40,t+k*0.13+0.02,0.06,{type:"triangle",v:0.04}); } },
+    deal(t,a){ const n=(a&&a.n)||a||2, g=(a&&a.gap)||0.13; for(let k=0;k<n;k++){ const s=t+0.08+k*g, f=1+((k*7)%5)*0.04, v=k===n-1?1:0.75; sNoise(s,0.07,{v:0.07*v,type:"bandpass",f:2600*f,f2:1400*f,q:1.2,a:0.004}); sTone((320+(k%6)*30),s+0.02,0.06,{type:"triangle",v:0.04*v}); } },
     page(t){ sNoise(t,0.35,{v:0.07,type:"lowpass",f:900,f2:250,a:0.1}); sTone(180,t,0.3,{v:0.08,glide:250,a:0.08}); },
     flip(t){ sNoise(t,0.05,{v:0.08,type:"bandpass",f:2400,q:1.5,a:0.003}); sNoise(t+0.03,0.04,{v:0.04,type:"bandpass",f:3200,q:1.5,a:0.003}); },
     cone(t,k){ const sc=[NT.C5,NT.D5,NT.E5,NT.G5,NT.A5,NT.C6]; sTone(sc[(k||0)%sc.length]*((k||0)>=6?2:1),t,0.4,{v:0.18,partials:[[4,0.25,0.06],[10,0.06,0.02]]}); },
