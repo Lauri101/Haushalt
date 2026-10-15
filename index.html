@@ -45,6 +45,18 @@ function vfix(){var sa=navigator.standalone||(window.matchMedia&&matchMedia("(di
 <script>(function(){var d=document.documentElement;function fit(){var w=innerWidth,h=innerHeight,s=Math.max(1,Math.min(1.5,Math.min(w/440,h/860)));s=Math.round(s*100)/100;window.__uiS=s;d.style.setProperty("--s",s);d.classList.toggle("scaled",s>1);d.classList.toggle("wide",w>h&&w>=900)}fit();addEventListener("resize",fit);
 /* iOS home screen apps sometimes get a layout viewport that is shorter than the screen (the status bar height goes missing at the bottom); stretch the app over the real screen */
 function vfix(){var sa=navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches),m=0;if(sa&&innerWidth<innerHeight&&screen.height>innerHeight){m=screen.height-innerHeight;if(m<16||m>90)m=0}window.__vfix=m;d.style.setProperty("--vfix",m+"px");d.classList.toggle("vfix",m>0)}vfix();addEventListener("resize",vfix);addEventListener("orientationchange",function(){setTimeout(vfix,300)})})();</script>
+<script>(function(){var d=document.documentElement;function fit(){var w=innerWidth,h=innerHeight,s=Math.max(1,Math.min(1.5,Math.min(w/440,h/860)));s=Math.round(s*100)/100;window.__uiS=s;d.style.setProperty("--s",s);d.classList.toggle("scaled",s>1);d.classList.toggle("wide",w>h&&w>=900)}fit();addEventListener("resize",fit);
+/* iOS home screen apps sometimes get a layout viewport that is shorter than the screen (the status bar height goes missing at the bottom); stretch the app over the real screen */
+function vfix(){var sa=navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches),m=0;if(sa&&innerWidth<innerHeight&&screen.height>innerHeight){m=screen.height-innerHeight;if(m<16||m>90)m=0}window.__vfix=m;d.style.setProperty("--vfix",m+"px");d.classList.toggle("vfix",m>0)}vfix();addEventListener("resize",vfix);addEventListener("orientationchange",function(){setTimeout(vfix,300)})})();</script>
+<script>(function(){var d=document.documentElement;function fit(){var w=innerWidth,h=innerHeight,s=Math.max(1,Math.min(1.5,Math.min(w/440,h/860)));s=Math.round(s*100)/100;window.__uiS=s;d.style.setProperty("--s",s);d.classList.toggle("scaled",s>1);d.classList.toggle("wide",w>h&&w>=900)}fit();addEventListener("resize",fit);
+/* iOS home screen apps sometimes get a layout viewport that is shorter than the screen (the status bar height goes missing at the bottom); stretch the app over the real screen */
+function vfix(){var sa=navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches),m=0;if(sa&&innerWidth<innerHeight&&screen.height>innerHeight){m=screen.height-innerHeight;if(m<16||m>90)m=0}window.__vfix=m;d.style.setProperty("--vfix",m+"px");d.classList.toggle("vfix",m>0)}vfix();addEventListener("resize",vfix);addEventListener("orientationchange",function(){setTimeout(vfix,300)})})();</script>
+<script>(function(){var d=document.documentElement;function fit(){var w=innerWidth,h=innerHeight,s=Math.max(1,Math.min(1.5,Math.min(w/440,h/860)));s=Math.round(s*100)/100;window.__uiS=s;d.style.setProperty("--s",s);d.classList.toggle("scaled",s>1);d.classList.toggle("wide",w>h&&w>=900)}fit();addEventListener("resize",fit);
+/* iOS home screen apps sometimes get a layout viewport that is shorter than the screen (the status bar height goes missing at the bottom); stretch the app over the real screen */
+function vfix(){var sa=navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches),m=0;if(sa&&innerWidth<innerHeight&&screen.height>innerHeight){m=screen.height-innerHeight;if(m<16||m>90)m=0}window.__vfix=m;d.style.setProperty("--vfix",m+"px");d.classList.toggle("vfix",m>0)}vfix();addEventListener("resize",vfix);addEventListener("orientationchange",function(){setTimeout(vfix,300)})})();</script>
+<script>(function(){var d=document.documentElement;function fit(){var w=innerWidth,h=innerHeight,s=Math.max(1,Math.min(1.5,Math.min(w/440,h/860)));s=Math.round(s*100)/100;window.__uiS=s;d.style.setProperty("--s",s);d.classList.toggle("scaled",s>1);d.classList.toggle("wide",w>h&&w>=900)}fit();addEventListener("resize",fit);
+/* iOS home screen apps sometimes get a layout viewport that is shorter than the screen (the status bar height goes missing at the bottom); stretch the app over the real screen */
+function vfix(){var sa=navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches),m=0;if(sa&&innerWidth<innerHeight&&screen.height>innerHeight){m=screen.height-innerHeight;if(m<16||m>90)m=0}window.__vfix=m;d.style.setProperty("--vfix",m+"px");d.classList.toggle("vfix",m>0)}vfix();addEventListener("resize",vfix);addEventListener("orientationchange",function(){setTimeout(vfix,300)})})();</script>
 <script>try{var d=document.documentElement;if(localStorage.getItem("haushalt-theme")==="light")d.setAttribute("data-app-theme","light");d.setAttribute("data-app-skin",localStorage.getItem("haushalt-skin")||"morgentau")}catch(e){document.documentElement.setAttribute("data-app-skin","morgentau")}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
@@ -226,7 +238,7 @@ button{font:inherit;color:inherit}
   color:#2a1a00;background:linear-gradient(180deg,#FFD54A,#FFA800);padding:7px 12px;border-radius:6px}
 .ach-tag.part{background:rgba(255,255,255,.08);color:var(--muted)}
 .ach-stage{flex:1;min-height:0;width:100%;position:relative}
-.ach-cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+.ach-cv{position:absolute;left:0;right:0;top:-3%;bottom:-11%;width:100%;height:114%;display:block;touch-action:none;cursor:grab}
 .ach-off{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--muted);font-size:14px;padding:30px;margin:0}
 .ach-prog{flex:none;display:flex;flex-direction:column;align-items:center;gap:7px;font:500 13px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",sans-serif;letter-spacing:.05em;margin:2px 0 8px}
 .ach-prog i{display:block;width:96px;height:3px;border-radius:2px;background:rgba(255,255,255,.18);position:relative;overflow:hidden}
@@ -861,7 +873,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
 :root[data-app-skin="huegelhoehle"]{--bi1:#E8C08A;--bi2:#8FB050;--bigl:rgba(200,150,80,.4)}
 :root[data-app-skin="sternennacht"]{--bi1:#9FE3FF;--bi2:#B060FF;--bigl:rgba(140,110,255,.48)}
 :root[data-app-theme="light"]{--bi0:#2A2A30;--bigl:rgba(0,0,0,.08)}
-html.wide{--rowtop:90px} html.wide .app{padding-top:var(--rowtop)} html.wide .app .top{height:140px;background:none!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;margin-bottom:6px}
+html.wide{--rowtop:32px} html.wide .app{padding-top:var(--rowtop)} html.wide .app .top{height:140px;background:none!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;margin-bottom:6px}
 html.wide .app .top #openSettings,html.wide .app .top #openPrefs{position:fixed;top:calc(env(safe-area-inset-top,0px) + var(--rowtop));width:140px;height:140px;border-radius:50%;background:none!important;z-index:6;transition:transform .35s var(--ease),filter .35s var(--ease)}
 html.wide .app .top #openSettings{left:calc(18% - 70px)} html.wide .app .top #openPrefs{right:calc(18% - 70px)}
 html.wide .top .emb-ico{display:none} html.wide .top .big-ico{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 0 6px var(--bigl)) drop-shadow(0 0 22px var(--bigl))}
@@ -1710,6 +1722,7 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
     const S=(r,w,h)=>new T.SphereGeometry(r,w||8,h||6), Tor=(r,t,a)=>new T.TorusGeometry(r,t,6,a?14:20,a||Math.PI*2), O=r=>new T.OctahedronGeometry(r), I=r=>new T.IcosahedronGeometry(r,0), D=r=>new T.DodecahedronGeometry(r);
     const M=(g,x,y,z,o)=>{ const m=new T.Mesh(g); m.position.set(x,y,z); if(o){ if(o.rx) m.rotation.x=o.rx; if(o.ry) m.rotation.y=o.ry; if(o.rz) m.rotation.z=o.rz; if(o.s) m.scale.set(o.s[0],o.s[1],o.s[2]); } return m; };
     const G=(x,y,z,kids,o)=>{ const g=new T.Group(); g.position.set(x,y,z); kids.forEach(k=>g.add(k)); if(o){ if(o.rx) g.rotation.x=o.rx; if(o.ry) g.rotation.y=o.ry; if(o.rz) g.rotation.z=o.rz; } return g; };
+    const W=m=>{ m.userData.water=1; return m; };   // marks a mesh as water: it is drawn blue instead of gold or grey
     const P=Math.PI;
     const prism=(r,len)=>{ const g=new T.CylinderGeometry(r,r,len,3); g.rotateZ(P/2); g.rotateX(-P/2); return g; };
     const idle=(g,f)=>{ g.userData.idle=f; return g; };
@@ -1814,12 +1827,12 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
         const cols=ring(6,1.3,1.05,(x,y,z)=>M(C(0.07,0.09,1.6,8),x,y,z));
         const tops=ring(6,1.3,1.95,(x,y,z)=>M(K(0.1,0.32,6),x,y,z));
         const chairs=ring(9,0.85,0,(x,y,z,t)=>G(x,0.25,z,[M(B(0.18,0.05,0.18),0,0.16,0),M(B(0.18,0.22,0.04),0,0.29,-0.08),M(B(0.04,0.14,0.04),0,0.07,0)]).rotateY(-t-P/2));
-        const falls=[-0.55,0,0.55].map((x,k)=>M(B(0.22,2.2-k*0.3,0.05),x,1.25-k*0.15,-1.6));
+        const falls=[-0.55,0,0.55].map((x,k)=>W(M(B(0.22,2.2-k*0.3,0.05),x,1.25-k*0.15,-1.6)));
         return [
           G(0,0,0,[M(C(1.9,2.0,0.25,12),0,0.125,0),M(C(1.55,1.55,0.03,12),0,0.26,0)]),
           G(0,0,0,cols),
           G(0,0,0,[M(Tor(1.3,0.07),0,1.86,0,{rx:P/2})].concat(tops)),
-          idle(G(0,0,0,[M(B(2.8,2.6,0.4),0,1.3,-1.95),M(C(0.7,0.75,0.08,10),0,0.29,-1.45,{s:[1.6,1,0.6]})].concat(falls)),(p,t)=>{ p.children.forEach((c,k)=>{ if(k>1){ c.scale.x=1+Math.sin(t*6+k*2)*0.18; } if(k===1){ const q=1+Math.sin(t*2.4)*0.04; c.scale.set(1.6*q,1,0.6*q); } }); }),
+          idle(G(0,0,0,[M(B(2.8,2.6,0.4),0,1.3,-1.95),W(M(C(0.7,0.75,0.08,10),0,0.29,-1.45,{s:[1.6,1,0.6]}))].concat(falls)),(p,t)=>{ p.children.forEach((c,k)=>{ if(k>1){ c.scale.x=1+Math.sin(t*6+k*2)*0.18; } if(k===1){ const q=1+Math.sin(t*2.4)*0.04; c.scale.set(1.6*q,1,0.6*q); } }); }),
           M(C(0.28,0.36,0.55,8),0,0.52,0),
           spin(G(0,1.05,0,[M(Tor(0.18,0.05),0,0.08,0)]),0.8),
           G(0,0,0,chairs)];
@@ -1876,20 +1889,20 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
           G(0,0,0,[M(C(2.0,2.1,0.3,10),0,0.15,0),M(new T.SphereGeometry(0.9,10,5,0,P*2,0,P/2),1.15,0.3,-0.85,{s:[1,0.8,1]})]),
           idle(G(-1.2,0.3,-0.85,[M(C(0.1,0.18,2.6,7),0,1.3,0),M(I(0.55),0,2.65,0,{s:[1.3,0.55,1.3]}),M(I(0.45),0,2.15,0,{s:[1.3,0.5,1.3]}),M(I(0.35),0,1.7,0,{s:[1.3,0.5,1.3]}),M(C(0.4,0.4,0.04,8),0,1.95,0)]),(p,t)=>{ p.rotation.z=Math.sin(t*0.6)*0.025; }),
           idle(G(-0.3,0.3,-0.2,[M(C(0.08,0.14,0.5,8),0,0.25,0),M(C(0.34,0.14,0.14,12),0,0.56,0),M(C(0.29,0.29,0.02,12),0,0.62,0)]),(p,t)=>{ const q=1+Math.sin(t*3)*0.06; p.children[2].scale.set(q,1,q); p.children[2].rotation.y=t*0.5; }),
-          M(B(4.2,0.04,0.95),0,0.32,1.25),
+          W(M(B(4.2,0.04,0.95),0,0.32,1.25)),
           idle(G(0.25,0.4,1.25,[G(0,0,0,[M(C(0.16,0.07,1.25,8),0,0,0,{rz:P/2,s:[1,1,0.7]}),M(Tor(0.2,0.04,P),0.62,0.18,0,{rz:-P/2.3}),M(B(0.14,0.05,0.24),-0.55,0.12,0)])]),(p,t)=>{ p.position.x=0.25+Math.sin(t*0.35)*0.85; const c=p.children[0]; c.position.y=Math.sin(t*1.4)*0.03; c.rotation.x=Math.sin(t*1.1)*0.06; }),
           G(1.15,0.92,-0.85,[M(B(0.42,0.08,0.34),0,0,0),M(B(0.42,0.38,0.06),0,0.22,-0.14),M(B(0.06,0.16,0.3),-0.18,0.1,0),M(B(0.06,0.16,0.3),0.18,0.1,0)]),
           idle(G(0,0,0,[M(O(0.07),0.05,0.62,1.22,{s:[1,1.4,1]}),M(O(0.07),0.42,0.62,1.28,{s:[1,1.4,1]})]),(p,t)=>{ p.position.x=Math.sin(t*0.35)*0.85; p.children.forEach((c,k)=>{ c.position.y=0.62+Math.sin(t*1.4)*0.03+Math.sin(t*2.2+k*2)*0.02; c.rotation.y=t*1.5; }); })];
       }
       case 8: { // Der Zerfall
         const steps=[0,1,2,3,4].map(k=>M(B(0.42,0.1,0.26),0.4,0.3+k*0.2,0.95-k*0.24));
-        const falls=[0.95,1.15,1.35].map((z,k)=>M(B(0.05,1.25-k*0.1,0.16),-1.42,0.85-k*0.05,z));
+        const falls=[0.95,1.15,1.35].map((z,k)=>W(M(B(0.05,1.25-k*0.1,0.16),-1.42,0.85-k*0.05,z)));
         const arrows=[[-0.9,-0.1,0.4,0.2],[-0.6,0.3,-0.3,0.35],[-1.15,0.35,0.2,-0.3],[-0.35,-0.35,-0.2,-0.25]].map(q=>G(q[0],0.22,q[1],[M(C(0.012,0.012,0.6,4),0,0.22,0),M(K(0.035,0.1,3),0,0.5,0)],{rz:q[2],rx:q[3]}));
         return [
-          G(0,0,0,[M(C(2.0,2.1,0.22,10),0,0.11,0),M(B(3.9,0.03,0.55),0,0.235,1.3)]),
+          G(0,0,0,[M(C(2.0,2.1,0.22,10),0,0.11,0),W(M(B(3.9,0.03,0.55),0,0.235,1.3))]),
           G(0,0,0,[M(new T.SphereGeometry(1.2,10,6,0,P*2,0,P/2),0.4,0.22,-0.55,{s:[1,0.95,1]})].concat(steps)),
           G(0.4,1.35,-0.6,[M(B(0.5,0.1,0.42),0,0.05,0),M(B(0.5,0.62,0.09),0,0.36,-0.18),M(B(0.08,0.24,0.38),-0.22,0.17,0),M(B(0.08,0.24,0.38),0.22,0.17,0),M(K(0.06,0.18,4),-0.22,0.72,-0.18),M(K(0.06,0.18,4),0.22,0.72,-0.18)]),
-          idle(G(0,0,0,[M(B(0.6,1.6,0.95),-1.75,1.0,1.15),M(C(0.4,0.42,0.06,10),-1.25,0.25,1.15,{s:[1,1,0.7]})].concat(falls)),(p,t)=>{ p.children.forEach((c,k)=>{ if(k>1) c.scale.z=1+Math.sin(t*6+k*2)*0.25; if(k===1){ const q=1+Math.sin(t*2.4)*0.05; c.scale.set(q,1,0.7*q); } }); }),
+          idle(G(0,0,0,[M(B(0.6,1.6,0.95),-1.75,1.0,1.15),W(M(C(0.4,0.42,0.06,10),-1.25,0.25,1.15,{s:[1,1,0.7]}))].concat(falls)),(p,t)=>{ p.children.forEach((c,k)=>{ if(k>1) c.scale.z=1+Math.sin(t*6+k*2)*0.25; if(k===1){ const q=1+Math.sin(t*2.4)*0.05; c.scale.set(q,1,0.7*q); } }); }),
           idle(G(0,0.28,1.3,[M(C(0.13,0.05,0.85,8),0.6,0,0,{rz:P/2,s:[1,1,0.6]}),M(C(0.13,0.05,0.85,8),1.35,0,0.05,{rz:P/2,s:[1,1,0.6]})]),(p,t)=>{ const a=p.children[0]; a.position.x=0.2+Math.sin(t*0.4)*0.55; a.position.y=Math.sin(t*1.5)*0.025; a.rotation.x=Math.sin(t*1.2)*0.08; p.children[1].position.y=Math.sin(t*1.3+1)*0.02; }),
           idle(G(-0.75,1.0,0.45,[G(-0.14,0,0,[M(K(0.11,0.42,8),0,0,0,{rz:-P/2-0.25}),M(Tor(0.11,0.025),0.19,0.05,0,{ry:P/2})]),G(0.2,0.05,0,[M(K(0.05,0.32,8),0,0,0,{rz:P/2+0.3}),M(Tor(0.06,0.02),-0.14,0.04,0,{ry:P/2})])]),(p,t)=>{ p.position.y=1.0+Math.sin(t*1.2)*0.08; p.rotation.y=Math.sin(t*0.5)*0.6; p.children[0].position.x=-0.14-Math.abs(Math.sin(t*0.8))*0.06; p.children[1].position.x=0.2+Math.abs(Math.sin(t*0.8))*0.06; }),
           G(0,0,0,arrows.concat([M(C(0.22,0.22,0.04,10),-0.2,0.3,0.35,{rx:1.2,rz:0.3}),M(S(0.05),-0.2,0.32,0.35)]))];
@@ -1964,13 +1977,13 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
           G(0,0,0,[M(C(2.05,2.15,0.2,14),0,0.1,0)]),
           G(0,0,0,wall),
           G(0,0.2,0,[M(C(0.62,0.72,0.22,8),0,0.11,0),M(C(0.3,0.42,2.7,8),0,1.55,0),M(C(0.36,0.3,0.16,8),0,2.95,0)].concat(ring(5,0.24,3.2,(x,y,z,t,k)=>M(K(0.06,0.36+(k%2)*0.14,4),x,y,z)))),
-          idle(G(0,0,0,[M(C(1.62,1.62,0.05,18),0,0.3,0),M(B(0.5,0.05,0.7),Math.cos(0.68)*1.85,0.28,Math.sin(0.68)*1.85,{ry:-0.68})]),(p,t)=>{ p.children[0].position.y=0.32+Math.sin(t*0.9)*0.06; p.children[1].scale.x=1+Math.sin(t*5)*0.15; }),
+          idle(G(0,0,0,[W(M(C(1.62,1.62,0.05,18),0,0.3,0)),W(M(B(0.5,0.05,0.7),Math.cos(0.68)*1.85,0.28,Math.sin(0.68)*1.85,{ry:-0.68}))]),(p,t)=>{ p.children[0].position.y=0.32+Math.sin(t*0.9)*0.06; p.children[1].scale.x=1+Math.sin(t*5)*0.15; }),
           idle(G(0,0,0,[giant(Math.cos(0.45)*2.0,Math.sin(0.45)*2.0,-0.45-P/2),giant(Math.cos(1.15)*2.05,Math.sin(1.15)*2.05,-1.15-P/2)]),(p,t)=>{ p.children.forEach((w,j)=>{ const g=w.children[0]; g.rotation.x=-0.12+Math.sin(t*1.6+j*P)*0.08; g.children[4].rotation.x=-1.1+Math.sin(t*1.6+j*P)*0.35; g.children[5].rotation.x=-1.1+Math.sin(t*1.6+j*P+0.5)*0.35; }); }),
           idle(G(0.75,0.36,-0.75,[M(C(0.025,0.025,0.55,5),0,0,0,{rz:P/2}),M(C(0.025,0.025,0.4,5),0.15,0,0.3,{rz:P/2,ry:0.9}),M(O(0.06),0.42,0,0.05)]),(p,t)=>{ p.position.y=0.38+Math.sin(t*0.9)*0.06+Math.sin(t*2.3)*0.015; p.rotation.y=t*0.15; }),
           idle(G(-0.8,0.42,0.75,[M(S(0.2,12,8),0,0,0),M(Tor(0.21,0.015),0,0,0,{rx:P/2}),M(O(0.035),0.35,0.15,0),M(O(0.03),-0.3,0.25,0.1)]),(p,t)=>{ p.position.y=0.42+Math.sin(t*0.9)*0.06; p.children[0].rotation.y=t*0.9; p.children[1].rotation.y=t*1.4; p.children[1].rotation.x=P/2+Math.sin(t)*0.4; [2,3].forEach((k,j)=>{ const a=t*1.5+j*P; p.children[k].position.set(Math.cos(a)*0.34,0.1+Math.sin(t*2+j)*0.08,Math.sin(a)*0.34); }); })];
       }
       case 14: { // Die Sümpfe
-        const pools=[[-0.9,0.6,0.5],[0.6,0.9,0.42],[-0.2,-0.2,0.38],[1.1,-0.1,0.3],[-1.2,-0.5,0.32]].map(q=>M(C(q[2],q[2],0.03,10),q[0],0.235,q[1],{s:[1.3,1,0.9]}));
+        const pools=[[-0.9,0.6,0.5],[0.6,0.9,0.42],[-0.2,-0.2,0.38],[1.1,-0.1,0.3],[-1.2,-0.5,0.32]].map(q=>W(M(C(q[2],q[2],0.03,10),q[0],0.235,q[1],{s:[1.3,1,0.9]})));
         const reeds=[]; [[-1.45,0.3],[0.15,0.65],[1.45,0.55],[-0.6,-0.6],[0.8,-0.55]].forEach((c,j)=>{ for(let k=0;k<4;k++) reeds.push(M(K(0.02,0.4+((k+j)%3)*0.1,3),c[0]+(k%2)*0.08-0.04,0.42,c[1]+(k>1?0.07:-0.03),{rz:(k-1.5)*0.12})); });
         const lights=[[-0.9,0.6],[0.6,0.9],[-0.2,-0.2],[1.1,-0.1],[-1.2,-0.5],[0.2,0.3]].map((q,k)=>{ const m=M(O(0.055),q[0],0.55,q[1],{s:[1,1.5,1]}); m.userData.lk=k; return m; });
         return [
@@ -2125,13 +2138,15 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
     const holder=new T.Group(); spin.add(holder);
     const gold=new T.MeshStandardMaterial({color:0xFFB000,emissive:0x3a1d00,roughness:.42,metalness:.2,flatShading:true,side:T.DoubleSide});
     const dark=new T.MeshStandardMaterial({color:0x3a3a42,roughness:.88,flatShading:true,side:T.DoubleSide});
+    const waterOn=new T.MeshStandardMaterial({color:0x3FA9FF,emissive:0x06264a,roughness:.22,metalness:.15,flatShading:true,side:T.DoubleSide});
+    const waterOff=new T.MeshStandardMaterial({color:0x2c3a52,emissive:0x050a14,roughness:.4,metalness:.1,flatShading:true,side:T.DoubleSide});
     const shards=[];
     for(let k=0;k<9;k++){
       const m=new T.Mesh(new T.TetrahedronGeometry(0.07+Math.random()*0.07), gold);
       m.userData={r:2.6+Math.random()*1.6, a:Math.random()*6.28, y:0.6+Math.random()*3.6, sp:(0.08+Math.random()*0.12)*(Math.random()<.5?-1:1), bob:Math.random()*6.28};
       sc.add(m); shards.push(m);
     }
-    const A={T,r,sc,cam,spin,holder,gold,dark,shards,hemi,dl,parts:[],obj:-1,filled:-1,rx:0,ry:0,drag:false,anims:[],running:false,raf:0,t0:performance.now(),host:null,ro:null};
+    const A={T,r,sc,cam,spin,holder,gold,dark,waterOn,waterOff,shards,hemi,dl,parts:[],obj:-1,filled:-1,rx:0,ry:0,drag:false,anims:[],running:false,raf:0,t0:performance.now(),host:null,ro:null};
     let sx=0, sy=0, bx=0, by=0;
     const cv=r.domElement;
     cv.addEventListener("pointerdown", e=>{ A.drag=true; sx=e.clientX; sy=e.clientY; bx=A.rx; by=A.ry; try{ cv.setPointerCapture(e.pointerId); }catch(_){} });
@@ -2143,19 +2158,23 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
   }
   // the chosen theme tints the light of the 3D scenes
   const ACH_LIGHT={morgentau:[0xffe4d2,0xfff0ea], laternenlicht:[0xffd59a,0xffe6c4], wiesenwind:[0xeeffe2,0xe6fff2], huegelhoehle:[0xffdfae,0xf2e2c8], sternennacht:[0xd6e0ff,0xdcd8ff]};
+  function achMat(A,o,kind){ if(kind==="haze") return A.haze; if(o.userData.water) return kind==="gold" ? A.waterOn : A.waterOff; return kind==="gold" ? A.gold : A.dark; }
+  // blue water that matches the theme: [earned, not yet earned]
+  const ACH_WATER={morgentau:[0x4FC3D6,0x2a4450],laternenlicht:[0x4A86E8,0x2a3652],wiesenwind:[0x4FAEFF,0x2a3e55],huegelhoehle:[0x4B98B5,0x2d3f48],sternennacht:[0x3FB8FF,0x29365a]};
   function achTint(){ const A=achScene; if(!A||!A.dl) return; const c=ACH_LIGHT[getSkin()]||[0xffffff,0xffffff]; A.dl.color.setHex(c[0]); A.hemi.color.setHex(c[1]);
     const light=getTheme()==="light", base=A.spin.userData.base;
     if(base) base.material.color.setHex(light?0xd9d3ca:0x26262b);
     A.dark.color.setHex(light?0xbab4ab:0x3a3a42);
     A.hemi.groundColor.setHex(light?0x9a948c:0x2a2a33);
+    { const w=ACH_WATER[getSkin()]||ACH_WATER.sternennacht; A.waterOn.color.setHex(w[0]); A.waterOff.color.setHex(light?0x9fb4c8:w[1]); }
     if(!A.running) try{ A.r.render(A.sc,A.cam); }catch(e){} }
   function achResize(){
     const A=achScene; if(!A||!A.host) return;
-    const w=A.host.clientWidth, h=A.host.clientHeight; if(!w||!h) return;
+    const w=A.r.domElement.clientWidth||A.host.clientWidth, h=A.r.domElement.clientHeight||A.host.clientHeight; if(!w||!h) return;
     A.r.setSize(w,h,false); A.cam.aspect=w/h;
     const vt=Math.tan(15*Math.PI/180), ht=vt*A.cam.aspect;
-    const dist=Math.max(3.45/ht, 2.75/vt, 7.6);
-    A.cam.position.set(0, 1.8+dist*0.38, dist*0.92); A.cam.lookAt(0,1.6,0);
+    const dist=Math.max(3.7/ht, 2.85/vt, 7.9);   // room for the base plate when it is turned diagonally
+    A.cam.position.set(0, 1.8+dist*0.38, dist*0.92); A.cam.lookAt(0,1.2,0);
     A.cam.updateProjectionMatrix();
     if(!A.running) A.r.render(A.sc,A.cam);
   }
@@ -2164,9 +2183,9 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
   function achSeasonNeed(se){ let n=0; for(let q=0;q<se;q++) n+=ACH_SEASONS[q].objs.length*ACH_PARTS; return n; }
   function achSeasonLocked(i, total){ return total < achSeasonNeed(ACH[i].season); }
   const ACH_GREY = 4; // parts already standing in grey before they are earned
-  function achDeco(i, T, mat){
+  function achDeco(i, T, mat, wmat){
     const g=new T.Group(); let sd=(i+1)*7919; const rnd=()=>{ sd=(sd*9301+49297)%233280; return sd/233280; };
-    const add=(geo,x,y,z,o)=>{ const m=new T.Mesh(geo,mat); m.position.set(x,y,z); if(o){ if(o.ry!==undefined) m.rotation.y=o.ry; if(o.rz) m.rotation.z=o.rz; if(o.s) m.scale.set(o.s[0],o.s[1],o.s[2]); } m.castShadow=true; m.receiveShadow=true; g.add(m); return m; };
+    const add=(geo,x,y,z,o)=>{ const m=new T.Mesh(geo,(o&&o.w&&wmat)||mat); m.position.set(x,y,z); if(o){ if(o.ry!==undefined) m.rotation.y=o.ry; if(o.rz) m.rotation.z=o.rz; if(o.s) m.scale.set(o.s[0],o.s[1],o.s[2]); } m.castShadow=true; m.receiveShadow=true; g.add(m); return m; };
     const kinds=(ACH_TERRAIN[i]||"rock");
     const has=k=>kinds.indexOf(k)>=0;
     [[1,1],[-1,1],[1,-1],[-1,-1]].forEach(([sx,sz],ci)=>{
@@ -2178,7 +2197,7 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
         const pick=(has("meadow")||has("field"))&&k%3===0?"tuft":has("forest")&&k%2===0?"pine":(has("water")||has("sea"))&&k===0?"pond":has("marsh")?(k%2?"reed":"pond"):has("ash")?(k%2?"spike":"crack"):has("dead")&&k===1?"dead":has("field")&&k===1?"furrow":"rock";
         if(pick==="tuft"){ for(let q=0;q<3;q++) add(new T.ConeGeometry(0.035,0.14+rnd()*0.08,4),x+(q-1)*0.05,y+0.07,z+(rnd()-0.5)*0.06); if(has("meadow")) add(new T.IcosahedronGeometry(0.09,0),x+0.12,y+0.04,z-0.08,{s:[1,0.7,1]}); }
         else if(pick==="pine"){ add(new T.CylinderGeometry(0.025,0.03,0.12,5),x,y+0.06,z); add(new T.ConeGeometry(0.12,0.3,6),x,y+0.24,z); add(new T.ConeGeometry(0.08,0.2,6),x,y+0.38,z); }
-        else if(pick==="pond"){ add(new T.CylinderGeometry(0.2,0.2,0.02,10),x,y+0.01,z,{s:[1.3,1,0.8],ry:rnd()*3}); }
+        else if(pick==="pond"){ add(new T.CylinderGeometry(0.2,0.2,0.02,10),x,y+0.01,z,{s:[1.3,1,0.8],ry:rnd()*3,w:1}); }
         else if(pick==="reed"){ for(let q=0;q<3;q++) add(new T.ConeGeometry(0.014,0.22+rnd()*0.1,3),x+(q-1)*0.04,y+0.12,z,{rz:(q-1)*0.15}); }
         else if(pick==="spike"){ add(new T.ConeGeometry(0.05,0.2+rnd()*0.15,4),x,y+0.12,z,{rz:(rnd()-0.5)*0.4}); }
         else if(pick==="crack"){ add(new T.BoxGeometry(0.35,0.012,0.025),x,y+0.005,z,{ry:rnd()*3}); }
@@ -2186,12 +2205,12 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
         else if(pick==="furrow"){ for(let q=0;q<3;q++) add(new T.BoxGeometry(0.4,0.025,0.04),x,y+0.01,z+(q-1)*0.09,{ry:sx*sz*0.8}); }
         else add(new T.DodecahedronGeometry(0.06+rnd()*0.08),x,y+0.04,z,{s:[1,0.65,1]});
       }
-      if(has("sea") || (has("water") && ci<2)) for(let q=0;q<2;q++) add(new T.BoxGeometry(0.32,0.015,0.035),cx-sx*0.05,0.06,cz+sz*(0.12+q*0.1)-sz*0.3,{ry:0.2*sx});
+      if(has("sea") || (has("water") && ci<2)) for(let q=0;q<2;q++) add(new T.BoxGeometry(0.32,0.015,0.035),cx-sx*0.05,0.06,cz+sz*(0.12+q*0.1)-sz*0.3,{ry:0.2*sx,w:1});
     });
     // low details in the middle: hidden later under the golden ground plate
     for(let k=0;k<14;k++){ const a=rnd()*6.283, d=0.3+rnd()*1.5, x=Math.cos(a)*d, z=Math.sin(a)*d;
       if(has("ash")) add(new T.BoxGeometry(0.4+rnd()*0.4,0.012,0.03),x,0.006,z,{ry:rnd()*3});
-      else if((has("water")||has("sea")||has("marsh")) && k%3===0) add(new T.CylinderGeometry(0.22+rnd()*0.2,0.22,0.015,10),x,0.008,z,{s:[1.3,1,0.8],ry:rnd()*3});
+      else if((has("water")||has("sea")||has("marsh")) && k%3===0) add(new T.CylinderGeometry(0.22+rnd()*0.2,0.22,0.015,10),x,0.008,z,{s:[1.3,1,0.8],ry:rnd()*3,w:1});
       else if((has("meadow")||has("field")) && k%2===0){ for(let q=0;q<3;q++) add(new T.ConeGeometry(0.03,0.1+rnd()*0.05,4),x+(q-1)*0.045,0.06,z); }
       else if(has("field") && k%3===1) add(new T.BoxGeometry(0.6,0.02,0.04),x,0.01,z,{ry:0.6});
       else if(has("forest") && k%3===0) add(new T.CylinderGeometry(0.06,0.07,0.08,6),x,0.04,z);
@@ -2210,10 +2229,10 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
     A.sc.fog = locked ? new A.T.Fog(0x2a2532, 8, 26) : null;
     while(A.holder.children.length) A.holder.remove(A.holder.children[0]);
     A.parts=achBuild(i, A.T); A.anims=[];
-    if(A.decoFor!==i){ if(A.deco) A.spin.remove(A.deco); A.deco=achDeco(i, A.T, A.dark); A.spin.add(A.deco); A.decoFor=i; }
+    if(A.decoFor!==i){ if(A.deco) A.spin.remove(A.deco); A.deco=achDeco(i, A.T, A.dark, A.waterOff); A.spin.add(A.deco); A.decoFor=i; }
     A.parts.forEach((p,k)=>{
-      const mat = locked ? A.haze : (k<filled ? A.gold : A.dark); p.visible = locked || k<filled || k<ACH_GREY;
-      p.traverse(o=>{ if(o.isMesh){ o.material=mat; o.castShadow=true; o.receiveShadow=true; } });
+      const kind = locked ? "haze" : (k<filled ? "gold" : "dark"); p.visible = locked || k<filled || k<ACH_GREY;
+      p.traverse(o=>{ if(o.isMesh){ o.material=achMat(A,o,kind); o.castShadow=true; o.receiveShadow=true; } });
       p.userData.home={y:p.position.y, sx:p.scale.x, sy:p.scale.y, sz:p.scale.z};
       A.holder.add(p);
     });
@@ -2233,7 +2252,7 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
     const now=performance.now();
     for(let k=from;k<filled;k++){
       const p=A.parts[k]; if(!p) continue;
-      if(k<ACH_GREY){ A.anims.push({p, t:now+500+(k-from)*380, d:800, gold:true}); p.traverse(o=>{ if(o.isMesh) o.material=A.dark; }); }
+      if(k<ACH_GREY){ A.anims.push({p, t:now+500+(k-from)*380, d:800, gold:true}); p.traverse(o=>{ if(o.isMesh) o.material=achMat(A,o,"dark"); }); }
       else { A.anims.push({p, t:now+500+(k-from)*380, d:950}); p.visible=false; }
     }
     setSeen(total);
@@ -2250,7 +2269,7 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
     A.anims = A.anims.filter(a=>{
       const h=a.p.userData.home; let k=(now-a.t)/a.d;
       if(k<0) return true;
-      if(a.gold){ if(!a.on){ a.on=1; a.p.traverse(o=>{ if(o.isMesh) o.material=A.gold; }); }
+      if(a.gold){ if(!a.on){ a.on=1; a.p.traverse(o=>{ if(o.isMesh) o.material=achMat(A,o,"gold"); }); }
         if(k>1) k=1; const b=Math.sin(k*Math.PI);
         a.p.position.y=h.y+b*0.3; a.p.scale.set(h.sx*(1+b*0.12),h.sy*(1+b*0.12),h.sz*(1+b*0.12));
         A.gold.emissive.setHex(k<1 ? 0x6a3c00 : 0x2c1700);
@@ -2377,7 +2396,7 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
       if(now<wLock) return;
       const k=e.deltaMode===1?32:1, dy=e.deltaY*k, dx=e.deltaX*k;
       if(Math.abs(dx)>Math.abs(dy)){
-        wX+=dx; if(Math.abs(wX)<90) return; const dir=wX>0?1:-1; wX=0; wLock=now+700;
+        wX+=dx; if(Math.abs(wX)<50) return; const dir=wX>0?1:-1; wX=0; wLock=now+700;
         if(donePage===1){ yearView += dir; ySel=null; sfx("flip"); renderYear(p1); p1.classList.remove("on"); void p1.offsetWidth; p1.classList.add("on"); }
         else if(donePage===2){ const n=Math.max(0,Math.min(ACH.length-1,(achView||0)+dir)); if(n!==achView){ achView=n; sfx("flip"); renderAch(p2,"swipe"); } }
         return;
