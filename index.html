@@ -57,6 +57,12 @@ function vfix(){var sa=navigator.standalone||(window.matchMedia&&matchMedia("(di
 <script>(function(){var d=document.documentElement;function fit(){var w=innerWidth,h=innerHeight,s=Math.max(1,Math.min(1.5,Math.min(w/440,h/860)));s=Math.round(s*100)/100;window.__uiS=s;d.style.setProperty("--s",s);d.classList.toggle("scaled",s>1);d.classList.toggle("wide",w>h&&w>=900)}fit();addEventListener("resize",fit);
 /* iOS home screen apps sometimes get a layout viewport that is shorter than the screen (the status bar height goes missing at the bottom); stretch the app over the real screen */
 function vfix(){var sa=navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches),m=0;if(sa&&innerWidth<innerHeight&&screen.height>innerHeight){m=screen.height-innerHeight;if(m<16||m>90)m=0}window.__vfix=m;d.style.setProperty("--vfix",m+"px");d.classList.toggle("vfix",m>0)}vfix();addEventListener("resize",vfix);addEventListener("orientationchange",function(){setTimeout(vfix,300)})})();</script>
+<script>(function(){var d=document.documentElement;function fit(){var w=innerWidth,h=innerHeight,s=Math.max(1,Math.min(1.5,Math.min(w/440,h/860)));s=Math.round(s*100)/100;window.__uiS=s;d.style.setProperty("--s",s);d.classList.toggle("scaled",s>1);d.classList.toggle("wide",w>h&&w>=900)}fit();addEventListener("resize",fit);
+/* iOS home screen apps sometimes get a layout viewport that is shorter than the screen (the status bar height goes missing at the bottom); stretch the app over the real screen */
+function vfix(){var sa=navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches),m=0;if(sa&&innerWidth<innerHeight&&screen.height>innerHeight){m=screen.height-innerHeight;if(m<16||m>90)m=0}window.__vfix=m;d.style.setProperty("--vfix",m+"px");d.classList.toggle("vfix",m>0)}vfix();addEventListener("resize",vfix);addEventListener("orientationchange",function(){setTimeout(vfix,300)})})();</script>
+<script>(function(){var d=document.documentElement;function fit(){var w=innerWidth,h=innerHeight,s=Math.max(1,Math.min(1.5,Math.min(w/440,h/860)));s=Math.round(s*100)/100;window.__uiS=s;d.style.setProperty("--s",s);d.classList.toggle("scaled",s>1);d.classList.toggle("wide",w>h&&w>=900)}fit();addEventListener("resize",fit);
+/* iOS home screen apps sometimes get a layout viewport that is shorter than the screen (the status bar height goes missing at the bottom); stretch the app over the real screen */
+function vfix(){var sa=navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches),m=0;if(sa&&innerWidth<innerHeight&&screen.height>innerHeight){m=screen.height-innerHeight;if(m<16||m>90)m=0}window.__vfix=m;d.style.setProperty("--vfix",m+"px");d.classList.toggle("vfix",m>0)}vfix();addEventListener("resize",vfix);addEventListener("orientationchange",function(){setTimeout(vfix,300)})})();</script>
 <script>try{var d=document.documentElement;if(localStorage.getItem("haushalt-theme")==="light")d.setAttribute("data-app-theme","light");d.setAttribute("data-app-skin",localStorage.getItem("haushalt-skin")||"morgentau")}catch(e){document.documentElement.setAttribute("data-app-skin","morgentau")}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
@@ -1172,8 +1178,10 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
   }
   function save(){
     try{ Sync.stamp(); }catch(e){}
+    try{ Mine.stamp(); }catch(e){}
     try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
     try{ Sync.schedule(); }catch(e){}
+    try{ Mine.schedule(); }catch(e){}
     if(dbRef){
       const snapshot = JSON.parse(JSON.stringify(state));
       writing = writing.then(()=>dbRef.set(snapshot)).catch(()=>{});
@@ -1267,7 +1275,7 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
         if(data.deleted){
           if(t && !isShared(t)) return; // a private task on this phone with the same id is never touched
           if(t && (t._u||0)>u) return; // edited here after it was deleted there: this phone wins and pushes again
-          if(t && (t._u||0)<=u){ state.tasks=state.tasks.filter(x=>x.id!==id); delete byId[id]; delete meta.known[id]; changed=true; }
+          if(t && (t._u||0)<=u){ state.tasks=state.tasks.filter(x=>x.id!==id); delete byId[id]; delete meta.known[id]; changed=true; if(!first) setTimeout(()=>{ try{ Mine.resync(); }catch(e){} }, 300); }
           if(!meta.tomb[id] || meta.tomb[id]<u) meta.tomb[id]=u;
           return;
         }
@@ -1343,9 +1351,10 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
       if(meta.hid){ prepareLocal(); saveMeta(); setTimeout(connect, 0); }
     }
     function exportInfo(){ return meta.hid ? {hid:meta.hid, name:meta.name||""} : null; }
+    function resync(){ if(meta.hid && be) connect(); }
     window.addEventListener("online", ()=>{ setStatus(status); push(); });
     window.addEventListener("offline", ()=>setStatus(status));
-    return { stamp, schedule, connect, create, join, leave, afterRestore, exportInfo, statusText, rowText,
+    return { stamp, schedule, connect, create, join, leave, resync, afterRestore, exportInfo, statusText, rowText,
       get configured(){ return !!cfg(); }, get joined(){ return !!meta.hid; }, get code(){ return fmt(meta.hid); },
       get name(){ return meta.name||""; }, set name(v){ meta.name=String(v||"").trim().slice(0,24); saveMeta(); } };
   })();
@@ -1415,6 +1424,251 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
         if(!(await Sync.join(ji.value))){ msg.textContent="The code has 16 characters."; return; } sfx("save"); openSharing(); };
       f.append(cr,jl,ji,jb,msg);
       if(Sync.statusText().indexOf("Error")===0) msg.textContent=Sync.statusText();
+    }
+    inner.appendChild(f);
+  }
+
+  /* ---------- my devices: everything of one person mirrored between their own phones, tablets and computers ---------- */
+  // Firestore: personal/{20 character code}/tasks/{id} for private tasks (newest change wins, like the household)
+  //            personal/{code}/profile/main for history, streak, badges, achievements and look (merged, nothing is ever lost)
+  const Mine = (()=>{
+    const KEY="haushalt-mine", LOCAL={q:1,qd:1,_u:1,_h:1,_mu:1,_mh:1,shared:1};
+    const SET_KEYS=["haushalt-skin","haushalt-theme","haushalt-lang"];   // look and language follow you; sound and volume stay per device
+    let meta={}; try{ meta=JSON.parse(localStorage.getItem(KEY)||"{}")||{}; }catch(e){ meta={}; }
+    meta.known=meta.known||{}; meta.tomb=meta.tomb||{}; meta.acked=meta.acked||{};
+    let be=null, unsubT=null, unsubP=null, status="off", errMsg="", firstT=true, firstP=true, pushing=false, pushAgain=false, timer=0, gotProfile=false;
+    const saveMeta=()=>{ try{ localStorage.setItem(KEY, JSON.stringify(meta)); }catch(e){} };
+    const cfg=()=>window.__MINE_FAKE__ ? {fake:1} : (window.HAUSHALT_SYNC && window.HAUSHALT_SYNC.projectId ? window.HAUSHALT_SYNC : null);
+    const stable=v=>{ if(Array.isArray(v)) return "["+v.map(stable).join(",")+"]"; if(v && typeof v==="object") return "{"+Object.keys(v).sort().filter(k=>v[k]!==undefined).map(k=>JSON.stringify(k)+":"+stable(v[k])).join(",")+"}"; return JSON.stringify(v); };
+    const pick=t=>{ const o={}; Object.keys(t).sort().forEach(k=>{ if(!LOCAL[k] && t[k]!==undefined) o[k]=t[k]; }); return o; };
+    const hash=t=>stable(pick(t));
+    const ALPHA="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const newCode=()=>{ const a=new Uint32Array(20); crypto.getRandomValues(a); return Array.from(a,x=>ALPHA[x%ALPHA.length]).join(""); };
+    const fmt=c=>(c||"").replace(/(.{4})(?=.)/g,"$1-");
+    const clean=c=>String(c||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+    const isPrivate=t=>!!t && !t.shared;
+    function setStatus(s,e){ status=s; if(e!==undefined) errMsg=e; const el=document.getElementById("mineStatus"); if(el) el.textContent=statusText(); const r=document.getElementById("mineRowLd"); if(r) r.textContent=rowText(); }
+    function pendingCount(){ let n=0; state.tasks.forEach(t=>{ if(isPrivate(t) && (meta.acked[t.id]||0)<(t._mu||0)) n++; }); for(const id in meta.tomb) if((meta.acked[id]||0)<meta.tomb[id]) n++; if(meta.profH!==meta.profAck) n++; return n; }
+    function statusText(){
+      if(status==="error") return "Error: "+errMsg;
+      if(status==="connecting") return "Connecting …";
+      if(status==="live"){ const p=pendingCount(); return p ? (navigator.onLine===false ? "Offline, changes will sync later" : "Syncing …") : "Synced"; }
+      return "";
+    }
+    function rowText(){ if(!cfg()) return "Not set up yet"; if(!meta.pid) return "Not connected"; return "Connected · "+(statusText()||"…"); }
+    // the parts of the state that belong to the person rather than to a single task
+    function settingsNow(){ const o={}; SET_KEYS.forEach(k=>{ const v=LS(k,null); if(v!==null) o[k]=v; }); return o; }
+    function profileNow(){
+      const hh=Sync.exportInfo();
+      return { log:state.log||[], days:state.days||{}, best:state.best||0, badges:state.badges||{}, achSeen:typeof state.achSeen==="number"?state.achSeen:0,
+        stats:state.stats||{}, set:{v:settingsNow(), u:meta.setU||0}, hh:hh||null };
+    }
+    const RANK={done:3, empty:2, miss:1, open:0};
+    function mergeStats(a,b){
+      const o=JSON.parse(JSON.stringify(a||{}));
+      Object.keys(b||{}).forEach(k=>{ const x=o[k], y=b[k];
+        if(x===undefined) o[k]=JSON.parse(JSON.stringify(y));
+        else if(typeof x==="number" && typeof y==="number") o[k]=Math.max(x,y);
+        else if(Array.isArray(x) && Array.isArray(y)) o[k]=[...new Set([...x,...y])];
+        else if(x && y && typeof x==="object" && typeof y==="object") o[k]=mergeStats(x,y); });
+      return o;
+    }
+    // combine two profiles: completed days, log entries and badges are never lost, records keep the higher value
+    function mergeProfile(a,b){
+      const seen={}, log=[];
+      (a.log||[]).concat(b.log||[]).forEach(e=>{ if(!e||!e.d) return; const k=e.d+"|"+e.id+"|"+(e.h===undefined?"":e.h); if(seen[k]) return; seen[k]=1; log.push(e); });
+      log.sort((x,y)=>x.d<y.d?-1:x.d>y.d?1:0);
+      const days=Object.assign({}, b.days||{});
+      Object.keys(a.days||{}).forEach(d=>{ const x=a.days[d], y=days[d]; if(y===undefined || (RANK[x]||0)>=(RANK[y]||0)) days[d]=x; });
+      const badges=Object.assign({}, b.badges||{}, a.badges||{});
+      return { log, days, best:Math.max(a.best||0,b.best||0), badges, achSeen:Math.max(a.achSeen||0,b.achSeen||0), stats:mergeStats(a.stats,b.stats) };
+    }
+    const core=p=>stable({log:p.log, days:p.days, best:p.best, badges:p.badges, achSeen:p.achSeen, stats:p.stats});
+    // record which private tasks changed since the last save (called inside save())
+    function stamp(){
+      if(!meta.pid) return;
+      const now=Date.now(), ids={};
+      state.tasks.forEach(t=>{
+        if(!isPrivate(t)){ delete t._mh; return; }   // shared tasks travel through the household
+        ids[t.id]=1; const h=hash(t);
+        if(!meta.known[t.id] && meta.tomb[t.id]){ delete meta.tomb[t.id]; t._mh=h; t._mu=now; }
+        else if(t._mh===undefined){ t._mh=h; t._mu=t._mu||now; }
+        else if(t._mh!==h){ t._mh=h; t._mu=now; }
+      });
+      for(const id in meta.known) if(!ids[id] && !meta.tomb[id]) meta.tomb[id]=now;
+      meta.known=ids;
+      const sv=stable(settingsNow()); if(meta.setH!==sv){ meta.setH=sv; meta.setU=now; }
+      saveMeta();
+    }
+    function schedule(){ if(!meta.pid || !be) return; clearTimeout(timer); timer=setTimeout(push, 400); }
+    async function push(){
+      if(!be || !meta.pid || firstT || firstP) return;
+      if(pushing){ pushAgain=true; return; }
+      pushing=true;
+      const pid=meta.pid, jobs=[];
+      state.tasks.forEach(t=>{ if(!isPrivate(t)) return; const u=t._mu||1; if((meta.acked[t.id]||0)<u){ const d=JSON.parse(JSON.stringify(pick(t))); d._u=u; jobs.push(["tasks",t.id,d,u]); } });
+      for(const id in meta.tomb){ const u=meta.tomb[id]; if((meta.acked[id]||0)<u) jobs.push(["tasks",id,{deleted:true,_u:u},u]); }
+      const prof=profileNow(), ph=core(prof)+stable(prof.set)+stable(prof.hh);
+      meta.profH=ph;
+      try{
+        await Promise.all(jobs.map(([c,id,d,u])=>be.put(pid,c,id,d).then(()=>{ if((meta.acked[id]||0)<u) meta.acked[id]=u; })));
+        if(meta.profAck!==ph){ await be.put(pid,"profile","main",JSON.parse(JSON.stringify(Object.assign(prof,{at:Date.now()})))); meta.profAck=ph; }
+        saveMeta(); setStatus("live");
+      }catch(e){ setStatus("error", (e&&e.code)||(e&&e.message)||String(e)); }
+      pushing=false; if(pushAgain){ pushAgain=false; push(); }
+    }
+    function persist(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} }
+    // private tasks from the other devices: newest change per task wins
+    function receiveTasks(docs){
+      let changed=false, dropped=false;
+      const byId={}; state.tasks.forEach(t=>byId[t.id]=t);
+      docs.forEach(({id,data,pending})=>{
+        const u=data._u||0, t=byId[id];
+        if(!pending) meta.acked[id]=Math.max(meta.acked[id]||0,u);
+        if(data.deleted){
+          if(t && !isPrivate(t)) return;                 // it lives in the household now
+          if(t && (t._mu||0)>u) return;
+          if(t){ state.tasks=state.tasks.filter(x=>x.id!==id); delete byId[id]; delete meta.known[id]; changed=true; dropped=true; }
+          if(!meta.tomb[id] || meta.tomb[id]<u) meta.tomb[id]=u;
+          return;
+        }
+        if(meta.tomb[id] && meta.tomb[id]>=u) return;
+        if(t && !isPrivate(t)) return;
+        if(!t || (t._mu||0)<u){
+          const n=JSON.parse(JSON.stringify(data)); delete n.deleted;
+          if(t){ n.q=t.q; n.qd=t.qd; if(n.q===undefined) delete n.q; if(n.qd===undefined) delete n.qd; }
+          if(!Array.isArray(n.days)) n.days=[];
+          n._mu=u; n._mh=hash(n);
+          if(t) state.tasks[state.tasks.indexOf(t)]=n; else state.tasks.push(n);
+          byId[id]=n; meta.known[id]=1; delete meta.tomb[id]; changed=true;
+        }
+      });
+      firstT=false; saveMeta();
+      if(changed){ persist(); cleanup(); safeRender(); }
+      if(dropped) try{ Sync.resync(); }catch(e){}   // a task that became shared on the other device comes back through the household
+      afterFirst();
+    }
+    function receiveProfile(docs){
+      const d=docs.find(x=>x.id==="main");
+      if(d){
+        gotProfile=true;
+        const remote=d.data||{}, local=profileNow(), m=mergeProfile(local, remote);
+        if(core(m)!==core(local)){
+          state.log=m.log; state.days=m.days; state.best=m.best; state.badges=m.badges; state.achSeen=m.achSeen; state.stats=m.stats;
+          persist(); safeRender();
+        }
+        // look and language: the most recent change on any device wins
+        const rs=remote.set;
+        if(rs && rs.v && (rs.u||0)>(meta.setU||0)){
+          meta.setU=rs.u; let look=false, lang=null;
+          SET_KEYS.forEach(k=>{ if(rs.v[k]!==undefined && LS(k,null)!==rs.v[k]){ LSset(k, rs.v[k]); if(k==="haushalt-lang") lang=rs.v[k]; else look=true; } });
+          meta.setH=stable(settingsNow());
+          if(look) try{ applyLook(); }catch(e){}
+          if(lang) try{ I18N.setLang(lang); render(); }catch(e){}
+        }
+        // the household comes along: a new device joins it on its own
+        if(remote.hh && remote.hh.hid && !Sync.joined) try{ Sync.afterRestore(remote.hh); }catch(e){}
+        meta.profAck=core(remote)+stable(remote.set||{v:{},u:0})+stable(remote.hh||null);
+      }
+      firstP=false; saveMeta();
+      afterFirst();
+    }
+    function afterFirst(){
+      if(firstT || firstP) return;
+      if(meta.joining){
+        if(!gotProfile){ const c=meta.pid; leave(true); setStatus("error","No device code "+fmt(c)); renderDevicesIfOpen(); return; }
+        delete meta.joining; saveMeta();
+      }
+      setStatus("live"); push();
+    }
+    async function backend(){
+      if(window.__MINE_FAKE__) return window.__MINE_FAKE__;
+      const c=cfg(), V="10.12.2";
+      const [A,F]=await Promise.all([import("https://www.gstatic.com/firebasejs/"+V+"/firebase-app.js"), import("https://www.gstatic.com/firebasejs/"+V+"/firebase-firestore.js")]);
+      const app=A.getApps().length ? A.getApp() : A.initializeApp(c), db=F.getFirestore(app);
+      return {
+        listen:(pid,coll,cb,err)=>F.onSnapshot(F.collection(db,"personal",pid,coll), s=>cb(s.docs.map(d=>({id:d.id, data:d.data(), pending:d.metadata.hasPendingWrites}))), err),
+        put:(pid,coll,id,data)=>F.setDoc(F.doc(db,"personal",pid,coll,id), data)
+      };
+    }
+    async function connect(){
+      if(!meta.pid || !cfg()) return;
+      setStatus("connecting"); firstT=true; firstP=true; gotProfile=false;
+      try{
+        if(!be) be=await backend();
+        [unsubT,unsubP].forEach(u=>{ if(u) try{ u(); }catch(e){} });
+        stamp();
+        const er=e=>setStatus("error",(e&&e.code)||(e&&e.message)||String(e));
+        unsubT=be.listen(meta.pid,"tasks",receiveTasks,er);
+        unsubP=be.listen(meta.pid,"profile",receiveProfile,er);
+      }catch(e){ setStatus("error", "Could not load the sync service"); }
+    }
+    function prepareLocal(){ meta.known={}; meta.tomb={}; meta.acked={}; delete meta.profAck; delete meta.profH; state.tasks.forEach(t=>{ delete t._mh; }); }
+    async function create(){
+      if(!cfg()) return;
+      meta.pid=newCode(); prepareLocal(); meta.setU=Date.now(); saveMeta();
+      try{ if(!be) be=await backend(); await be.put(meta.pid,"profile","main",JSON.parse(JSON.stringify(Object.assign(profileNow(),{at:Date.now()})))); }catch(e){ setStatus("error",(e&&e.code)||String(e)); }
+      await connect();
+    }
+    async function join(code){
+      const c=clean(code); if(c.length!==20) return false;
+      meta.pid=c; meta.joining=1; meta.setU=0; prepareLocal(); saveMeta(); await connect(); return true;
+    }
+    function leave(silent){
+      [unsubT,unsubP].forEach(u=>{ if(u) try{ u(); }catch(e){} }); unsubT=unsubP=null;
+      delete meta.pid; delete meta.joining; meta.known={}; meta.tomb={}; meta.acked={}; delete meta.profAck; delete meta.profH; saveMeta();
+      state.tasks.forEach(t=>{ delete t._mh; delete t._mu; }); persist();
+      if(!silent) setStatus("off","");
+    }
+    function resync(){ if(meta.pid && be) connect(); }
+    function settingsChanged(){ if(!meta.pid) return; clearTimeout(settingsChanged.t); settingsChanged.t=setTimeout(()=>{ stamp(); schedule(); }, 60); }
+    function afterRestore(info){
+      if(info && typeof info.pid==="string" && clean(info.pid).length===20){
+        [unsubT,unsubP].forEach(u=>{ if(u) try{ u(); }catch(e){} }); unsubT=unsubP=null;
+        meta.pid=clean(info.pid); delete meta.joining;
+      }
+      if(meta.pid){ prepareLocal(); saveMeta(); setTimeout(connect, 0); }
+    }
+    function exportInfo(){ return meta.pid ? {pid:meta.pid} : null; }
+    window.addEventListener("online", ()=>{ setStatus(status); push(); });
+    window.addEventListener("offline", ()=>setStatus(status));
+    document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") push(); });
+    return { stamp, schedule, connect, create, join, leave, resync, settingsChanged, afterRestore, exportInfo, statusText, rowText,
+      get configured(){ return !!cfg(); }, get joined(){ return !!meta.pid; }, get code(){ return fmt(meta.pid); } };
+  })();
+  function renderDevicesIfOpen(){ if(sheetMode==="devices" && sheet.classList.contains("open")) openDevices(); }
+  function openDevices(){ sheetMode="devices";
+    inner.innerHTML="";
+    const top=document.createElement("div"); top.className="top";
+    top.innerHTML='<h1>My devices</h1><button class="icon-btn" aria-label="Back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>';
+    top.querySelector("button").onclick=renderSettings; inner.appendChild(top);
+    const f=document.createElement("div"); f.className="form bk share";
+    const p=(cls,txt)=>{ const e=document.createElement("p"); e.className=cls; e.textContent=txt; return e; };
+    if(!Mine.configured){ f.appendChild(p("bk-hint","Syncing your devices needs the same one-time Firebase setup as sharing.")); inner.appendChild(f); return; }
+    const msg=p("bk-msg",""); msg.id="mineStatus"; msg.setAttribute("aria-live","polite");
+    if(Mine.joined){
+      const box=document.createElement("div"); box.className="bk-stat glass share-code";
+      box.innerHTML='<span>Device code</span><b translate="no"></b><span>Enter this code on your other phone, tablet or computer. Whoever has it sees all your tasks, so keep it to yourself.</span>';
+      box.querySelector("b").textContent=Mine.code;
+      msg.textContent=Mine.statusText();
+      const cp=document.createElement("button"); cp.className="btn full"; cp.textContent="Copy code";
+      cp.onclick=async()=>{ try{ await navigator.clipboard.writeText(Mine.code); cp.textContent="Code copied"; }catch(e){ try{ if(navigator.share) await navigator.share({text:Mine.code}); }catch(_){} } };
+      f.append(box,msg,cp);
+      f.appendChild(p("bk-hint","Synced: your private tasks and notes, history and calendar, streak and record, badges, achievements, theme and language. Shared household tasks keep syncing through the household. Sound and volume stay per device."));
+      const lv=document.createElement("button"); lv.className="btn ghost full"; lv.textContent="Disconnect this device"; lv.dataset.sfx="none";
+      lv.onclick=()=>{ if(!lv.dataset.c){ lv.dataset.c="1"; lv.textContent="Really disconnect? Everything stays on this device"; sfx("tap"); return; } Mine.leave(); sfx("del"); openDevices(); };
+      f.appendChild(lv);
+    } else {
+      f.appendChild(p("bk-hint","Keep your own phone, tablet and computer in sync: tasks, streak, calendar, badges, achievements, theme and language. Your shared household stays as it is."));
+      const cr=document.createElement("button"); cr.className="btn full"; cr.textContent="Create device code";
+      cr.onclick=async()=>{ cr.disabled=true; await Mine.create(); sfx("save"); openDevices(); };
+      f.appendChild(p("bk-hint","Start on the device that has your tasks, usually your phone. Then enter the code on the other device."));
+      const jl=document.createElement("label"); jl.className="lbl"; jl.htmlFor="mineCode"; jl.textContent="Code from your other device";
+      const ji=document.createElement("input"); ji.type="text"; ji.id="mineCode"; ji.placeholder="XXXX-XXXX-XXXX-XXXX-XXXX"; ji.autocapitalize="characters"; ji.autocomplete="off"; ji.spellcheck=false; ji.translate=false;
+      const jb=document.createElement("button"); jb.className="btn ghost full"; jb.textContent="Connect this device";
+      jb.onclick=async()=>{ if(!(await Mine.join(ji.value))){ msg.textContent="The device code has 20 characters."; return; } sfx("save"); openDevices(); };
+      f.append(cr,jl,ji,jb,msg);
+      if(Mine.statusText().indexOf("Error")===0) msg.textContent=Mine.statusText();
     }
     inner.appendChild(f);
   }
@@ -2804,7 +3058,7 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
     {id:"sternennacht",  n:"Starry Night",  file:"5_sternennacht.mp3",  len:2268000, sw:["#3FD0FF","#B060FF","#FF4FD8"], meta:{dark:"#08091A",light:"#F2F1F9"}}
   ];
   const LS = (k,d)=>{ try{ const v=localStorage.getItem(k); return v===null ? d : v; }catch(e){ return d; } };
-  const LSset = (k,v)=>{ try{ localStorage.setItem(k,v); }catch(e){} };
+  const LSset = (k,v)=>{ try{ localStorage.setItem(k,v); }catch(e){} if(k==="haushalt-skin"||k==="haushalt-theme") try{ Mine.settingsChanged(); }catch(e){} };
   function getSkin(){ const id=LS("haushalt-skin","morgentau"); return SKINS.find(x=>x.id===id) ? id : "morgentau"; }
   function getTheme(){ return LS("haushalt-theme","dark")==="light" ? "light" : "dark"; }
   function musicOn(){ return LS("haushalt-music","on")!=="off"; }
@@ -3735,6 +3989,10 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
     shr.innerHTML='<span class="ri" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9.5" r="2.6"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5M14.5 14.6c.8-.4 1.6-.6 2.5-.6 2.2 0 3.9 1.4 4.4 4"/></svg></span><span class="t"><span class="tt">Sharing</span><span class="ld" id="syncRowLd"></span></span><span class="m">›</span>';
     shr.querySelector("#syncRowLd").textContent=Sync.rowText();
     shr.onclick=openSharing; g.appendChild(shr);
+    const dvr=document.createElement("button"); dvr.className="row";
+    dvr.innerHTML='<span class="ri" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="13" height="9.5" rx="1.6"/><path d="M1.5 18h15"/><rect x="17" y="8" width="5.5" height="11" rx="1.4"/></svg></span><span class="t"><span class="tt">My devices</span><span class="ld" id="mineRowLd"></span></span><span class="m">›</span>';
+    dvr.querySelector("#mineRowLd").textContent=Mine.rowText();
+    dvr.onclick=openDevices; g.appendChild(dvr);
     list.appendChild(g);
     // developer (temporary, for testing)
     const ld=document.createElement("div"); ld.className="setlbl"; ld.textContent="Developer"; list.appendChild(ld);
@@ -3858,20 +4116,20 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
   function markBackedUp(){ LSset("haushalt-lastbackup", today()); updateBackupBadge(); }
   function backupPayload(){
     const settings={}; SETTING_KEYS.forEach(k=>{ const v=LS(k,null); if(v!==null) settings[k]=v; });
-    const sync=Sync.exportInfo();
-    return Object.assign({app:"haushalt", v:2, exportedAt:new Date().toISOString(), state:JSON.parse(JSON.stringify(state)), settings}, sync ? {sync} : {});
+    const sync=Sync.exportInfo(), mine=Mine.exportInfo();
+    return Object.assign({app:"haushalt", v:2, exportedAt:new Date().toISOString(), state:JSON.parse(JSON.stringify(state)), settings}, sync ? {sync} : {}, mine ? {mine} : {});
   }
   function parseBackup(text){
     let d; try{ d=JSON.parse(String(text).trim()); }catch(e){ return null; }
     const st = d && d.app==="haushalt" && d.state ? d.state : d;   // also accept the old plain format
     if(!st || !Array.isArray(st.tasks) || !st.tasks.every(t=>t && typeof t.id==="string" && typeof t.text==="string" && typeof t.next==="string")) return null;
-    return {state:st, settings:(d && d.settings) || null, exportedAt:(d && d.exportedAt) || null, sync:(d && d.sync) || null};
+    return {state:st, settings:(d && d.settings) || null, exportedAt:(d && d.exportedAt) || null, sync:(d && d.sync) || null, mine:(d && d.mine) || null};
   }
   function restoreBackup(bk){
     try{ localStorage.setItem("haushalt-prev", JSON.stringify(backupPayload())); }catch(e){}
     state = JSON.parse(JSON.stringify(bk.state));
     if(!Array.isArray(state.log)) state.log=[];
-    norm(); cleanup(); Sync.afterRestore(bk.sync); save();
+    norm(); cleanup(); Sync.afterRestore(bk.sync); Mine.afterRestore(bk.mine); save();
     if(bk.settings) Object.keys(bk.settings).forEach(k=>{ if(SETTING_KEYS.includes(k)) LSset(k, bk.settings[k]); });
     applyLook(); musicSetVol(); if(typeof sfxSetVol==="function") sfxSetVol();
     I18N.setLang(LS("haushalt-lang","en"));
@@ -4083,13 +4341,13 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
 
   /* ---------- language: English is written in the code, German is applied on top ---------- */
   const I18N = (()=>{
-    const D = {"Rhythm": "Rhythmus", "Status": "Status", "Record": "Bilanz", "Note": "Notiz", "Note · shared": "Notiz · geteilt", "Add a note …": "Notiz hinzufügen …", "Tap the card to turn it back": "Tippe auf die Karte, um sie zurückzudrehen", "Not done yet": "Noch nie erledigt", "Note (optional)": "Notiz (optional)","Share selected tasks with another person. You choose which ones, everything else stays private on this phone. A shared task done by one of you is done for both. Streaks, badges and achievements stay personal.": "Teile ausgewählte Aufgaben mit einer anderen Person. Du entscheidest, welche, alles andere bleibt privat auf diesem Handy. Eine geteilte Aufgabe, die einer von euch erledigt, ist für beide erledigt. Serie, Abzeichen und Erfolge bleiben persönlich.", "Tasks you mark as shared are visible to everyone with this code. Keep it private.": "Aufgaben, die du als geteilt markierst, sieht jeder mit diesem Code. Behalte ihn für dich.", "Shared tasks": "Geteilte Aufgaben", "Switch on what belongs to the household. Private tasks like supplements or bank accounts stay on this phone.": "Schalte ein, was zum Haushalt gehört. Private Aufgaben wie Nahrungsergänzung oder Bankkonten bleiben auf diesem Handy.", "No tasks yet.": "Noch keine Aufgaben.", "Shared with household": "Mit dem Haushalt geteilt", "Visible and done for both of you": "Für euch beide sichtbar und erledigt","Sharing":"Teilen","Not set up yet":"Noch nicht eingerichtet","Not connected":"Nicht verbunden","Connecting …":"Verbinde …","Synced":"Synchronisiert","Syncing …":"Synchronisiere …","Offline, changes will sync later":"Offline, Änderungen werden später übertragen",
+    const D = {"Rhythm": "Rhythmus", "Status": "Status", "Record": "Bilanz", "Note": "Notiz", "Note · shared": "Notiz · geteilt", "Add a note …": "Notiz hinzufügen …", "Tap the card to turn it back": "Tippe auf die Karte, um sie zurückzudrehen", "Not done yet": "Noch nie erledigt", "Note (optional)": "Notiz (optional)","Share selected tasks with another person. You choose which ones, everything else stays private on this phone. A shared task done by one of you is done for both. Streaks, badges and achievements stay personal.": "Teile ausgewählte Aufgaben mit einer anderen Person. Du entscheidest, welche, alles andere bleibt privat auf diesem Handy. Eine geteilte Aufgabe, die einer von euch erledigt, ist für beide erledigt. Serie, Abzeichen und Erfolge bleiben persönlich.", "Tasks you mark as shared are visible to everyone with this code. Keep it private.": "Aufgaben, die du als geteilt markierst, sieht jeder mit diesem Code. Behalte ihn für dich.", "Shared tasks": "Geteilte Aufgaben", "Switch on what belongs to the household. Private tasks like supplements or bank accounts stay on this phone.": "Schalte ein, was zum Haushalt gehört. Private Aufgaben wie Nahrungsergänzung oder Bankkonten bleiben auf diesem Handy.", "No tasks yet.": "Noch keine Aufgaben.", "Shared with household": "Mit dem Haushalt geteilt", "Visible and done for both of you": "Für euch beide sichtbar und erledigt","Sharing":"Teilen","Not set up yet":"Noch nicht eingerichtet","Connecting …":"Verbinde …","Synced":"Synchronisiert","Syncing …":"Synchronisiere …","Offline, changes will sync later":"Offline, Änderungen werden später übertragen",
 "Sharing needs a one-time setup: a free Firebase project and the file sync-config.js on GitHub. Follow the setup guide, then come back here.":"Teilen braucht eine einmalige Einrichtung: ein kostenloses Firebase-Projekt und die Datei sync-config.js auf GitHub. Folge der Anleitung und komm dann hierher zurück.",
 "Your name":"Dein Name","Shown to the other person when you complete a shared task.":"Wird der anderen Person angezeigt, wenn du eine geteilte Aufgabe erledigst.","Household code":"Haushaltscode",
 "Everything on this phone is shared with everyone who has this code. Keep it private.":"Alles auf diesem Handy wird mit allen geteilt, die diesen Code haben. Gib ihn nicht weiter.",
 "Share code":"Code teilen","Code copied":"Code kopiert","Leave household":"Haushalt verlassen","Really leave? Your tasks stay on this phone":"Wirklich verlassen? Deine Aufgaben bleiben auf diesem Handy",
 "Share all tasks with another person. A task done by one of you is done for both. Streaks, badges and achievements stay personal.":"Teile alle Aufgaben mit einer anderen Person. Was einer von euch erledigt, ist für beide erledigt. Serie, Abzeichen und Erfolge bleiben persönlich.",
-"Create household":"Haushalt erstellen","Or join with a code":"Oder mit Code beitreten","Join household":"Haushalt beitreten","Enter your name first.":"Gib zuerst deinen Namen ein.","The code has 16 characters.":"Der Code hat 16 Zeichen.",
+"Create household":"Haushalt erstellen","My devices":"Meine Geräte","Device code":"Gerätecode","Copy code":"Code kopieren","Code copied":"Code kopiert","Create device code":"Gerätecode erstellen","Code from your other device":"Code von deinem anderen Gerät","Connect this device":"Dieses Gerät verbinden","Disconnect this device":"Dieses Gerät trennen","Really disconnect? Everything stays on this device":"Wirklich trennen? Alles bleibt auf diesem Gerät","The device code has 20 characters.":"Der Gerätecode hat 20 Zeichen.","Syncing your devices needs the same one-time Firebase setup as sharing.":"Für den Abgleich deiner Geräte braucht es dieselbe einmalige Firebase-Einrichtung wie beim Teilen.","Enter this code on your other phone, tablet or computer. Whoever has it sees all your tasks, so keep it to yourself.":"Gib diesen Code auf deinem anderen Handy, Tablet oder Computer ein. Wer ihn kennt, sieht alle deine Aufgaben. Behalte ihn für dich.","Synced: your private tasks and notes, history and calendar, streak and record, badges, achievements, theme and language. Shared household tasks keep syncing through the household. Sound and volume stay per device.":"Abgeglichen werden deine privaten Aufgaben und Notizen, Verlauf und Kalender, Serie und Rekord, Abzeichen, Erfolge, Theme und Sprache. Geteilte Aufgaben laufen weiter über den Haushalt. Ton und Lautstärke bleiben pro Gerät.","Keep your own phone, tablet and computer in sync: tasks, streak, calendar, badges, achievements, theme and language. Your shared household stays as it is.":"Halte dein Handy, Tablet und deinen Computer gleich: Aufgaben, Serie, Kalender, Abzeichen, Erfolge, Theme und Sprache. Dein geteilter Haushalt bleibt, wie er ist.","Start on the device that has your tasks, usually your phone. Then enter the code on the other device.":"Fang auf dem Gerät an, auf dem deine Aufgaben sind, meist dein Handy. Gib den Code dann auf dem anderen Gerät ein.","Not connected":"Nicht verbunden","Or join with a code":"Oder mit Code beitreten","Join household":"Haushalt beitreten","Enter your name first.":"Gib zuerst deinen Namen ein.","The code has 16 characters.":"Der Code hat 16 Zeichen.",
 "Join my household in the Haushalt app with this code:":"Tritt meinem Haushalt in der Haushalt-App mit diesem Code bei:","Could not load the sync service":"Der Sync-Dienst konnte nicht geladen werden","e.g. Lauri":"z. B. Lauri","Tomorrow":"Morgen","Later":"Später","No tasks yet": "Noch keine Aufgaben", "All done for today": "Für heute alles erledigt", "More tasks tomorrow.": "Morgen kommen die nächsten Aufgaben.", "Set up what you want to keep on top of at home, and how often.": "Leg fest, was du regelmäßig im Haushalt prüfen willst und wie oft.","Mon": "Mo", "Tue": "Di", "Wed": "Mi", "Thu": "Do", "Fri": "Fr", "Sat": "Sa", "Sun": "So", "Every week": "Jede Woche", "Every 2 weeks": "Alle 2 Wochen", "Every 3 weeks": "Alle 3 Wochen", "Every 3 months": "Alle 3 Monate", "Every 6 months": "Alle 6 Monate", "first": "ersten", "second": "zweiten", "third": "dritten", "fourth": "vierten", "last": "letzten", "Monday": "Montag", "Tuesday": "Dienstag", "Wednesday": "Mittwoch", "Thursday": "Donnerstag", "Friday": "Freitag", "Saturday": "Samstag", "Sunday": "Sonntag", "days": "Tage", "never done yet": "noch nie erledigt", "day in a row": "Tag in Folge", "Record": "Rekord", "The Journey Begins": "Die Reise beginnt", "Paths Apart": "Getrennte Wege", "The End of the Road": "Das Ende des Weges", "The Great Feast": "Das große Fest", "A birthday, fireworks and a guest who suddenly vanishes.": "Ein Geburtstag, ein Feuerwerk und ein Gast, der plötzlich verschwindet.", "The Departure": "Der Aufbruch", "A ring in the fire reveals its secret. High time to leave.": "Ein Ring im Feuer verrät sein Geheimnis. Höchste Zeit zu gehen.", "The Old Forest": "Der alte Wald", "A gnarled willow, ancient barrows and a cheerful rescuer.": "Eine knorrige Weide, uralte Gräber und ein fröhlicher Retter.", "The Inn": "Das Gasthaus", "At the crossroads a man of few words is waiting.": "Am Kreuzweg wartet ein wortkarger Waldläufer.", "The Windy Peak": "Die Wetterspitze", "Five shadows in the moonlight. A blade that will not heal.": "Fünf Schatten im Mondlicht. Eine Klinge, die nicht heilen will.", "The Council": "Der Rat", "By the waterfall the decision is made. Nine set out.": "Am Wasserfall fällt die Entscheidung. Neun ziehen los.", "The Bridge in the Mountain": "Die Brücke im Berg", "Deep in the rock an old friend stands against the fire.": "Tief im Fels stellt sich ein alter Freund dem Feuer.", "The Farewell": "Der Abschied", "A silver mirror, a boat in the mist and two who go on alone.": "Ein silberner Spiegel, ein Boot im Nebel und zwei, die allein weitergehen.", "The Breaking": "Der Zerfall", "A horn shatters by the great river. The fellowship scatters in three directions.": "Ein Horn zerbricht am großen Fluss. Die Gemeinschaft zieht in drei Richtungen auseinander.", "The Shepherds' Forest": "Der Wald der Hirten", "Ancient trees that can speak. They are slow to anger, but then they mean it.": "Uralte Bäume, die sprechen können. Sie werden langsam wütend, aber dann richtig.", "The White Rider": "Der weiße Reiter", "Thought lost, he returns. All in white, on a horse faster than the wind.": "Totgeglaubt kehrt er zurück. Ganz in Weiß, mit einem Pferd schneller als der Wind.", "The Golden Hall": "Die goldene Halle", "A king wakes from an evil sleep. The serpent flees down the hill.": "Ein König erwacht aus bösem Schlaf. Die Schlange flieht den Hügel hinab.", "The Gorge": "Die Klamm", "A night of rain and ladders. At dawn the horn sounds.": "Eine Nacht aus Regen und Leitern. Im Morgengrauen erklingt das Horn.", "The Flood": "Die Flut", "The trees march. The river takes back the fortress.": "Die Bäume marschieren. Der Fluss holt sich die Festung zurück.", "The Marshes": "Die Sümpfe", "Lights over dead water. Two eyes in the rock know the way.": "Lichter über totem Wasser. Zwei Augen im Fels kennen den Weg.", "The Lair": "Die Lauer", "A stair into darkness, a web in the tunnel. A small light against the great dark.": "Eine Treppe ins Dunkel, ein Netz im Tunnel. Ein kleines Licht gegen die große Finsternis.", "The Beacons": "Die Leuchtfeuer", "From peak to peak the fire leaps. A call for help that cannot go unheard.": "Von Gipfel zu Gipfel springt das Feuer. Ein Hilferuf, der nicht überhört werden kann.", "The Paths of the Dead": "Die Pfade der Toten", "A gate in the mountain, an old oath. A silent host follows the rightful heir.": "Ein Tor im Berg, ein alter Eid. Ein schweigendes Heer folgt dem rechtmäßigen Erben.", "The Fields Before the City": "Die Felder vor der Stadt", "The gate breaks, the riders come at dawn. And black sails bring hope.": "Das Tor bricht, im Morgengrauen kommen die Reiter. Und schwarze Segel bringen Hoffnung.", "The White City": "Die weiße Stadt", "Seven rings of stone on the mountain's flank. At the top a white tower watches over the plain.": "Sieben Ringe aus Stein an der Flanke des Berges. Ganz oben wacht ein weißer Turm über die Ebene.", "Through the Black Land": "Durch das schwarze Land", "Ash, thirst and no way back. When he can go no further, his friend carries him.": "Asche, Durst und kein Weg zurück. Wenn er nicht mehr kann, trägt ihn sein Freund.", "At the Black Gate": "Am Schwarzen Tor", "A hopeless attack, only to buy time. Then wings rush across the sky.": "Ein aussichtsloser Angriff, nur um Zeit zu gewinnen. Dann rauschen Flügel am Himmel.", "The Mountain of Fate": "Der Schicksalsberg", "One last step at the edge of the fire. The ring falls, and a dark tower crumbles.": "Ein letzter Schritt am Rand des Feuers. Der Ring fällt, und ein dunkler Turm stürzt in sich zusammen.", "The Last Voyage": "Die letzte Fahrt", "A white ship in the evening light. Some roads end at the sea, and that is good.": "Ein weißes Schiff im Abendlicht. Manche Wege enden am Meer, und das ist gut so.", "Complete": "Vollständig", "Locked": "Noch gesperrt", "Secret": "Geheim", "The 3D view loads from the internet the first time you open it.": "Die 3D Ansicht lädt beim ersten Öffnen aus dem Internet.", "3D object, drag to rotate": "3D Objekt, zum Drehen ziehen", "Today": "Heute", "Year overview": "Jahresübersicht", "Year": "Jahr", "Achievements": "Erfolge", "Previous year": "Vorheriges Jahr", "Next year": "Nächstes Jahr", "1 task": "1 Aufgabe", "Season 1 complete!": "Season 1 geschafft!", "Season 2 · Paths Apart": "Season 2 · Getrennte Wege", "The first journey has been told. 8 new adventures await.": "Die erste Fahrt ist erzählt. 8 neue Abenteuer warten.", "On to Season 2": "Weiter zu Season 2", "Season 2 complete!": "Season 2 geschafft!", "Season 3 · The End of the Road": "Season 3 · Das Ende des Weges", "The parted paths come together again. 8 final adventures await.": "Die getrennten Wege führen wieder zusammen. 8 letzte Abenteuer warten.", "On to Season 3": "Weiter zu Season 3", "View": "Ansehen", "Preview the celebration": "Feier schon mal ansehen", "Good morning": "Guten Morgen", "Hello": "Hallo", "Good evening": "Guten Abend", "1 task for today": "1 Aufgabe für heute", "Done today": "Heute geschafft", "done today": "heute erledigt", "open": "offen", "Very important": "Sehr wichtig", "Open for 1 day": "Seit 1 Tag offen", ". Swipe right for done, left for again tomorrow, down for later today.": ". Rechts wischen für erledigt, links für morgen wieder, nach unten für später heute.", "Done": "Erledigt", "Moved to the back": "Hinten angestellt", "Undo": "Rückgängig", "Manage tasks": "Aufgaben verwalten", "Settings": "Einstellungen", "Morning Dew": "Morgentau", "Lantern Light": "Laternenlicht", "Meadow Breeze": "Wiesenwind", "Hillside Burrow": "Hügelhöhle", "Starry Night": "Sternennacht", "Starts with your next touch": "Startet bei der nächsten Berührung", "Loading …": "Lädt …", "Playing on loop": "Spielt im Loop", "Music file could not be loaded": "Musikdatei nicht ladbar", "This device cannot play audio": "Dieses Gerät unterstützt keine Wiedergabe", "Tap anywhere once to start": "Einmal irgendwo tippen, um zu starten", "Off": "Aus", "First steps": "Erste Schritte", "Unbroken streak": "Serie am Stück", "Diligence": "Fleiß", "A day's work": "Tageswerk", "Special moments": "Besondere Momente", "Complete your first task.": "Erledige deine erste Aufgabe.", "Every great journey begins with one step out of your own front door.": "Jede große Fahrt beginnt mit einem Schritt vor die eigene Tür.", "First Rest": "Erste Rast", "Finish everything that was due on one day.": "Erledige an einem Tag alles, was fällig war.", "At the first campfire even dry bread tastes like a feast.": "Am ersten Lagerfeuer schmeckt selbst trockenes Brot wie ein Festmahl.", "The Pack": "Das Gepäck", "Create 5 tasks.": "Lege 5 Aufgaben an.", "Pack well and you never have to turn back.": "Wer gut packt, muss unterwegs nicht umkehren.", "Map Reader": "Kartenleser", "Complete 5 different tasks.": "Erledige 5 verschiedene Aufgaben.", "Now you know the paths through your own realm.": "Jetzt kennst du die Wege durch dein eigenes Reich.", "Waybread": "Wegbrot", "Save your first backup.": "Speichere deine erste Sicherung.", "One bite carries you through any bad day. Just like a backup.": "Ein Bissen davon trägt dich durch jeden schlechten Tag. Genau wie eine Sicherung.", "Three Miles": "Drei Meilen", "Keep a 3 day streak.": "Halte eine Serie von 3 Tagen.", "The first milestone is behind you. The road goes on.": "Der erste Meilenstein liegt hinter dir. Die Straße geht weiter.", "Wanderer's Lantern": "Wanderlaterne", "Keep a 7 day streak.": "Halte eine Serie von 7 Tagen.", "For a whole week your light has not flickered.": "Eine ganze Woche lang hat dein Licht nicht geflackert.", "Over the Pass": "Über den Pass", "Keep a 14 day streak.": "Halte eine Serie von 14 Tagen.", "Snow, wind and weariness. You made it over anyway.": "Schnee, Wind und Müdigkeit. Du bist trotzdem drüber.", "The Beacons Are Lit": "Die Leuchtfeuer brennen", "Keep a 30 day streak.": "Halte eine Serie von 30 Tagen.", "From hill to hill your fire leaps. A whole month without a gap.": "Von Hügel zu Hügel springt dein Feuer. Ein ganzer Monat ohne Lücke.", "Grey Pilgrim": "Grauer Pilger", "Keep a 60 day streak.": "Halte eine Serie von 60 Tagen.", "A wizard is never late. And neither, it seems, are you.": "Ein Zauberer kommt nie zu spät. Und du offenbar auch nicht.", "The White Tower": "Der weiße Turm", "Keep a 100 day streak.": "Halte eine Serie von 100 Tagen.", "A hundred days, stone upon stone. That is how fortresses are built.": "Hundert Tage, Stein auf Stein. So entstehen Festungen.", "The Ring Closes": "Der Ring schließt sich", "Keep a 365 day streak.": "Halte eine Serie von 365 Tagen.", "A whole year, a closed circle. This ring belongs to you alone.": "Ein ganzes Jahr, ein geschlossener Kreis. Dieser Ring gehört nur dir.", "Gardener's Apprentice": "Gärtnerlehrling", "Complete 10 tasks in total.": "Erledige insgesamt 10 Aufgaben.", "Whoever tends their garden has already understood what matters most.": "Wer seinen Garten pflegt, hat das Wichtigste schon verstanden.", "Silver Shirt": "Silberhemd", "Complete 50 tasks in total.": "Erledige insgesamt 50 Aufgaben.", "Light as cloth, hard as steel. Fifty times seen through.": "Leicht wie Stoff, hart wie Stahl. Fünfzig Mal durchgezogen.", "Dwarven Forge": "Zwergenschmiede", "Complete 100 tasks in total.": "Erledige insgesamt 100 Aufgaben.", "A hundred blows on the anvil. Now every move sits right.": "Hundert Schläge auf den Amboss. Jetzt sitzt jede Bewegung.", "Glowing Blade": "Leuchtende Klinge", "Complete 250 tasks in total.": "Erledige insgesamt 250 Aufgaben.", "It glows blue whenever mess draws near.": "Sie leuchtet blau, wenn sich Unordnung nähert.", "Dragon's Hoard": "Drachenhort", "Complete 500 tasks in total.": "Erledige insgesamt 500 Aufgaben.", "Five hundred things done, piled into a golden mountain.": "Fünfhundert erledigte Dinge, aufgetürmt zu einem goldenen Berg.", "Starlight in a Glass": "Sternenlicht im Glas", "Complete 1000 tasks in total.": "Erledige insgesamt 1000 Aufgaben.", "A light for dark places, when all other lights go out.": "Ein Licht für dunkle Orte, wenn alle anderen Lichter ausgehen.", "Second Breakfast": "Zweites Frühstück", "Complete 5 tasks in one day.": "Erledige 5 Aufgaben an einem Tag.", "Anyone who gets this much done has earned a second pot of tea.": "Wer so viel schafft, hat sich eine zweite Kanne Tee verdient.", "Forced March": "Gewaltmarsch", "Complete 10 tasks in one day.": "Erledige 10 Aufgaben an einem Tag.", "Three days and nights on the march. Fine, one day did the job too.": "Drei Tage und Nächte durchgelaufen. Na gut, ein Tag hat auch gereicht.", "At First Light": "Im ersten Licht", "Complete a task between 5 and 8 in the morning.": "Erledige eine Aufgabe zwischen 5 und 8 Uhr morgens.", "Look to the east when the sun rises. Something is already done.": "Schau nach Osten, wenn die Sonne aufgeht. Dann ist schon etwas erledigt.", "Ranger of the Night": "Waldläufer der Nacht", "Complete a task after 9 in the evening.": "Erledige eine Aufgabe nach 21 Uhr abends.", "Quietly, in the dark, without anyone noticing. But it is done.": "Leise, im Dunkeln, ohne dass es jemand merkt. Aber es ist erledigt.", "Evening in the Hills": "Feierabend im Hügelland", "Finish both Saturday and Sunday of the same weekend.": "Schaffe Samstag und Sonntag desselben Wochenendes komplett.", "A whole weekend with nothing left over. Raise a big mug to that.": "Ein ganzes Wochenende ohne Rückstand. Darauf einen großen Krug.", "The Return": "Die Rückkehr", "Finish a full day right after missing one.": "Schaffe einen Tag komplett, direkt nachdem du einen Tag verpasst hast.", "Falling down is part of it. Coming back is what makes the difference.": "Hinfallen gehört dazu. Wiederkommen macht den Unterschied.", "Stone at Sunrise": "Zu Stein im Morgenlicht", "Complete a task that was open for 7 days or more.": "Erledige eine Aufgabe, die seit 7 Tagen oder länger offen war.", "Argued too long about who goes first. Then the sun came up.": "Zu lange gestritten, wer zuerst anfängt. Dann kam die Sonne.", "Moon Runes": "Mondrunen", "Finish a whole calendar month without missing a day.": "Schaffe einen ganzen Kalendermonat ohne verpassten Tag.", "Some signs only show when the moon plays along for a whole month.": "Manche Zeichen sieht man nur, wenn der Mond einen ganzen Monat lang mitspielt.", "Faithful Companion": "Treuer Gefährte", "Complete the same task 20 times.": "Erledige dieselbe Aufgabe 20 Mal.", "Not fast, not pretty, but always there. The best companions are like that.": "Nicht schnell, nicht schön, aber immer da. Die besten Gefährten sind so.", "Rare Guest": "Seltener Gast", "Complete a task that is due only every 3 months or less often.": "Erledige eine Aufgabe, die nur alle 3 Monate oder seltener fällig ist.", "They come rarely. But when they come, they come at the right time.": "Sie kommen selten. Aber wenn sie kommen, dann zur rechten Zeit.", "Five Lands Travelled": "Fünf Lande bereist", "Try all 5 themes in Settings.": "Probiere alle 5 Themes in den Einstellungen aus.", "Morning Dew, Lantern Light, Meadow Breeze, Hillside Burrow and Starry Night. You know them all.": "Morgentau, Laternenlicht, Wiesenwind, Hügelhöhle und Sternennacht. Du kennst sie alle.", "Sailing West": "Segel gen Westen", "Complete all of Season 1 (56 days done).": "Vollende alle Erfolge von Season 1 (56 geschaffte Tage).", "The first great journey has been told. The ship waits for the next.": "Die erste große Fahrt ist zu Ende erzählt. Das Schiff wartet auf die nächste.", "days this month": "Tage in diesem Monat", "Silver": "Silber", "Platinum": "Platin", "Diamond": "Diamant", "Cosmic": "Kosmisch", "Badge unlocked": "Abzeichen freigeschaltet", "Back": "Zurück", "Tap a badge to see how to earn it. In the detail view you can tilt it into the light.": "Tippe auf ein Abzeichen, um zu sehen, wie du es bekommst. In der Detailansicht kannst du es durch Neigen ins Licht drehen.", "✦ Turn on tilt lighting": "✦ Licht durch Neigen aktivieren", "✦ Tilt your phone": "✦ Neige dein Handy", "Motion not allowed": "Bewegung nicht erlaubt", "Up next": "Als Nächstes", "How to unlock it": "So schaltest du es frei", "Close": "Schließen", "For testing only. Everything here is stored separately and never changes your real tasks, streak or badges. Turn the Developer switch off and everything is back to how it was.": "Nur zum Testen. Alles hier wird getrennt gespeichert und ändert deine echten Aufgaben, Serie und Abzeichen nicht. Wenn du den Entwickler-Schalter ausmachst, ist alles wieder wie vorher.", "Days done (3D achievements, seasons)": "Geschaffte Tage (3D Erfolge, Seasons)", "Streak in days": "Serie in Tagen", "Real": "Echt", "Badges": "Abzeichen", "Unlock all badges": "Alle Abzeichen freischalten", "Display only, not saved": "Nur Anzeige, wird nicht gespeichert", "Play animations": "Animationen abspielen", "Season celebration 1 → 2": "Season-Feier 1 → 2", "Season celebration 2 → 3": "Season-Feier 2 → 3", "Streak animation": "Streak-Animation", "Badge notice": "Abzeichen-Hinweis", "Confetti": "Konfetti", "Replay parts flying in": "Teile neu einfliegen lassen", "Reset all test values": "Alle Test-Werte zurücksetzen", "Theme & Music": "Theme & Musik", "Music": "Musik", "Volume": "Lautstärke", "Sounds when swiping and tapping": "Klänge beim Wischen und Tippen", "Sound volume": "Lautstärke der Sounds", "Display & Data": "Darstellung & Daten", "Light mode": "Heller Modus", "Backup": "Sicherung", "Never backed up": "Noch nie gesichert", "Last: today": "Zuletzt heute", "Last: yesterday": "Zuletzt gestern", "Developer": "Entwickler", "Test menu for unlocking": "Testmenü zum Freischalten", "Test values active": "Test-Werte aktiv", "No test values": "Keine Test-Werte", "Tasks": "Aufgaben", "Nothing added yet.": "Noch nichts angelegt.", "Add task": "Aufgabe anlegen", "Previous month": "Vorheriger Monat", "Next month": "Nächster Monat", "1 task done": "1 Aufgabe erledigt", "Nothing done on this day.": "An diesem Tag nichts erledigt.", "Saved. Put the file in iCloud Drive or Files.": "Gesichert. Lege die Datei in iCloud Drive oder „Dateien“ ab.", "Saving as a file does not work here. Use “Copy as text” below.": "Speichern als Datei geht hier nicht. Nutze unten „Als Text kopieren“.", "Last backup: today": "Zuletzt gesichert: heute", "Last backup: yesterday": "Zuletzt gesichert: gestern", "days done. The backup contains everything, including streak, achievements and settings.": "geschaffte Tage. Die Sicherung enthält alles, auch Streak, Erfolge und Einstellungen.", "Save backup": "Sicherung speichern", "Opens the share menu. Choose “Save to Files” and then iCloud Drive. That way the backup survives even a new phone.": "Öffnet das Teilen‑Menü. Wähle „In Dateien sichern“ und dann iCloud Drive. So überlebt die Sicherung auch einen Handywechsel.", "Load backup": "Sicherung laden", "Cancel": "Abbrechen", "Restore": "Wiederherstellen", "Restored. Your previous data has been kept, just in case.": "Wiederhergestellt. Dein vorheriger Stand ist zur Sicherheit gemerkt.", "This file is not a household backup.": "Diese Datei ist keine Haushalt‑Sicherung.", "The file could not be read.": "Die Datei konnte nicht gelesen werden.", "Bring back data from before the last import": "Stand vor dem letzten Import zurückholen", "Your previous data is back.": "Vorheriger Stand ist zurück.", "Back up or paste as text": "Als Text sichern oder einfügen", "Copy as text": "Als Text kopieren", "Copied. Paste it into Notes.": "Kopiert. In die Notizen einfügen.", "Text is selected, copy it by hand now": "Text ist markiert, jetzt manuell kopieren", "Paste backup text here": "Gesicherten Text hier einfügen", "Check text": "Text prüfen", "This text is not a household backup.": "Der Text ist keine Haushalt‑Sicherung.", "Edit task": "Aufgabe bearbeiten", "New task": "Neue Aufgabe", "e.g. Pflanzen gießen": "z. B. Pflanzen gießen", "Comes first and pulses red": "Kommt zuerst und pulsiert rot", "Repeat": "Wiederholung", "Position in the month": "Position im Monat", "Which weekday?": "Welcher Wochentag?", "On which days?": "An welchen Tagen?", "Delete": "Löschen", "Really delete?": "Wirklich löschen?", "Save": "Speichern", "Give the task a name.": "Gib der Aufgabe einen Text.", "Pick at least one weekday.": "Wähle mindestens einen Wochentag.", "Pick a date.": "Wähle ein Datum.", "open ·": "offen ·", "✓ Done": "✓ Erledigt", "Tomorrow ↺": "Morgen ↺", "↓ Later": "↓ Später", "Very important: Bad putzen. Swipe right for done, left for again tomorrow, down for later today.": "Sehr wichtig: Bad putzen. Rechts wischen für erledigt, links für morgen wieder, nach unten für später heute.", "← Tomorrow": "← Morgen", "Done →": "Erledigt →", "What should the card say?": "Was soll auf der Karte stehen?", "How often?": "Wie oft?", "Every X days": "Alle X Tage", "Weekdays": "Wochentage", "Once": "Einmalig", "Every": "Alle", "On the": "Am", "of the month": "im Monat", "On which day?": "An welchem Tag?", "Developer menu": "Entwicklermenü", "Müll rausbringen. Swipe right for done, left for again tomorrow, down for later today.": "Müll rausbringen. Rechts wischen für erledigt, links für morgen wieder, nach unten für später heute.", "days in a row": "Tage in Folge", "Monthly": "Monatlich", "Own emoji (optional)": "Eigenes Emoji (optional)", "Chosen automatically from the text. Type an emoji to use your own instead.": "Wird automatisch aus dem Text gewählt. Tippe ein Emoji ein, um ein eigenes zu nutzen.", "Language": "Sprache", "Cancelled, nothing saved.": "Abgebrochen, nichts gesichert.", "History": "Verlauf", "Replaces your current data.": "Ersetzt deinen aktuellen Stand.", "The backup contains everything, including streak, achievements and settings.": "Die Sicherung enthält alles, auch Streak, Erfolge und Einstellungen.", "Backup found": "Sicherung gefunden"};
     const MF=["January","February","March","April","May","June","July","August","September","October","November","December"];
     const MG=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
@@ -4113,6 +4371,8 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
       [/^last (today|yesterday|(\d+) days ago) · ([A-Z][a-z]{2}) (\d+)$/, m=>"zuletzt "+(m[1]==="today"?"heute":m[1]==="yesterday"?"gestern":"vor "+m[2]+" Tagen")+" · "+dm(m[3],m[4])],
       [/^Shared · (.+)$/, m=>"Geteilt · "+T(m[1])],
       [/^Error: (.+)$/, m=>"Fehler: "+T(m[1])],
+      [/^Connected · (.+)$/, m=>"Verbunden · "+T(m[1])],
+      [/^No device code (.+)$/, m=>"Kein Gerätecode "+m[1]],
       [/^No household with the code (.+)$/, m=>"Kein Haushalt mit dem Code "+m[1]],
       [/^Earned (.+)$/, m=>full(m[1]) && "Erreicht am "+full(m[1])],
       [/^Backup from (.+)$/, m=>full(m[1]) && "Sicherung vom "+full(m[1])],
@@ -4201,6 +4461,7 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
     function setLang(l){
       lang = l==="de" ? "de" : "en";
       try{ localStorage.setItem("haushalt-lang", lang); }catch(e){}
+      try{ Mine.settingsChanged(); }catch(e){}
       document.documentElement.lang = lang;
       if(lang==="de") walk(document.body); else restore();
     }
@@ -4213,7 +4474,7 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
   })();
 
   /* ---------- boot ---------- */
-  I18N.init(); loadLocal(); norm(); cleanup(); render(); connectDb(); Sync.connect();
+  I18N.init(); loadLocal(); norm(); cleanup(); render(); connectDb(); Sync.connect(); Mine.connect();
   if("serviceWorker" in navigator){ window.addEventListener("load", ()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); }); }
   try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
   applyLook();
