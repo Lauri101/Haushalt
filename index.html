@@ -12,6 +12,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<script>(function(){var d=document.documentElement;function fit(){var w=innerWidth,h=innerHeight,s=Math.max(1,Math.min(1.5,Math.min(w/440,h/860)));s=Math.round(s*100)/100;window.__uiS=s;d.style.setProperty("--s",s);d.classList.toggle("scaled",s>1)}fit();addEventListener("resize",fit)})();</script>
 <script>try{var d=document.documentElement;if(localStorage.getItem("haushalt-theme")==="light")d.setAttribute("data-app-theme","light");d.setAttribute("data-app-skin",localStorage.getItem("haushalt-skin")||"morgentau")}catch(e){document.documentElement.setAttribute("data-app-skin","morgentau")}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
@@ -35,6 +36,8 @@
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
 html,body{margin:0;background:var(--bg)}
 body{height:100%;overflow:hidden;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+/* tablets and laptops: the whole app grows evenly with the screen (phones stay at 1) */
+html.scaled body{width:calc(100vw / var(--s));height:calc(100% / var(--s));transform:scale(var(--s));transform-origin:0 0}
 button{font:inherit;color:inherit}
 
 /* ambient light: gives the glass something to refract */
@@ -88,9 +91,9 @@ button{font:inherit;color:inherit}
 .card.behind{transform:scale(.93) translateY(16px);opacity:.45;cursor:default;
   -webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(255,255,255,.05);box-shadow:none}
 .card .inner{display:flex;flex-direction:column;align-items:center;gap:24px;position:relative;z-index:1}
-.card .ico{width:clamp(84px,24vw,104px);height:clamp(84px,24vw,104px);border-radius:28px;display:grid;place-items:center;
-  font-size:clamp(46px,13vw,58px);line-height:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08)}
-.card .text{font-family:"Bebas Neue","Oswald","Impact","Arial Narrow",sans-serif;font-size:clamp(46px,13.5vw,62px);line-height:.95;font-weight:400;text-align:center;letter-spacing:.025em;overflow-wrap:normal;word-break:normal;hyphens:none;max-width:100%;padding-top:.06em}
+.card .ico{width:clamp(84px,calc(24vw / var(--s,1)),104px);height:clamp(84px,calc(24vw / var(--s,1)),104px);border-radius:28px;display:grid;place-items:center;
+  font-size:clamp(46px,calc(13vw / var(--s,1)),58px);line-height:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08)}
+.card .text{font-family:"Bebas Neue","Oswald","Impact","Arial Narrow",sans-serif;font-size:clamp(46px,calc(13.5vw / var(--s,1)),62px);line-height:.95;font-weight:400;text-align:center;letter-spacing:.025em;overflow-wrap:normal;word-break:normal;hyphens:none;max-width:100%;padding-top:.06em}
 .card .tint{position:absolute;inset:0;opacity:0;pointer-events:none;border-radius:inherit}
 .card .tint.r{background:radial-gradient(140% 110% at 100% 50%,rgba(48,209,88,.95),rgba(48,209,88,.45) 50%,rgba(48,209,88,.22) 100%)}
 .card .tint.l{background:radial-gradient(140% 110% at 0% 50%,rgba(255,159,10,.95),rgba(255,159,10,.45) 50%,rgba(255,159,10,.22) 100%)}
@@ -119,7 +122,7 @@ button{font:inherit;color:inherit}
 .empty.withcount > :first-child{margin-top:auto}
 .empty.withcount > :last-child{margin-bottom:auto}
 .streakban{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 8px);height:84px;z-index:6;pointer-events:none;visibility:hidden;display:flex;justify-content:center}
-.sbwrap{position:relative;width:min(92vw,380px);height:84px;transform:translateY(-150%)}
+.sbwrap{position:relative;width:min(calc(92vw / var(--s,1)),380px);height:84px;transform:translateY(-150%)}
 .sbrib{position:absolute;left:44px;right:0;top:14px;height:58px;filter:drop-shadow(0 8px 14px rgba(0,0,0,.45))}
 .sbrib svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .sbtext{position:absolute;left:60px;right:30px;top:20px;height:44px;display:flex;align-items:center;justify-content:center;gap:8px;color:#fff;white-space:nowrap;
@@ -224,7 +227,7 @@ button{font:inherit;color:inherit}
 .yarr{border:0;background:none;color:rgba(255,255,255,.35);font-size:26px;width:36px;height:44px;cursor:pointer}
 .yarr:hover{color:#fff}
 .ypop{position:absolute;left:10px;right:10px;bottom:74px;border-radius:22px;padding:14px 16px 12px;z-index:3;animation:popIn .4s cubic-bezier(.25,1,.5,1);
-  display:flex;flex-direction:column;max-height:calc(100vh / 3);max-height:calc(100dvh / 3)}
+  display:flex;flex-direction:column;max-height:calc(calc(100vh / var(--s,1)) / 3);max-height:calc(100dvh / 3)}
 @keyframes popIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 .ypop-h{display:flex;align-items:center;justify-content:space-between;font-size:15px;font-weight:600;margin-bottom:8px}
 .ypop-x{border:0;background:rgba(255,255,255,.08);color:var(--ink);width:30px;height:30px;border-radius:50%;font-size:18px;cursor:pointer}
@@ -236,7 +239,7 @@ button{font:inherit;color:inherit}
 .ypop li{flex:none}
 .ypop li{display:flex;align-items:center;gap:8px;font-size:14px;color:rgba(245,245,247,.85)}
 .done3d{gap:0}
-.n3d{--fs:clamp(190px,58vw,260px);font-size:calc(var(--fs) * var(--k,1));perspective:900px;touch-action:none;cursor:pointer;
+.n3d{--fs:clamp(190px,calc(58vw / var(--s,1)),260px);font-size:calc(var(--fs) * var(--k,1));perspective:900px;touch-action:none;cursor:pointer;
   user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;outline:none;flex:none;
   transition:font-size .65s cubic-bezier(.25,1,.5,1);padding:.04em .2em 0}
 .done3d.open .n3d{font-size:calc(var(--fs) * var(--k,1) * .52)}
@@ -494,7 +497,7 @@ html,body{transition:background-color .4s ease}
 .share-code b{font-family:"Bebas Neue","Oswald","Impact","Arial Narrow",sans-serif;font-weight:400;font-size:34px;letter-spacing:.08em;line-height:1.05}
 .row .ld .by{color:inherit}
 .row .tt .shr{display:inline-block;vertical-align:-2px;margin-left:6px;opacity:.55}
-.syncnote{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 74px);transform:translate(-50%,-14px);opacity:0;z-index:60;padding:10px 16px;border-radius:999px;font-size:14px;font-weight:600;white-space:nowrap;max-width:88vw;overflow:hidden;text-overflow:ellipsis;transition:opacity .3s ease,transform .35s var(--spring);pointer-events:none}
+.syncnote{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 74px);transform:translate(-50%,-14px);opacity:0;z-index:60;padding:10px 16px;border-radius:999px;font-size:14px;font-weight:600;white-space:nowrap;max-width:calc(88vw / var(--s,1));overflow:hidden;text-overflow:ellipsis;transition:opacity .3s ease,transform .35s var(--spring);pointer-events:none}
 .syncnote.show{opacity:1;transform:translate(-50%,0)}
 .form.share>*{flex-shrink:0}
 .sharelist{flex:none;max-height:none;overflow:visible}
@@ -557,7 +560,7 @@ svg.locked,.bdg.locked svg{filter:grayscale(1) brightness(.3) contrast(1.15)!imp
 .bx-how span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .bx-how b{font-size:15px;font-weight:600;line-height:1.35}
 .bdg-box .btn{margin-top:12px}
-.btoast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:40;display:flex;align-items:center;gap:12px;padding:10px 16px 10px 10px;border-radius:22px;max-width:min(92vw,420px);text-align:left;cursor:pointer;transform:translate(-50%,calc(-100% - 40px - env(safe-area-inset-top,0px)));opacity:0;visibility:hidden;pointer-events:none;transition:transform .5s cubic-bezier(.2,1.2,.4,1),opacity .35s ease,visibility 0s linear .5s;color:var(--ink)}
+.btoast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:40;display:flex;align-items:center;gap:12px;padding:10px 16px 10px 10px;border-radius:22px;max-width:min(calc(92vw / var(--s,1)),420px);text-align:left;cursor:pointer;transform:translate(-50%,calc(-100% - 40px - env(safe-area-inset-top,0px)));opacity:0;visibility:hidden;pointer-events:none;transition:transform .5s cubic-bezier(.2,1.2,.4,1),opacity .35s ease,visibility 0s linear .5s;color:var(--ink)}
 .btoast.show{transform:translate(-50%,0);opacity:1;visibility:visible;pointer-events:auto;transition:transform .5s cubic-bezier(.2,1.2,.4,1),opacity .2s ease,visibility 0s}
 .btoast .bt-art{width:54px;height:54px;flex:none}
 .bt-t{display:flex;flex-direction:column;min-width:0}
@@ -575,7 +578,7 @@ svg.locked,.bdg.locked svg{filter:grayscale(1) brightness(.3) contrast(1.15)!imp
 .sfx2.out{animation:sfxOut .42s ease both}
 @keyframes sfxIn{from{opacity:0}to{opacity:1}}
 @keyframes sfxOut{to{opacity:0;transform:scale(1.04)}}
-.sfx2-rays{position:absolute;left:50%;top:42%;width:190vmax;height:190vmax;margin:-95vmax 0 0 -95vmax;background:repeating-conic-gradient(from 0deg,rgba(255,214,92,.16) 0 7deg,transparent 7deg 18deg);animation:sfxSpin 16s linear infinite,sfxRays 1.4s .9s ease both;opacity:0;-webkit-mask:radial-gradient(circle,#000 0,transparent 60%);mask:radial-gradient(circle,#000 0,transparent 60%)}
+.sfx2-rays{position:absolute;left:50%;top:42%;width:calc(190vmax / var(--s,1));height:calc(190vmax / var(--s,1));margin:calc(-95vmax / var(--s,1)) 0 0 calc(-95vmax / var(--s,1));background:repeating-conic-gradient(from 0deg,rgba(255,214,92,.16) 0 7deg,transparent 7deg 18deg);animation:sfxSpin 16s linear infinite,sfxRays 1.4s .9s ease both;opacity:0;-webkit-mask:radial-gradient(circle,#000 0,transparent 60%);mask:radial-gradient(circle,#000 0,transparent 60%)}
 .sfx2.tease .sfx2-rays{animation:sfxSpin 16s linear infinite,sfxRaysT 1s .2s ease both}
 @keyframes sfxSpin{to{transform:rotate(360deg)}}
 @keyframes sfxRays{0%{opacity:0}40%{opacity:1}100%{opacity:.75}}
@@ -583,10 +586,10 @@ svg.locked,.bdg.locked svg{filter:grayscale(1) brightness(.3) contrast(1.15)!imp
 .sfx2-glow{position:absolute;left:50%;top:42%;width:340px;height:340px;margin:-170px 0 0 -170px;border-radius:50%;background:radial-gradient(circle,rgba(255,214,92,.55),transparent 65%);opacity:0;animation:sfxGlow 1.2s 1.0s ease-out both}
 .sfx2.tease .sfx2-glow{display:none}
 @keyframes sfxGlow{0%{opacity:0;transform:scale(.3)}30%{opacity:1;transform:scale(1.3)}100%{opacity:.55;transform:scale(1)}}
-.sfx2-center{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 20px;text-align:center;margin-top:-6vh}
-.sfx2-coin{position:relative;width:min(62vw,250px);aspect-ratio:1;transform-style:preserve-3d;animation:sfxDrop .8s .25s cubic-bezier(.2,1.6,.4,1) both,sfxFlip 1s 2.5s cubic-bezier(.5,0,.2,1.3) both}
+.sfx2-center{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 20px;text-align:center;margin-top:calc(-6vh / var(--s,1))}
+.sfx2-coin{position:relative;width:min(calc(62vw / var(--s,1)),250px);aspect-ratio:1;transform-style:preserve-3d;animation:sfxDrop .8s .25s cubic-bezier(.2,1.6,.4,1) both,sfxFlip 1s 2.5s cubic-bezier(.5,0,.2,1.3) both}
 .sfx2.tease .sfx2-coin{animation:sfxDrop .7s .1s cubic-bezier(.2,1.5,.4,1) both;transform:rotateY(180deg)}
-@keyframes sfxDrop{0%{transform:translateY(-70vh) rotate(-25deg) scale(.6)}100%{transform:none}}
+@keyframes sfxDrop{0%{transform:translateY(calc(-70vh / var(--s,1))) rotate(-25deg) scale(.6)}100%{transform:none}}
 @keyframes sfxFlip{0%{transform:rotateY(0) scale(1)}45%{transform:rotateY(100deg) scale(1.18)}100%{transform:rotateY(180deg) scale(1)}}
 .sfx2-face{position:absolute;inset:0;-webkit-backface-visibility:hidden;backface-visibility:hidden}
 .sfx2-face svg{width:100%;height:100%;display:block;filter:drop-shadow(0 14px 22px rgba(0,0,0,.5))}
@@ -596,7 +599,7 @@ svg.locked,.bdg.locked svg{filter:grayscale(1) brightness(.3) contrast(1.15)!imp
 .sfx2.tease .sfx2-coin{transform:none;animation:sfxDrop .7s .1s cubic-bezier(.2,1.5,.4,1) both}
 .sfx2-lock{position:absolute;right:4%;bottom:4%;width:28%;animation:sfxPop .5s .6s cubic-bezier(.2,1.8,.4,1) both;filter:none}
 .sfx2-lock svg{width:100%;display:block;filter:drop-shadow(0 0 0 #fff) drop-shadow(0 4px 6px rgba(0,0,0,.4))}
-.sfx2-ribbon{position:relative;width:min(88vw,340px);height:74px;margin-top:-26px;animation:sfxUnfurl .55s .85s cubic-bezier(.2,1.4,.4,1) both;filter:drop-shadow(0 8px 14px rgba(0,0,0,.45))}
+.sfx2-ribbon{position:relative;width:min(calc(88vw / var(--s,1)),340px);height:74px;margin-top:-26px;animation:sfxUnfurl .55s .85s cubic-bezier(.2,1.4,.4,1) both;filter:drop-shadow(0 8px 14px rgba(0,0,0,.45))}
 .sfx2.tease .sfx2-ribbon{animation-delay:.4s}
 @keyframes sfxUnfurl{0%{transform:scaleX(0) rotate(-6deg);opacity:0}100%{transform:none;opacity:1}}
 .sfx2-ribbon svg{position:absolute;inset:0;width:100%;height:100%}
@@ -619,7 +622,7 @@ svg.locked,.bdg.locked svg{filter:grayscale(1) brightness(.3) contrast(1.15)!imp
 .sfx2-star svg,.sfx2-leaf svg{width:100%;height:100%;display:block}
 @keyframes sfxStar{0%{opacity:0;transform:scale(0)}20%{opacity:1}70%{opacity:1;transform:translate(var(--dx),var(--dy)) scale(var(--s)) rotate(160deg)}100%{opacity:0;transform:translate(calc(var(--dx)*1.15),calc(var(--dy)*1.15 + 30px)) scale(calc(var(--s)*.6)) rotate(220deg)}}
 .sfx2-leaf{position:absolute;top:-40px;width:18px;height:27px;opacity:0;transform:scale(var(--s));animation:sfxLeaf var(--t) var(--d) linear both}
-@keyframes sfxLeaf{0%{opacity:0;transform:translate(0,0) rotate(0) scale(var(--s))}8%{opacity:1}50%{transform:translate(var(--x),55vh) rotate(calc(var(--r)*.5)) scale(var(--s))}100%{opacity:.9;transform:translate(calc(var(--x)*-1),112vh) rotate(var(--r)) scale(var(--s))}}
+@keyframes sfxLeaf{0%{opacity:0;transform:translate(0,0) rotate(0) scale(var(--s))}8%{opacity:1}50%{transform:translate(var(--x),calc(55vh / var(--s,1))) rotate(calc(var(--r)*.5)) scale(var(--s))}100%{opacity:.9;transform:translate(calc(var(--x)*-1),calc(112vh / var(--s,1))) rotate(var(--r)) scale(var(--s))}}
 @media (prefers-reduced-motion:reduce){.sfx2-rays,.sfx2-leaf,.sfx2-star{display:none}.sfx2-coin{animation:none!important;transform:rotateY(180deg)}.sfx2.tease .sfx2-coin{transform:none}.sfx2 .r1{display:none}.sfx2 .r2,.sfx2-sub,.sfx2-btn,.sfx2-ribbon{animation:none;opacity:1}}
 
 /* sealed season: hazy grey objects behind a lock */
@@ -730,9 +733,9 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
   animation:ghostDeal .7s var(--spring) both;transition:opacity .45s ease}
 [data-app-theme="light"] .ghostcard{background:rgba(255,255,255,.55);border-color:rgba(0,0,0,.05)}
 .ghostcard.out{opacity:0!important}
-@keyframes ghostDeal{from{opacity:0;transform:translate(-30px,60vh) rotate(-14deg) scale(.9)}to{opacity:.45;transform:translateY(16px) rotate(var(--r)) scale(.93)}}
+@keyframes ghostDeal{from{opacity:0;transform:translate(-30px,calc(60vh / var(--s,1))) rotate(-14deg) scale(.9)}to{opacity:.45;transform:translateY(16px) rotate(var(--r)) scale(.93)}}
 @media (prefers-reduced-motion:reduce){.ghostcard{display:none}}
-@keyframes dealIn{from{opacity:0;transform:translate(-30px,60vh) rotate(-14deg) scale(.9)}to{opacity:1;transform:none}}
+@keyframes dealIn{from{opacity:0;transform:translate(-30px,calc(60vh / var(--s,1))) rotate(-14deg) scale(.9)}to{opacity:1;transform:none}}
 .app .top{position:relative}
 .greet{position:absolute;left:60px;right:60px;top:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;pointer-events:none;animation:greetIn 3.3s var(--spring) both}
 .greet b{font-size:15px;font-weight:700;letter-spacing:-.01em;line-height:1.1}
@@ -765,7 +768,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
 /* task stickers */
 .has-sticker{font-size:0}
 .has-sticker .tsticker{width:100%;height:100%;display:block;filter:drop-shadow(0 3px 5px rgba(0,0,0,.35))}
-.card .ico.has-sticker{background:none;border-color:transparent;padding:0;width:clamp(100px,30vw,128px);height:clamp(100px,30vw,128px)}
+.card .ico.has-sticker{background:none;border-color:transparent;padding:0;width:clamp(100px,calc(30vw / var(--s,1)),128px);height:clamp(100px,calc(30vw / var(--s,1)),128px)}
 .row .ri.has-sticker{background:none;padding:0;width:38px;height:38px}
 .icoprev{width:64px;height:64px;flex:none;display:grid;place-items:center;font-size:36px}
 .icofield input#fi{width:76px;font-size:22px}
@@ -1414,6 +1417,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
     }
     try{ Liquid.poke(); }catch(e){}
   }
+  const uiS=()=>window.__uiS||1;   // how much the whole app is scaled up on tablets and laptops
   /* streak banner */
   let streakBusyUntil=0;
   // after streak banner and badge hints: jump to the achievements page and let the new golden part fly in
@@ -1469,8 +1473,8 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
       const W=Math.ceil(r.width*2+40), H=Math.ceil(r.height+20), c=document.createElement("canvas");
       c.width=Math.ceil(W*dpr); c.height=Math.ceil(H*dpr);
       const x=c.getContext("2d",{willReadFrequently:true}); x.scale(dpr,dpr);
-      x.font=cs.fontStyle+" "+cs.fontWeight+" "+cs.fontSize+" "+cs.fontFamily;
-      try{ x.letterSpacing=cs.letterSpacing; }catch(e){}
+      x.font=cs.fontStyle+" "+cs.fontWeight+" "+(parseFloat(cs.fontSize)*uiS())+"px "+cs.fontFamily;
+      try{ x.letterSpacing=(parseFloat(cs.letterSpacing)||0)*uiS()+"px"; }catch(e){}
       x.textAlign="center"; x.textBaseline="alphabetic";
       const m=x.measureText(String(txt)), asc=m.fontBoundingBoxAscent||m.actualBoundingBoxAscent, des=m.fontBoundingBoxDescent||m.actualBoundingBoxDescent;
       const base=H/2-(asc+des)/2+asc;
@@ -2047,7 +2051,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
   }
   function achInit(T){
     const r=new T.WebGLRenderer({antialias:true, alpha:true});
-    r.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+    r.setPixelRatio(Math.min((window.devicePixelRatio||1)*uiS(), 3));
     r.shadowMap.enabled=true; r.shadowMap.type=T.PCFSoftShadowMap;
     r.domElement.className="ach-cv"; r.domElement.setAttribute("aria-label","3D object, drag to rotate"); r.domElement.setAttribute("role","img");
     const sc=new T.Scene();
@@ -2431,7 +2435,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
         { const nw=em.querySelector(".n3d"); requestAnimationFrame(()=>{ try{
             // the extruded side leans to the left; nudge the whole object so the visible shape sits in the middle, like the number in the bar above
             const ls=nw.querySelectorAll(".n3d-l"); let L=1e9, R=-1e9; ls.forEach(l=>{ const r=l.getBoundingClientRect(); if(r.width){ L=Math.min(L,r.left); R=Math.max(R,r.right); } });
-            const box=nw.getBoundingClientRect(), fs=parseFloat(getComputedStyle(nw).fontSize)||1, d=(box.left+box.width/2)-(L+R)/2;
+            const box=nw.getBoundingClientRect(), fs=parseFloat(getComputedStyle(nw).fontSize)||1, d=((box.left+box.width/2)-(L+R)/2)/uiS();
             if(R>L && Math.abs(d)<60) nw.style.translate=(d/fs).toFixed(4)+"em 0";
           }catch(e){} }); }
         const lbl=document.createElement("div"); lbl.className="n3d-lbl"; lbl.textContent="done today";
@@ -2550,7 +2554,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
     });
     card.addEventListener("pointermove", e=>{
       if(!dragging) return;
-      const rx = e.clientX - sx, ry = e.clientY - sy;
+      const rx = (e.clientX - sx)/uiS(), ry = (e.clientY - sy)/uiS();
       if(!axis && Math.hypot(rx,ry) > 10) axis = (ry > 0 && ry > Math.abs(rx)*1.2) ? "y" : "x";
       if(axis==="y"){
         dx = rx*0.15; dy = Math.max(0, ry);
