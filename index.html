@@ -18,6 +18,9 @@
 <script>(function(){var d=document.documentElement;function fit(){var w=innerWidth,h=innerHeight,s=Math.max(1,Math.min(1.5,Math.min(w/440,h/860)));s=Math.round(s*100)/100;window.__uiS=s;d.style.setProperty("--s",s);d.classList.toggle("scaled",s>1)}fit();addEventListener("resize",fit);
 /* iOS home screen apps sometimes get a layout viewport that is shorter than the screen (the status bar height goes missing at the bottom); stretch the app over the real screen */
 function vfix(){var sa=navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches),m=0;if(sa&&innerWidth<innerHeight&&screen.height>innerHeight){m=screen.height-innerHeight;if(m<16||m>90)m=0}window.__vfix=m;d.style.setProperty("--vfix",m+"px");d.classList.toggle("vfix",m>0)}vfix();addEventListener("resize",vfix);addEventListener("orientationchange",function(){setTimeout(vfix,300)})})();</script>
+<script>(function(){var d=document.documentElement;function fit(){var w=innerWidth,h=innerHeight,s=Math.max(1,Math.min(1.5,Math.min(w/440,h/860)));s=Math.round(s*100)/100;window.__uiS=s;d.style.setProperty("--s",s);d.classList.toggle("scaled",s>1)}fit();addEventListener("resize",fit);
+/* iOS home screen apps sometimes get a layout viewport that is shorter than the screen (the status bar height goes missing at the bottom); stretch the app over the real screen */
+function vfix(){var sa=navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches),m=0;if(sa&&innerWidth<innerHeight&&screen.height>innerHeight){m=screen.height-innerHeight;if(m<16||m>90)m=0}window.__vfix=m;d.style.setProperty("--vfix",m+"px");d.classList.toggle("vfix",m>0)}vfix();addEventListener("resize",vfix);addEventListener("orientationchange",function(){setTimeout(vfix,300)})})();</script>
 <script>try{var d=document.documentElement;if(localStorage.getItem("haushalt-theme")==="light")d.setAttribute("data-app-theme","light");d.setAttribute("data-app-skin",localStorage.getItem("haushalt-skin")||"morgentau")}catch(e){document.documentElement.setAttribute("data-app-skin","morgentau")}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
@@ -59,7 +62,7 @@ button{font:inherit;color:inherit}
   box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 25px 50px -12px rgba(0,0,0,.6);
 }
 
-.app{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;max-width:520px;margin:0 auto;padding:20px 16px 0}
+.app{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;max-width:520px;margin:0 auto;padding:32px 16px 0}
 .top{display:flex;align-items:center;justify-content:space-between;height:52px;flex:none;border-radius:18px;padding:0 6px}
 .app .top .count{flex:1;text-align:center}
 .count{font-size:15px;color:var(--muted)}
@@ -284,7 +287,7 @@ button{font:inherit;color:inherit}
 .donelist svg{flex:none}
 @keyframes dl{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
-.hint{flex:none;display:flex;justify-content:space-between;align-items:center;font-family:"Bebas Neue","Oswald","Impact","Arial Narrow",sans-serif;font-size:16px;letter-spacing:.07em;line-height:1;color:var(--muted);padding:0 14px 14px;height:32px}
+.hint{flex:none;display:flex;justify-content:space-between;align-items:center;font-family:"Bebas Neue","Oswald","Impact","Arial Narrow",sans-serif;font-size:16px;letter-spacing:.07em;line-height:1;color:var(--muted);padding:0 14px 4px;height:32px;margin-bottom:calc(-.4 * env(safe-area-inset-bottom,0px))}
 .hint .l{color:var(--later)} .hint .r{color:var(--done)} .hint .d{color:#3D9BFF}
 .undo{position:fixed;z-index:5;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(140px);
   color:var(--ink);border-radius:999px;padding:12px 22px;font-size:15px;font-weight:500;cursor:pointer;transition:transform .45s var(--ease)}
@@ -823,7 +826,6 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
 :root:not([data-app-theme="light"]) .sheet h1,:root:not([data-app-theme="light"]) .bk-title{background:linear-gradient(100deg,#fff 0%,#fff 55%,var(--c2) 76%,var(--c3) 88%,var(--c4) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
 :root:not([data-app-theme="light"]) .sheet .amb{opacity:.6}
 :root:not([data-app-theme="light"]) .setlbl,:root:not([data-app-theme="light"]) .bk-hint,:root:not([data-app-theme="light"]) .lbl,:root:not([data-app-theme="light"]) .hint,:root:not([data-app-theme="light"]) .count,:root:not([data-app-theme="light"]) .none{text-shadow:0 1px 10px rgba(0,0,0,.95),0 0 3px rgba(0,0,0,.9)}
-:root:not([data-app-theme="light"]) .hint{background:linear-gradient(0deg,rgba(0,0,0,.75),transparent);border-radius:0 0 18px 18px}
 :root:not([data-app-theme="light"]) .sheet h1{filter:drop-shadow(0 2px 12px rgba(0,0,0,.85))}
 .ashfx{position:fixed;inset:0;width:100%;height:100%;z-index:8;pointer-events:none}
 :root:not([data-app-theme="light"]) .count .skn{text-shadow:none}
