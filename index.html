@@ -75,6 +75,9 @@ function vfix(){var sa=navigator.standalone||(window.matchMedia&&matchMedia("(di
 <script>(function(){var d=document.documentElement;function fit(){var w=innerWidth,h=innerHeight,s=Math.max(1,Math.min(1.5,Math.min(w/440,h/860)));s=Math.round(s*100)/100;window.__uiS=s;d.style.setProperty("--s",s);d.classList.toggle("scaled",s>1);d.classList.toggle("wide",w>h&&w>=900)}fit();addEventListener("resize",fit);
 /* iOS home screen apps sometimes get a layout viewport that is shorter than the screen (the status bar height goes missing at the bottom); stretch the app over the real screen */
 function vfix(){var sa=navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches),m=0;if(sa&&innerWidth<innerHeight&&screen.height>innerHeight){m=screen.height-innerHeight;if(m<16||m>90)m=0}window.__vfix=m;d.style.setProperty("--vfix",m+"px");d.classList.toggle("vfix",m>0)}vfix();addEventListener("resize",vfix);addEventListener("orientationchange",function(){setTimeout(vfix,300)})})();</script>
+<script>(function(){var d=document.documentElement;function fit(){var w=innerWidth,h=innerHeight,s=Math.max(1,Math.min(1.5,Math.min(w/440,h/860)));s=Math.round(s*100)/100;window.__uiS=s;d.style.setProperty("--s",s);d.classList.toggle("scaled",s>1);d.classList.toggle("wide",w>h&&w>=900)}fit();addEventListener("resize",fit);
+/* iOS home screen apps sometimes get a layout viewport that is shorter than the screen (the status bar height goes missing at the bottom); stretch the app over the real screen */
+function vfix(){var sa=navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches),m=0;if(sa&&innerWidth<innerHeight&&screen.height>innerHeight){m=screen.height-innerHeight;if(m<16||m>90)m=0}window.__vfix=m;d.style.setProperty("--vfix",m+"px");d.classList.toggle("vfix",m>0)}vfix();addEventListener("resize",vfix);addEventListener("orientationchange",function(){setTimeout(vfix,300)})})();</script>
 <script>try{var d=document.documentElement;if(localStorage.getItem("haushalt-theme")==="light")d.setAttribute("data-app-theme","light");d.setAttribute("data-app-skin",localStorage.getItem("haushalt-skin")||"morgentau")}catch(e){document.documentElement.setAttribute("data-app-skin","morgentau")}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
@@ -3515,7 +3518,7 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
     const t0=performance.now();
     const close=()=>{ if(el.classList.contains("out")) return; el.classList.add("out"); setTimeout(()=>el.remove(), 450); };
     el.querySelector(".sfx2-btn").onclick=e=>{ e.stopPropagation(); close(); };
-    el.addEventListener("click", ()=>{ if(performance.now()-t0>1200) close(); });
+    el.addEventListener("click", ()=>{ if(performance.now()-t0>1200){ sfx("close"); close(); } });
     let auto=0; if(!done) auto=setTimeout(close, 4200);
     const pv=el.querySelector(".sfx2-prev"); if(pv) pv.onclick=e=>{ e.stopPropagation(); clearTimeout(auto); el.remove(); seasonFx(true,0,k); };
     duckMusic(done?6500:2500);
@@ -3590,17 +3593,20 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
   }
   // which sound a plain button press makes; specific actions play their own sound in code
   function sfxForClick(el){
+    if(el.closest("summary")) return "tap";
     const b=el.closest("button,.n3d"); if(!b) return null;
     if(b.dataset.sfx) return b.dataset.sfx==="none" ? null : b.dataset.sfx;
     if(b.id==="openSettings"||b.id==="openPrefs") return "open";
     if(b.id==="undo") return "undo";
-    if(b.classList.contains("n3d")||b.classList.contains("yd")||b.classList.contains("skin")||b.closest(".dpager")) return null;
+    if(b.closest(".dpager")) return b.getAttribute("aria-current")==="true" ? "tap" : null;   // a new page plays its own page sound
+    if(b.classList.contains("skin")) return b.getAttribute("aria-checked")==="true" ? "tap" : null;   // a new theme plays its own sound
+    if(b.classList.contains("n3d")||b.classList.contains("yd")) return null;
     if(b.closest(".sheet .top")) return "close";
     if(b.closest(".ach-nav")||b.classList.contains("yarr")) return "flip";
     return "tap";
   }
   document.addEventListener("click", e=>{ const id=sfxForClick(e.target); if(id) sfx(id); }, true);
-  document.addEventListener("change", e=>{ const t=e.target; if(t && t.classList && t.classList.contains("switch")) sfx(t.checked ? "on" : "off"); }, true);
+  document.addEventListener("change", e=>{ const t=e.target; if(t && t.classList && t.classList.contains("switch")) sfx(t.checked ? "on" : "off"); else if(t && t.tagName==="SELECT") sfx("tap"); }, true);
 
   /* ---------- badges (Abzeichen) ---------- */
   const BK='stroke="#2b1d14" stroke-width="2.4"';
@@ -3813,7 +3819,7 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
     el.innerHTML=badgeSvg(b,"bt-art")+'<span class="bt-t"><span class="bt-k">Badge unlocked</span><b></b><span class="bt-x"></span></span>';
     el.querySelector("b").textContent=b.name;
     el.querySelector(".bt-x").textContent= extra ? "and "+extra+" more" : b.cond;
-    el.onclick=()=>{ el.classList.remove("show"); sheet.classList.add("open"); openBadges(b.id); };
+    el.onclick=()=>{ sfx("open"); el.classList.remove("show"); sheet.classList.add("open"); openBadges(b.id); };
     duckMusic(4000); sfx("part");
     requestAnimationFrame(()=>el.classList.add("show"));
     setTimeout(()=>{ el.classList.remove("show"); setTimeout(()=>{ badgeShowing=false; showBadgeToast(); }, 450); }, 3600);
@@ -3892,7 +3898,7 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
       box.querySelector(".bx-s").textContent=b.story;
       box.querySelector(".bx-how b").textContent=b.cond;
       const close=()=>{ ov.classList.remove("show"); setTimeout(()=>ov.remove(), 250); };
-      box.querySelector("button").onclick=close; ov.onclick=e=>{ if(e.target===ov) close(); };
+      box.querySelector("button").dataset.sfx="close"; box.querySelector("button").onclick=close; ov.onclick=e=>{ if(e.target===ov){ sfx("close"); close(); } };
       ov.appendChild(box); inner.appendChild(ov);
       startLight();
       const art=box.querySelector("svg"); art.style.touchAction="none";
@@ -4131,6 +4137,7 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
     const goMonth = delta => { const d=new Date(y, m-1+delta, 1); calMonth=d.getFullYear()+"-"+pad(d.getMonth()+1); renderCal(); };
     const title=document.createElement("div"); title.className="caltitle";
     title.innerHTML='<b>'+MONTHS[m-1]+' '+y+'</b><span>'+(monthCount===1?'1 task done':monthCount+' tasks done')+'</span>';
+    prev.dataset.sfx="flip"; next.dataset.sfx="flip";
     prev.onclick=()=>goMonth(-1);
     next.onclick=()=>goMonth(1);
     let csx=0, csy=0, cdown=false;
@@ -4138,7 +4145,7 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
     box.addEventListener("pointerup", e=>{
       if(!cdown) return; cdown=false;
       const dx=e.clientX-csx, dy=e.clientY-csy;
-      if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.5) goMonth(dx<0 ? 1 : -1);
+      if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.5){ sfx("flip"); goMonth(dx<0 ? 1 : -1); }
     });
     box.addEventListener("pointercancel", ()=>{ cdown=false; });
     head.append(prev,title,next); box.appendChild(head);
@@ -4368,9 +4375,9 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
     ok.dataset.sfx="none";
     ok.onclick=()=>{
       const text=ft.value.trim();
-      if(!text){ err.textContent="Give the task a name."; ft.focus(); return; }
-      if(draft.mode==="days" && !draft.days.length){ err.textContent="Pick at least one weekday."; return; }
-      if(draft.mode==="once" && !/^\d{4}-\d{2}-\d{2}$/.test(fd.value)){ err.textContent="Pick a date."; return; }
+      if(!text){ sfx("snap"); err.textContent="Give the task a name."; ft.focus(); return; }
+      if(draft.mode==="days" && !draft.days.length){ sfx("snap"); err.textContent="Pick at least one weekday."; return; }
+      if(draft.mode==="once" && !/^\d{4}-\d{2}-\d{2}$/.test(fd.value)){ sfx("snap"); err.textContent="Pick a date."; return; }
       const date=fd.value||today();
       const every=Math.min(365,Math.max(1,parseInt(fe.value,10)||1));
       const typed = fi.value.trim();
