@@ -78,6 +78,15 @@ function vfix(){var sa=navigator.standalone||(window.matchMedia&&matchMedia("(di
 <script>(function(){var d=document.documentElement;function fit(){var w=innerWidth,h=innerHeight,s=Math.max(1,Math.min(1.5,Math.min(w/440,h/860)));s=Math.round(s*100)/100;window.__uiS=s;d.style.setProperty("--s",s);d.classList.toggle("scaled",s>1);d.classList.toggle("wide",w>h&&w>=900)}fit();addEventListener("resize",fit);
 /* iOS home screen apps sometimes get a layout viewport that is shorter than the screen (the status bar height goes missing at the bottom); stretch the app over the real screen */
 function vfix(){var sa=navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches),m=0;if(sa&&innerWidth<innerHeight&&screen.height>innerHeight){m=screen.height-innerHeight;if(m<16||m>90)m=0}window.__vfix=m;d.style.setProperty("--vfix",m+"px");d.classList.toggle("vfix",m>0)}vfix();addEventListener("resize",vfix);addEventListener("orientationchange",function(){setTimeout(vfix,300)})})();</script>
+<script>(function(){var d=document.documentElement;function fit(){var w=innerWidth,h=innerHeight,s=Math.max(1,Math.min(1.5,Math.min(w/440,h/860)));s=Math.round(s*100)/100;window.__uiS=s;d.style.setProperty("--s",s);d.classList.toggle("scaled",s>1);d.classList.toggle("wide",w>h&&w>=900)}fit();addEventListener("resize",fit);
+/* iOS home screen apps sometimes get a layout viewport that is shorter than the screen (the status bar height goes missing at the bottom); stretch the app over the real screen */
+function vfix(){var sa=navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches),m=0;if(sa&&innerWidth<innerHeight&&screen.height>innerHeight){m=screen.height-innerHeight;if(m<16||m>90)m=0}window.__vfix=m;d.style.setProperty("--vfix",m+"px");d.classList.toggle("vfix",m>0)}vfix();addEventListener("resize",vfix);addEventListener("orientationchange",function(){setTimeout(vfix,300)})})();</script>
+<script>(function(){var d=document.documentElement;function fit(){var w=innerWidth,h=innerHeight,s=Math.max(1,Math.min(1.5,Math.min(w/440,h/860)));s=Math.round(s*100)/100;window.__uiS=s;d.style.setProperty("--s",s);d.classList.toggle("scaled",s>1);d.classList.toggle("wide",w>h&&w>=900)}fit();addEventListener("resize",fit);
+/* iOS home screen apps sometimes get a layout viewport that is shorter than the screen (the status bar height goes missing at the bottom); stretch the app over the real screen */
+function vfix(){var sa=navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches),m=0;if(sa&&innerWidth<innerHeight&&screen.height>innerHeight){m=screen.height-innerHeight;if(m<16||m>90)m=0}window.__vfix=m;d.style.setProperty("--vfix",m+"px");d.classList.toggle("vfix",m>0)}vfix();addEventListener("resize",vfix);addEventListener("orientationchange",function(){setTimeout(vfix,300)})})();</script>
+<script>(function(){var d=document.documentElement;function fit(){var w=innerWidth,h=innerHeight,s=Math.max(1,Math.min(1.5,Math.min(w/440,h/860)));s=Math.round(s*100)/100;window.__uiS=s;d.style.setProperty("--s",s);d.classList.toggle("scaled",s>1);d.classList.toggle("wide",w>h&&w>=900)}fit();addEventListener("resize",fit);
+/* iOS home screen apps sometimes get a layout viewport that is shorter than the screen (the status bar height goes missing at the bottom); stretch the app over the real screen */
+function vfix(){var sa=navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches),m=0;if(sa&&innerWidth<innerHeight&&screen.height>innerHeight){m=screen.height-innerHeight;if(m<16||m>90)m=0}window.__vfix=m;d.style.setProperty("--vfix",m+"px");d.classList.toggle("vfix",m>0)}vfix();addEventListener("resize",vfix);addEventListener("orientationchange",function(){setTimeout(vfix,300)})})();</script>
 <script>try{var d=document.documentElement;if(localStorage.getItem("haushalt-theme")==="light")d.setAttribute("data-app-theme","light");d.setAttribute("data-app-skin",localStorage.getItem("haushalt-skin")||"morgentau")}catch(e){document.documentElement.setAttribute("data-app-skin","morgentau")}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
@@ -1790,6 +1799,15 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
     updateAppBadge();
   }
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="hidden") updateAppBadge(); });
+  /* haptics: Android has navigator.vibrate; iPhone (iOS 18+) gives a short tick whenever a native switch toggles, so a hidden one is flipped */
+  const Haptic=(()=>{ let lbl=null;
+    const ios=()=>{ if(!lbl){ const i=document.createElement("input"); i.type="checkbox"; i.setAttribute("switch",""); i.id="hapticSw"; i.tabIndex=-1; i.setAttribute("aria-hidden","true");
+        lbl=document.createElement("label"); lbl.htmlFor="hapticSw"; lbl.setAttribute("aria-hidden","true"); lbl.style.cssText="position:fixed;left:-99px;top:0;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden";
+        lbl.appendChild(i); document.body.appendChild(lbl); }
+      try{ lbl.click(); }catch(e){} };
+    const one=()=>{ if(navigator.vibrate){ try{ navigator.vibrate(12); }catch(e){} } else ios(); };
+    return { tick:one, strong(){ if(navigator.vibrate){ try{ navigator.vibrate([18,60,18,60,30]); }catch(e){} } else { one(); setTimeout(one,90); setTimeout(one,180); } } };
+  })();
   const uiS=()=>window.__uiS||1;   // how much the whole app is scaled up on tablets and laptops
   const vH=()=>innerHeight+(window.__vfix||0);   // real screen height, see the iOS viewport fix in the head
   /* streak banner */
@@ -2940,7 +2958,7 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
     a.oncancel=done;
   }
   function attachSwipe(card, task){
-    let sx=0, sy=0, dx=0, dy=0, t0=0, dragging=false, axis=null;
+    let sx=0, sy=0, dx=0, dy=0, t0=0, dragging=false, axis=null, armed=false;
     const tr=card.querySelector(".tint.r"), tl=card.querySelector(".tint.l"), td=card.querySelector(".tint.d");
     const W = () => stage.clientWidth, H = () => stage.clientHeight;
     const GLOW = { r:"48,209,88", l:"255,159,10", d:"10,132,255" };
@@ -2959,7 +2977,7 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
     }
     const resetTints = ()=>paint(null, 0);
     card.addEventListener("pointerdown", e=>{ sfx("grab");
-      dragging=true; cardDragging=true; axis=null; sx=e.clientX; sy=e.clientY; dx=0; dy=0; t0=performance.now();
+      dragging=true; cardDragging=true; axis=null; sx=e.clientX; sy=e.clientY; dx=0; dy=0; t0=performance.now(); armed=false;
       card.classList.remove("back"); card.setPointerCapture(e.pointerId);
     });
     card.addEventListener("pointermove", e=>{
@@ -2970,10 +2988,12 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
         dx = rx*0.15; dy = Math.max(0, ry);
         card.style.transform = `translate(${dx}px,${dy}px) scale(${1 - Math.min(dy/H(),1)*0.06})`;
         paint("d", Math.min(dy/130,1));
+        const over = dy > H()*0.22; if(over!==armed){ armed=over; if(over) Haptic.tick(); }
       } else {
         dx = rx; dy = ry*0.25;
         card.style.transform = `translate(${dx}px,${dy}px) rotate(${dx/18}deg)`;
         paint(dx>0 ? "r" : "l", Math.min(Math.abs(dx)/120, 1));
+        const over = Math.abs(dx) > W()*0.28; if(over!==armed){ armed=over; if(over) Haptic.tick(); }
       }
     });
     const end = ()=>{
@@ -3000,6 +3020,8 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
     function commit(dir){
       flippedId=null;
       const lastOne = dueTasks().length<=1;
+      if(lastOne && dir!=="d") Haptic.strong(); else if(!armed) Haptic.tick(); armed=false;
+      try{ const r=card.getBoundingClientRect(); Liquid.ripple(r.left+r.width/2, r.top+r.height/2, dir, lastOne && dir!=="d"); }catch(e){}
       if(dir==="r" && !lastOne) sfx("done", doneToday()+1); else if(dir==="l" && lastOne) sfx("alldone"); else sfx(dir==="r" ? "alldone" : dir==="l" ? "later" : "down");
       card.classList.add("fly");
       if(dir==="d"){
@@ -3178,9 +3200,9 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
   }
   // dark themes: slowly flowing liquid in the theme's cold and warm colours with spectral seams, drawn by the GPU
   const Liquid=(()=>{
-    const FS="#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\nuniform vec2 R; uniform float T; uniform vec3 C0,C1,C2,C3,W0,W1,W2,W3; uniform vec4 H0,H1,H2,H3,H4,H5; uniform vec4 HS; uniform vec2 HS2; uniform vec3 B; uniform float LM;\nfloat hz(vec2 uv, vec4 b, float s){ float r=min(min(b.z,b.w)*.9,.12); vec2 q=abs(uv-b.xy)-b.zw+r; float d=length(max(q,0.0))+min(max(q.x,q.y),0.0)-r; return s*(1.0-smoothstep(0.0,.16,d)); }\nfloat h(vec2 p){ vec3 q=fract(vec3(p.xyx)*.1031); q+=dot(q,q.yzx+33.33); return fract((q.x+q.y)*q.z); }\nfloat n2(vec2 p){ vec2 i=floor(p), f=fract(p); vec2 u=f*f*f*(f*(f*6.0-15.0)+10.0);\n  return mix(mix(h(i),h(i+vec2(1,0)),u.x), mix(h(i+vec2(0,1)),h(i+vec2(1,1)),u.x), u.y); }\nconst mat2 RT=mat2(.8,.6,-.6,.8);\nfloat fb(vec2 p){ vec2 q=RT*p; return .6*n2(q)+.3*n2(RT*q*2.03+7.1)+.1*n2(RT*RT*q*4.1+3.7); }\nvec3 spec(float x){ x=clamp(x,0.0,1.0); return clamp(vec3(abs(x*6.0-3.0)-1.0, 2.0-abs(x*6.0-2.0), 2.0-abs(x*6.0-4.0)),0.0,1.0); }\nvoid main(){\n  vec2 uv=(gl_FragCoord.xy-.5*R)/R.y; float t=T*.015;\n  vec2 p=uv*3.4;\n  vec2 w=vec2(fb(p+vec2(t,-t*.7)), fb(p+vec2(4.3-t*.8,1.7+t*.6)));\n  float f=(fb(p*1.05+1.7*w+vec2(-t*.4,t*.3))-.5)*2.6+.5;   // the liquid\n  float hk=max(max(max(hz(uv,H0,HS.x),hz(uv,H3,HS.w)),max(hz(uv,H1,HS.y),hz(uv,H2,HS.z))),max(hz(uv,H4,HS2.x),hz(uv,H5,HS2.y)));\n  f-=hk*1.4;   // keep a calm black pool around the big number, the liquid flows around it\n  float m=smoothstep(-.12,.12,sin(p.x*.55-p.y*.45+2.2*fb(p*.35+vec2(9.1,2.3+t*.1))+t*.35));   // cold or warm, sweeping diagonally   // cold (1) or warm (0) region\n  float th=1.02, e=.03, d=f-th;\n#ifdef DERIV\n  float fw=fwidth(d);\n#else\n  float fw=0.0;\n#endif\n  float E=max(e,2.4*fw);   // edge and seam never get thinner than about two screen pixels, so they stay smooth\n  vec3 col=vec3(0.0);\n  if(d>0.0){\n    float k=clamp(d/.6,0.0,1.0);\n    vec3 cold=mix(C0, C1, smoothstep(0.0,.12,k)); cold=mix(cold, C2, smoothstep(.1,.45,k)); cold=mix(cold, C3, smoothstep(.45,1.0,k));\n    vec3 warm=mix(W0, W1, smoothstep(0.0,.18,k)); warm=mix(warm, W2, smoothstep(.15,.5,k)); warm=mix(warm, W3, smoothstep(.5,1.0,k));\n    col=mix(warm,cold,m);\n    col*=smoothstep(0.0,E*.6,d);\n  }\n  // thin spectral seam where the liquid meets the dark\n  float seam=1.0-smoothstep(0.0,E,abs(d));\n  col+=spec(.5+d/(2.0*E))*seam*seam*.85;\n  // fine floating filaments\n  float g=f-.36;\n#ifdef DERIV\n  float px=abs(g)/max(fwidth(g),1e-4); float line=(1.0-smoothstep(.55,1.75,px))*(1.0-hk);   // same width in screen pixels everywhere, smooth edges\n#else\n  float line=(1.0-smoothstep(0.0,.012,abs(g)))*(1.0-hk);\n#endif\n  float hue=.5+.5*sin(p.x*.9+p.y*.7+t*.6);\n  vec3 lc=mix(mix(W1,W2,hue),mix(C0,C1,hue),m); lc=mix(lc,vec3(1.0),.3);   // a light tint of the theme colours instead of plain grey\n  col+=lc*line*.5*(1.0-smoothstep(-E,0.0,d));\n  float v=smoothstep(1.25,.3,length(uv));\n  col=mix(vec3(dot(col,vec3(.299,.587,.114))),col,.8)*.8;\n  vec3 dark=B*(.75+.25*v)+col*v;\n  // light mode: the same liquid as a soft watercolour tint that melts into the pale background\n  float mc=max(col.r,max(col.g,col.b)); vec3 hc=col/max(mc,1e-3); float mk=smoothstep(0.0,.25,mc)*v;\n  vec3 light=B*(.985+.015*v)*mix(vec3(1.0),mix(hc,vec3(1.0),.35),.42*mk);\n  gl_FragColor=vec4(mix(dark,light,LM),1.0);\n}\n";
+    const FS="#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\nuniform vec2 R; uniform float T; uniform vec3 C0,C1,C2,C3,W0,W1,W2,W3; uniform vec4 H0,H1,H2,H3,H4,H5; uniform vec4 HS; uniform vec2 HS2; uniform vec3 B; uniform float LM; uniform vec4 RP; uniform vec2 RD;\nfloat hz(vec2 uv, vec4 b, float s){ float r=min(min(b.z,b.w)*.9,.12); vec2 q=abs(uv-b.xy)-b.zw+r; float d=length(max(q,0.0))+min(max(q.x,q.y),0.0)-r; return s*(1.0-smoothstep(0.0,.16,d)); }\nfloat h(vec2 p){ vec3 q=fract(vec3(p.xyx)*.1031); q+=dot(q,q.yzx+33.33); return fract((q.x+q.y)*q.z); }\nfloat n2(vec2 p){ vec2 i=floor(p), f=fract(p); vec2 u=f*f*f*(f*(f*6.0-15.0)+10.0);\n  return mix(mix(h(i),h(i+vec2(1,0)),u.x), mix(h(i+vec2(0,1)),h(i+vec2(1,1)),u.x), u.y); }\nconst mat2 RT=mat2(.8,.6,-.6,.8);\nfloat fb(vec2 p){ vec2 q=RT*p; return .6*n2(q)+.3*n2(RT*q*2.03+7.1)+.1*n2(RT*RT*q*4.1+3.7); }\nvec3 spec(float x){ x=clamp(x,0.0,1.0); return clamp(vec3(abs(x*6.0-3.0)-1.0, 2.0-abs(x*6.0-2.0), 2.0-abs(x*6.0-4.0)),0.0,1.0); }\nvoid main(){\n  vec2 uv=(gl_FragCoord.xy-.5*R)/R.y; float t=T*.015;\n  // ripple after a card is swiped: a wave runs outwards and the liquid is pushed in the swipe direction, then settles\n  if(RP.w>0.0){ vec2 q=uv-RP.xy; float rd=length(q), age=RP.z; float front=age*.55; float wv=sin((rd-front)*26.0)*exp(-pow((rd-front)*5.0,2.0))*exp(-age*1.4); uv+= (q/max(rd,1e-3))*wv*.03*RP.w + RD*RP.w*.08*exp(-rd*2.2)*exp(-age*1.6)*sin(min(age,1.6)*1.9); }\n  vec2 p=uv*3.4;\n  vec2 w=vec2(fb(p+vec2(t,-t*.7)), fb(p+vec2(4.3-t*.8,1.7+t*.6)));\n  float f=(fb(p*1.05+1.7*w+vec2(-t*.4,t*.3))-.5)*2.6+.5;   // the liquid\n  float hk=max(max(max(hz(uv,H0,HS.x),hz(uv,H3,HS.w)),max(hz(uv,H1,HS.y),hz(uv,H2,HS.z))),max(hz(uv,H4,HS2.x),hz(uv,H5,HS2.y)));\n  f-=hk*1.4;   // keep a calm black pool around the big number, the liquid flows around it\n  float m=smoothstep(-.12,.12,sin(p.x*.55-p.y*.45+2.2*fb(p*.35+vec2(9.1,2.3+t*.1))+t*.35));   // cold or warm, sweeping diagonally   // cold (1) or warm (0) region\n  float th=1.02, e=.03, d=f-th;\n#ifdef DERIV\n  float fw=fwidth(d);\n#else\n  float fw=0.0;\n#endif\n  float E=max(e,2.4*fw);   // edge and seam never get thinner than about two screen pixels, so they stay smooth\n  vec3 col=vec3(0.0);\n  if(d>0.0){\n    float k=clamp(d/.6,0.0,1.0);\n    vec3 cold=mix(C0, C1, smoothstep(0.0,.12,k)); cold=mix(cold, C2, smoothstep(.1,.45,k)); cold=mix(cold, C3, smoothstep(.45,1.0,k));\n    vec3 warm=mix(W0, W1, smoothstep(0.0,.18,k)); warm=mix(warm, W2, smoothstep(.15,.5,k)); warm=mix(warm, W3, smoothstep(.5,1.0,k));\n    col=mix(warm,cold,m);\n    col*=smoothstep(0.0,E*.6,d);\n  }\n  // thin spectral seam where the liquid meets the dark\n  float seam=1.0-smoothstep(0.0,E,abs(d));\n  col+=spec(.5+d/(2.0*E))*seam*seam*.85;\n  // fine floating filaments\n  float g=f-.36;\n#ifdef DERIV\n  float px=abs(g)/max(fwidth(g),1e-4); float line=(1.0-smoothstep(.55,1.75,px))*(1.0-hk);   // same width in screen pixels everywhere, smooth edges\n#else\n  float line=(1.0-smoothstep(0.0,.012,abs(g)))*(1.0-hk);\n#endif\n  float hue=.5+.5*sin(p.x*.9+p.y*.7+t*.6);\n  vec3 lc=mix(mix(W1,W2,hue),mix(C0,C1,hue),m); lc=mix(lc,vec3(1.0),.3);   // a light tint of the theme colours instead of plain grey\n  col+=lc*line*.5*(1.0-smoothstep(-E,0.0,d));\n  float v=smoothstep(1.25,.3,length(uv));\n  col=mix(vec3(dot(col,vec3(.299,.587,.114))),col,.8)*.8;\n  vec3 dark=B*(.75+.25*v)+col*v;\n  // light mode: the same liquid as a soft watercolour tint that melts into the pale background\n  float mc=max(col.r,max(col.g,col.b)); vec3 hc=col/max(mc,1e-3); float mk=smoothstep(0.0,.25,mc)*v;\n  vec3 light=B*(.985+.015*v)*mix(vec3(1.0),mix(hc,vec3(1.0),.35),.42*mk);\n  gl_FragColor=vec4(mix(dark,light,LM),1.0);\n}\n";
     const PAL={"sternennacht": [[0.75, 1, 1], [0.15, 0.75, 1], [0.12, 0.2, 0.95], [0.03, 0, 0.22], [0.75, 0.05, 0.02], [1, 0.45, 0.05], [1, 0.85, 0.25], [1, 0.98, 0.9]], "morgentau": [[0.85, 1, 0.95], [0.49, 0.85, 0.75], [0.18, 0.52, 0.48], [0.02, 0.1, 0.09], [0.72, 0.08, 0.32], [1, 0.44, 0.66], [1, 0.62, 0.42], [1, 0.93, 0.82]], "laternenlicht": [[0.72, 0.95, 1], [0.24, 0.66, 0.75], [0.2, 0.33, 0.82], [0.02, 0.03, 0.15], [0.7, 0.12, 0.02], [1, 0.48, 0.22], [1, 0.72, 0.28], [1, 0.95, 0.8]], "wiesenwind": [[0.8, 0.97, 1], [0.35, 0.68, 1], [0.14, 0.34, 0.8], [0.02, 0.05, 0.18], [0.08, 0.42, 0.14], [0.37, 0.83, 0.48], [0.9, 0.86, 0.35], [0.98, 1, 0.86]], "huegelhoehle": [[0.86, 0.95, 0.7], [0.56, 0.69, 0.31], [0.28, 0.38, 0.14], [0.05, 0.07, 0.02], [0.55, 0.17, 0.07], [0.77, 0.42, 0.24], [0.9, 0.64, 0.4], [0.98, 0.9, 0.76]]};
-    let uHS2=null, uB=null, uLM=null, lm=0, base=null, uH=null, uHS=null, holes=[0,1,2,3,4,5].map(()=>({x:0,y:0,w:.1,h:.1,s:0})), holeN=0;
+    let uRP=null, uRD=null, rip=null, uHS2=null, uB=null, uLM=null, lm=0, base=null, uH=null, uHS=null, holes=[0,1,2,3,4,5].map(()=>({x:0,y:0,w:.1,h:.1,s:0})), holeN=0;
     let cv=null, gl=null, uR=null, uT=null, uP=null, pal=null, raf=0, on=false, last=0, t0=performance.now()-(Date.now()%1800000); // continue from wall-clock phase so every opening shows a different mix
     function setup(){
       if(gl) return true;
@@ -3192,7 +3214,7 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
         const pr=gl.createProgram(); gl.attachShader(pr,sh(gl.VERTEX_SHADER,"attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}")); gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,(gl.getExtension("OES_standard_derivatives") ? "#extension GL_OES_standard_derivatives : enable\n#define DERIV 1\n" : "")+FS)); gl.linkProgram(pr); gl.useProgram(pr);
         const b=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,b); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
         const l=gl.getAttribLocation(pr,"p"); gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l,2,gl.FLOAT,false,0,0);
-        uR=gl.getUniformLocation(pr,"R"); uT=gl.getUniformLocation(pr,"T"); uH=["H0","H1","H2","H3","H4","H5"].map(n=>gl.getUniformLocation(pr,n)); uHS2=gl.getUniformLocation(pr,"HS2"); uB=gl.getUniformLocation(pr,"B"); uLM=gl.getUniformLocation(pr,"LM"); uHS=gl.getUniformLocation(pr,"HS"); uP=["C0","C1","C2","C3","W0","W1","W2","W3"].map(n=>gl.getUniformLocation(pr,n));
+        uR=gl.getUniformLocation(pr,"R"); uT=gl.getUniformLocation(pr,"T"); uH=["H0","H1","H2","H3","H4","H5"].map(n=>gl.getUniformLocation(pr,n)); uHS2=gl.getUniformLocation(pr,"HS2"); uB=gl.getUniformLocation(pr,"B"); uLM=gl.getUniformLocation(pr,"LM"); uRP=gl.getUniformLocation(pr,"RP"); uRD=gl.getUniformLocation(pr,"RD"); uHS=gl.getUniformLocation(pr,"HS"); uP=["C0","C1","C2","C3","W0","W1","W2","W3"].map(n=>gl.getUniformLocation(pr,n));
       }catch(e){ gl=null; cv=null; return false; }
       cv.addEventListener("webglcontextlost", e=>{ e.preventDefault(); stop(); gl=null; if(cv) cv.remove(); cv=null; document.documentElement.classList.remove("has-liquid"); });
       document.body.insertBefore(cv, document.body.firstChild);
@@ -3228,14 +3250,16 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
       });
     }
     function size(){ if(!cv) return; let k=Math.min(window.devicePixelRatio||1,2)*.7; const px=innerWidth*vH()*k*k; if(px>700000) k*=Math.sqrt(700000/px); cv.width=Math.round(innerWidth*k); cv.height=Math.round(vH()*k); if(gl){ gl.viewport(0,0,cv.width,cv.height); draw(); } }
-    function draw(){ if(!gl) return; if(pal){ pal.forEach((c,i)=>gl.uniform3f(uP[i],c[0],c[1],c[2])); pal=null; } if(base){ gl.uniform3f(uB,base[0],base[1],base[2]); gl.uniform1f(uLM,lm); base=null; } holeStep(); holes.forEach((h,i)=>gl.uniform4f(uH[i],h.x,h.y,h.w,h.h)); gl.uniform4f(uHS,holes[0].s,holes[1].s,holes[2].s,holes[3].s); gl.uniform2f(uHS2,holes[4].s,holes[5].s); gl.uniform2f(uR,cv.width,cv.height); gl.uniform1f(uT,(performance.now()-t0)/1000); gl.drawArrays(gl.TRIANGLES,0,3); }
+    function draw(){ if(!gl) return; if(pal){ pal.forEach((c,i)=>gl.uniform3f(uP[i],c[0],c[1],c[2])); pal=null; } if(base){ gl.uniform3f(uB,base[0],base[1],base[2]); gl.uniform1f(uLM,lm); base=null; } { let w=0,x=0,y=0,a=0,dx=0,dy=0; if(rip){ a=(performance.now()-rip.t)/1000; if(a>3.2) rip=null; else { w=rip.s; x=rip.x; y=rip.y; dx=rip.dx; dy=rip.dy; } } gl.uniform4f(uRP,x,y,a,w); gl.uniform2f(uRD,dx,dy); } holeStep(); holes.forEach((h,i)=>gl.uniform4f(uH[i],h.x,h.y,h.w,h.h)); gl.uniform4f(uHS,holes[0].s,holes[1].s,holes[2].s,holes[3].s); gl.uniform2f(uHS2,holes[4].s,holes[5].s); gl.uniform2f(uR,cv.width,cv.height); gl.uniform1f(uT,(performance.now()-t0)/1000); gl.drawArrays(gl.TRIANGLES,0,3); }
     const still=()=>window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
     function loop(now){ if(!on) return; raf=requestAnimationFrame(loop); if(document.hidden) return; if(now-last<33) return; last=now; draw(); } // about 30 frames per second is plenty for this slow motion
     function start(){ if(on) return; if(!setup()) return; on=true; document.documentElement.classList.add("has-liquid"); cv.style.display="block"; draw(); if(!still()) raf=requestAnimationFrame(loop); }
     function stop(){ on=false; cancelAnimationFrame(raf); document.documentElement.classList.remove("has-liquid"); if(cv) cv.style.display="none"; }
     function sync(){ const p=PAL[getSkin()]; if(p){ pal=p; const L=getTheme()==="light"; lm=L?1:0; const sk=SKINS.find(x=>x.id===getSkin()), h=(sk&&sk.meta[L?"light":"dark"])||(L?"#F2F2F7":"#0A0A0D"); base=[1,3,5].map(i=>parseInt(h.substr(i,2),16)/255); start(); draw(); } else stop(); }
     function poke(){ if(on && still()){ holeN=0; setTimeout(()=>{ holeN=0; draw(); },60); } }
-    return {sync, poke};
+    // a card was swiped away at screen point (px,py): ripple from there, pushed in the swipe direction
+    function ripple(px,py,dir,big){ if(!on || still()) return; const H=vH(); rip={t:performance.now(), x:(px-innerWidth/2)/H, y:(H/2-py)/H, dx:dir==="r"?-1:dir==="l"?1:0, dy:dir==="d"?1:0, s:big?1.6:1}; }
+    return {sync, poke, ripple};
   })();
   function applyLook(){
     const el=document.documentElement, t=getTheme(), sk=SKINS.find(x=>x.id===getSkin());
