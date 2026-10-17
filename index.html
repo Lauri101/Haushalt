@@ -969,11 +969,12 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
 @keyframes dealIn{from{opacity:0;transform:translate(-30px,calc(60vh / var(--s,1))) rotate(-14deg) scale(.9)}to{opacity:1;transform:none}}
 .app .top{position:relative}
 .greet{position:absolute;left:60px;right:60px;top:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;pointer-events:none;animation:greetIn 3.3s var(--spring) both}
-.greet b{font-size:15px;font-weight:700;letter-spacing:-.01em;line-height:1.1}
-.greet span{font-size:12px;color:var(--muted)}
+.greet{gap:4px}
+.greet b{font-family:"Bebas Neue","Oswald","Impact","Arial Narrow",sans-serif;font-weight:400;font-size:25px;letter-spacing:.045em;line-height:1;padding-top:.08em}
+.greet span{font-family:"Bebas Neue","Oswald","Impact","Arial Narrow",sans-serif;font-size:15px;letter-spacing:.08em;line-height:1;padding-top:.08em;color:var(--muted)}
 .app .top .count{transition:opacity .35s var(--ease)}
 .app .top.greeting .count{opacity:0}
-@keyframes greetIn{0%{opacity:0;transform:translateY(-10px)}12%{opacity:1;transform:none}78%{opacity:1}100%{opacity:0;transform:translateY(-6px)}}
+@keyframes greetIn{0%{opacity:0;transform:translateY(-10px)}12%{opacity:1;transform:none}78%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-6px)}}
 @media (prefers-reduced-motion:reduce){.sheet.open,.sheet.open .sheet-inner,.sheet.closing,.stage.deal .card,.greet{animation:none}.greet{display:none}}
 
 /* light mode: readable streak number */
