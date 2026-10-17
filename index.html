@@ -993,10 +993,11 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
 :root{--spring:cubic-bezier(.2,1.1,.3,1);--dur:.42s}
 .sheet.open{animation:sheetIn var(--dur) var(--spring) both}
 .sheet.open .sheet-inner{animation:sheetRise var(--dur) var(--spring) both}
-.sheet.closing{animation:sheetOut .19s ease-in both}
+.sheet.closing{animation:sheetOut .42s cubic-bezier(.4,0,.2,1) both}
 @keyframes sheetIn{from{opacity:0}to{opacity:1}}
 @keyframes sheetRise{from{transform:translateY(18px) scale(.985)}to{transform:none}}
-@keyframes sheetOut{to{opacity:0;transform:translateY(10px)}}
+@keyframes sheetOut{to{opacity:0;transform:translateY(12px) scale(.992)}}
+@keyframes appBack{from{opacity:0}to{opacity:1}}
 .btn,.row,.icon-btn,.chip{transition:transform .18s var(--spring),background .3s var(--ease),opacity .3s var(--ease)}
 .btn:active,.icon-btn:active,.row:active{transform:scale(.97)}
 .bdg-ov,.bdg-box{transition-timing-function:var(--spring)!important}
@@ -1133,6 +1134,17 @@ html:not(.wide) .app .top .greet,html:not(.wide) .app .top .syncbad{left:70px;ri
 .sheet .top .icon-btn svg line{stroke-width:3.2;stroke-linecap:round}
 [data-app-theme="light"] .sheet .top .icon-btn{background:linear-gradient(180deg,rgba(255,255,255,.85),rgba(255,255,255,.6));border-color:rgba(0,0,0,.06);border-top-color:rgba(255,255,255,.9);box-shadow:0 6px 16px -6px rgba(0,0,0,.18)}
 .sheet .top .icon-btn.fdel.armed{background:#E5122B;border-color:transparent}
+/* phone: the close button sits exactly where the settings button was, same size, so nothing jumps */
+html:not(.wide) .sheet .top{height:72px;margin-top:20px;padding:0 3px}
+html:not(.wide) .sheet .top .icon-btn{width:60px;height:60px}
+html:not(.wide) .sheet .top .icon-btn svg{width:38px;height:38px}
+html:not(.wide) .sheet .top .icon-btn svg line{stroke-width:2.6}
+html:not(.wide) .sheet .top .icon-btn.fdel svg{width:28px;height:28px}
+/* no circle behind the close button: it looks like the plus and settings icons on the start screen */
+.sheet .top .icon-btn,[data-app-theme="light"] .sheet .top .icon-btn{background:none!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+:root:not([data-app-theme="light"]) .sheet .top .icon-btn svg{filter:drop-shadow(0 1px 6px rgba(0,0,0,.5))}
+.sheet .top .icon-btn.fdel.armed{background:none!important;color:#FF453A}
+.sheet .top .icon-btn.fdel.armed svg{filter:drop-shadow(0 0 10px rgba(255,69,58,.7))}
 /* no scroll bars anywhere: scrolling still works, the bar is just never drawn */
 *{scrollbar-width:none;-ms-overflow-style:none}
 *::-webkit-scrollbar{display:none;width:0;height:0;background:transparent}
@@ -1204,7 +1216,8 @@ html.vfix #liquid,html.vfix .ashfx,html.vfix #confetti{height:calc(100% + var(--
 html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix))}
 .has-liquid .amb{display:none}
 .has-liquid .sheet{background:rgba(3,3,6,.62);background:color-mix(in srgb,var(--bg) 72%,transparent)}
-.has-liquid body:has(.sheet.open) .app{visibility:hidden}
+.has-liquid body:has(.sheet.open:not(.closing)) .app{visibility:hidden}
+body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) both}
 .has-liquid body:has(.sheet.open) .undo:not(.del){visibility:hidden}
 .has-liquid body:has(.sheet.open) .hint{visibility:hidden!important}
 @media (prefers-reduced-motion:reduce){:root:not([data-app-theme="light"]) .amb,:root:not([data-app-theme="light"]) .btn:not(.ghost):not(.danger){animation:none}}
@@ -3608,7 +3621,7 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
     function holeStep(){
       if((holeN++ % 5)===0){
         holeT=[null,null,null,null,null,null];
-        if(!document.querySelector(".sheet.open")){
+        if(!document.querySelector(".sheet.open:not(.closing)")){
           const H=vH(), box=(els,sx,sy)=>{
             let L=1e9,Rr=-1e9,Tp=1e9,Bt=-1e9;
             els.forEach(e=>{ if(!e) return; const r=e.getBoundingClientRect(); if(!r.width||!r.height) return; L=Math.min(L,r.left); Rr=Math.max(Rr,r.right); Tp=Math.min(Tp,r.top); Bt=Math.max(Bt,r.bottom); });
@@ -4652,7 +4665,7 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
     try{ if(navigator.clearAppBadge) navigator.clearAppBadge(); }catch(e){}
     setTimeout(()=>location.reload(), 350);
   }
-  function closeSheet(){ if(!sheet.classList.contains("open")) return render(); sheet.classList.add("closing"); setTimeout(()=>{ sheet.classList.remove("open","closing"); render(); }, 190); }
+  function closeSheet(){ if(!sheet.classList.contains("open")) return render(); sheet.classList.add("closing"); setTimeout(()=>{ sheet.classList.remove("open","closing"); render(); }, 400); }
   let listFrom="main";
   function renderList(from){ sheetMode = "list"; if(typeof from==="string") listFrom=from;
     inner.innerHTML = '';
