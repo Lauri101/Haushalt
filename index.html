@@ -1105,6 +1105,28 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
 :root[data-app-skin="huegelhoehle"]{--bi1:#E8C08A;--bi2:#8FB050;--bigl:rgba(200,150,80,.4)}
 :root[data-app-skin="sternennacht"]{--bi1:#9FE3FF;--bi2:#B060FF;--bigl:rgba(140,110,255,.48)}
 :root[data-app-theme="light"]{--bi0:#2A2A30;--bigl:rgba(0,0,0,.08)}
+/* phone top row: no glass; bigger plus, settings and streak sit in calm pools the liquid flows around */
+html:not(.wide) .app .top{background:none!important;border-color:transparent!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;height:72px;padding:0 2px}
+html:not(.wide) .app .top::before,html:not(.wide) .app .top::after{display:none!important}
+html:not(.wide) .app .top #openSettings,html:not(.wide) .app .top #openPrefs{width:60px;height:60px;border-radius:50%}
+html:not(.wide) .app .top .icon-btn .emb-ico{width:34px;height:34px}
+html:not(.wide) .app .top .count{font-size:17px}
+html:not(.wide) .app .top .count .skn{font-size:25px}
+html:not(.wide) .app .top .dring{width:24px;height:24px;vertical-align:-6px;margin-right:9px}
+html:not(.wide) .app .top .greet b{font-size:32px}
+html:not(.wide) .app .top .greet span{font-size:16px}
+html:not(.wide) .app .top .syncbad b{font-size:30px}
+html:not(.wide) .app .top .greet,html:not(.wide) .app .top .syncbad{left:70px;right:70px}
+:root:not([data-app-theme="light"]) html:not(.wide) .app .top .emb-ico{filter:drop-shadow(0 1px 6px rgba(0,0,0,.5))}
+/* close and back buttons: round glass, the cross drawn like the plus */
+.sheet .top .icon-btn{width:46px;height:46px;border-radius:50%;background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.05));border:1px solid rgba(255,255,255,.14);border-top-color:rgba(255,255,255,.24);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 6px 16px -4px rgba(0,0,0,.45);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);color:var(--ink)}
+.sheet .top .icon-btn svg{width:20px;height:20px}
+.sheet .top .icon-btn svg line{stroke-width:3.2;stroke-linecap:round}
+[data-app-theme="light"] .sheet .top .icon-btn{background:linear-gradient(180deg,rgba(255,255,255,.85),rgba(255,255,255,.6));border-color:rgba(0,0,0,.06);border-top-color:rgba(255,255,255,.9);box-shadow:0 6px 16px -6px rgba(0,0,0,.18)}
+.sheet .top .icon-btn.fdel.armed{background:#E5122B;border-color:transparent}
+/* no scroll bars anywhere: scrolling still works, the bar is just never drawn */
+*{scrollbar-width:none;-ms-overflow-style:none}
+*::-webkit-scrollbar{display:none;width:0;height:0;background:transparent}
 html.wide{--rowtop:32px} html.wide .app{padding-top:var(--rowtop)} html.wide .app .top{height:140px;background:none!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;margin-bottom:6px}
 html.wide .app .top #openSettings,html.wide .app .top #openPrefs{position:fixed;top:calc(env(safe-area-inset-top,0px) + var(--rowtop));width:140px;height:140px;border-radius:50%;background:none!important;z-index:6;transition:transform .35s var(--ease),filter .35s var(--ease)}
 html.wide .app .top #openSettings{left:calc(18% - 70px)} html.wide .app .top #openPrefs{right:calc(18% - 70px)}
@@ -3557,6 +3579,7 @@ html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix)
           const ah=document.querySelector(".ach-h"); if(ah) holeT[1]=box([ah],1.0,1.05);
           const st=document.querySelector(".ach-stage"); if(st && !st.querySelector(".ach-lock")) holeT[2]=box([st],.9,.82);
           if(document.documentElement.classList.contains("wide")){ holeT[3]=box([document.getElementById("openSettings")],.62,.62); holeT[4]=box([document.getElementById("openPrefs")],.62,.62); const sk=document.querySelector("#count .sk")||document.getElementById("count"); holeT[5]=box([sk],1.6,1.4); }
+          else { holeT[3]=box([document.getElementById("openSettings")],.95,.95); holeT[4]=box([document.getElementById("openPrefs")],.95,.95); const bar=document.querySelector(".app .top"); const sk=(bar && bar.querySelector(".syncbad,.greet"))||document.querySelector("#count .sk")||document.getElementById("count"); holeT[5]=box([sk],sk && sk.classList && (sk.classList.contains("greet")||sk.classList.contains("syncbad")) ? 1.05 : 1.5, sk && sk.classList && (sk.classList.contains("greet")||sk.classList.contains("syncbad")) ? 1.15 : 1.35); }
         }
       }
       const k=.08;
