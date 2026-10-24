@@ -293,7 +293,7 @@ html.wide .thx-toast{top:120px}
 .thxfx{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(6,8,15,.72);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);animation:fade .35s ease both}
 .thxfx.out{animation:thxOut .38s ease forwards}
 @keyframes thxOut{to{opacity:0}}
-.thx-card{text-align:center;max-width:320px;animation:thxIn .7s cubic-bezier(.2,1.3,.4,1) both}
+.thx-card{position:relative;z-index:1;text-align:center;max-width:320px;animation:thxIn .7s cubic-bezier(.2,1.3,.4,1) both}
 @keyframes thxIn{0%{transform:scale(.6);opacity:0}100%{transform:none;opacity:1}}
 .thx-big{position:relative;width:150px;height:140px;margin:0 auto;filter:drop-shadow(0 0 26px rgba(255,77,109,.55));animation:thxBeat 1.6s .7s ease-in-out infinite}
 .thx-big svg{width:100%;height:100%}
@@ -302,6 +302,15 @@ html.wide .thx-toast{top:120px}
 .thx-card h2{margin:22px 0 0;font:400 44px/1 "Bebas Neue",Impact,sans-serif;letter-spacing:1px;color:#fff;text-transform:uppercase}
 .thx-card p{margin:10px 0 0;font-size:16px;line-height:1.4;color:rgba(255,255,255,.78)}
 .thx-float{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.thx-list{list-style:none;margin:12px auto 0;padding:0;display:inline-flex;flex-direction:column;gap:8px;text-align:left}
+.thx-list[hidden]{display:none}
+.thx-list li{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:600;color:#fff;animation:thxLi .5s cubic-bezier(.2,1.2,.4,1) both}
+.thx-list li:nth-child(2){animation-delay:.08s}.thx-list li:nth-child(3){animation-delay:.16s}.thx-list li:nth-child(4){animation-delay:.24s}.thx-list li:nth-child(5){animation-delay:.32s}
+.thx-list li svg{flex:none;width:16px;height:16px;fill:#ff4d6d}
+.thx-list li.more{font-size:14px;font-weight:400;color:rgba(255,255,255,.65);padding-left:26px}
+@keyframes thxLi{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:none}}
+[data-app-theme="light"] .thx-list li{color:#1D1D1F}
+[data-app-theme="light"] .thx-list li.more{color:rgba(0,0,0,.55)}
 .thx-float i{position:absolute;bottom:-28px;opacity:0;animation:thxRise 2.6s cubic-bezier(.15,.7,.35,1) both}
 .thx-float i svg{width:100%;height:100%;fill:currentColor}
 @keyframes thxRise{0%{transform:translate(0,0) rotate(0) scale(.7);opacity:0}8%{opacity:1}55%{transform:translate(calc(var(--dx) * .6),calc(var(--h) * -.75)) rotate(calc(var(--r) * .6)) scale(1);opacity:1}100%{transform:translate(var(--dx),calc(var(--h) * -1)) rotate(var(--r)) scale(.9);opacity:0}}
@@ -1279,6 +1288,8 @@ html.paused{filter:grayscale(1)}
 #liquid{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;display:none}
 html.vfix{height:calc(100% + var(--vfix))}
 html.vfix .sheet,html.vfix .success,html.vfix .themefade,html.vfix .sfx2{bottom:calc(-1 * var(--vfix))}
+/* the sheet background reaches the screen edge, its content (lists, buttons) stays inside the visible area */
+html.vfix .sheet-inner{padding-bottom:var(--vfix)}
 html.vfix #liquid,html.vfix .ashfx,html.vfix #confetti{height:calc(100% + var(--vfix))}
 html.vfix .undo{bottom:calc(20px + env(safe-area-inset-bottom,0px) - var(--vfix))}
 .has-liquid .amb{display:none}
@@ -1811,34 +1822,55 @@ body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) bot
   }
   // the other side: a thank you arrives once, the next time the app is open and calm
   function thanksSeen(){ try{ return JSON.parse(localStorage.getItem("haushalt-thx-seen")||"{}")||{}; }catch(e){ return {}; } }
+  // several thank-yous (tapped one after another, arriving one by one) are gathered into one screen
+  let thxPending=[], thxLast=0, thxTimer=0, thxOpen=null;
   function queueThanks(list){
-    const seen=thanksSeen(), fresh=list.filter(x=>!(seen[x.id]>=x.at)); if(!fresh.length) return;
+    const seen=thanksSeen(), fresh=list.filter(x=>!(seen[x.id]>=x.at) && !thxPending.some(y=>y.id===x.id && y.at===x.at)); if(!fresh.length) return;
+    if(thxOpen){ thxOpen.add(fresh); return; }
+    thxPending=thxPending.concat(fresh); thxLast=Date.now();
     const t0=Date.now();
-    const tick=()=>{ if(Date.now()-t0>60000) return;
-      const busy=document.querySelector(".sheet.open") || document.getElementById("seasonFx") || document.getElementById("thxFx") || document.querySelector(".app .top.greeting") || badgeShowing || badgeQueue.length || Date.now()<streakBusyUntil;
-      if(busy || document.hidden){ setTimeout(tick,600); return; }
-      showThanks(fresh); };
-    setTimeout(tick, 900);
+    const tick=()=>{ thxTimer=0; if(Date.now()-t0>60000 || !thxPending.length) return;
+      const busy=document.querySelector(".sheet.open") || document.getElementById("seasonFx") || document.querySelector(".app .top.greeting") || badgeShowing || badgeQueue.length || Date.now()<streakBusyUntil;
+      if(busy || document.hidden || Date.now()-thxLast<1600){ thxTimer=setTimeout(tick,500); return; }
+      const l=thxPending; thxPending=[]; showThanks(l); };
+    clearTimeout(thxTimer); thxTimer=setTimeout(tick, 900);
   }
   function showThanks(list){
-    const seen=thanksSeen(); list.forEach(x=>{ seen[x.id]=x.at; }); try{ localStorage.setItem("haushalt-thx-seen", JSON.stringify(seen)); }catch(e){}
-    const f=list[0], more=list.length-1, from=f.by||"";
+    const seen=thanksSeen();
+    const markSeen=l=>{ l.forEach(x=>{ seen[x.id]=x.at; }); try{ localStorage.setItem("haushalt-thx-seen", JSON.stringify(seen)); }catch(e){} };
+    markSeen(list);
+    let items=[]; const addItems=l=>{ l.forEach(x=>{ if(!items.some(y=>y.id===x.id)) items.push(x); }); };
+    addItems(list);
+    const from=(list[0] && list[0].by)||"", de=I18N.lang==="de";
     const el=document.createElement("div"); el.id="thxFx"; el.className="thxfx"; el.setAttribute("role","dialog"); el.setAttribute("aria-modal","true");
     const title = from ? from+" says thanks" : "Thank you";
     el.setAttribute("aria-label", title);
     // heart confetti: many small hearts shoot up from the bottom edge, sway and fade out on the way up
-    const HC=["#ff4d6d","#ff2d55","#ff8fa3","#ffb3c1","#ff6b81","#ffffff"]; let fl="";
-    for(let i=0;i<46;i++){ const r=Math.random, x=r()*100, h=55+r()*40, dx=(r()-.5)*120, rot=(r()-.5)*90, d=(1.9+r()*1.4).toFixed(2), dl=(r()*0.9).toFixed(2), sz=(8+r()*16).toFixed(0);
-      fl+='<i style="left:'+x.toFixed(1)+'%;width:'+sz+'px;height:'+sz+'px;color:'+HC[i%HC.length]+';--h:'+h.toFixed(0)+'vh;--dx:'+dx.toFixed(0)+'px;--r:'+rot.toFixed(0)+'deg;animation-duration:'+d+'s;animation-delay:'+dl+'s">'+HEART+'</i>'; }
-    el.innerHTML='<div class="thx-float" aria-hidden="true">'+fl+'</div><div class="thx-card"><div class="thx-big" aria-hidden="true"><svg viewBox="0 0 120 112"><path d="M60 106l-6.5-5.9C28 77.4 12 63 12 45.2 12 30.7 23.4 19.5 37.6 19.5c8 0 15.7 3.7 22.4 11.4 6.7-7.7 14.4-11.4 22.4-11.4C96.6 19.5 108 30.7 108 45.2c0 17.8-16 32.2-41.5 54.9z" fill="#fff" stroke="#2b1d14" stroke-width="4" stroke-linejoin="round"/><path d="M60 96l-5-4.5C33 72 20 60 20 45.6 20 35 28.2 27 38.5 27c6.2 0 12.6 3.3 17.3 9.4L60 41.8l4.2-5.4C68.9 30.3 75.3 27 81.5 27 91.8 27 100 35 100 45.6 100 60 87 72 65 91.5z" fill="#ff4d6d" stroke="#2b1d14" stroke-width="3" stroke-linejoin="round"/><path d="M34 40q4-7 12-7" stroke="#fff" stroke-opacity=".75" stroke-width="5" fill="none" stroke-linecap="round"/></svg>'
-+'</div><h2></h2><p></p></div>';
+    // more thanks at once, more hearts: 34 for one task, 24 more for each further task, up to 150
+    const HC=["#ff4d6d","#ff2d55","#ff8fa3","#ffb3c1","#ff6b81","#ffffff"];
+    const hearts=(n,spread)=>{ let fl=""; for(let i=0;i<n;i++){ const r=Math.random, x=r()*100, h=55+r()*40, dx=(r()-.5)*120, rot=(r()-.5)*90, d=(1.9+r()*1.4).toFixed(2), dl=(r()*spread).toFixed(2), sz=(8+r()*16).toFixed(0);
+      fl+='<i style="left:'+x.toFixed(1)+'%;width:'+sz+'px;height:'+sz+'px;color:'+HC[i%HC.length]+';--h:'+h.toFixed(0)+'vh;--dx:'+dx.toFixed(0)+'px;--r:'+rot.toFixed(0)+'deg;animation-duration:'+d+'s;animation-delay:'+dl+'s">'+HEART+'</i>'; } return fl; };
+    const heartCount=k=>Math.min(150, 34+(k-1)*24);
+    el.innerHTML='<div class="thx-float" aria-hidden="true">'+hearts(heartCount(list.length), 0.9+Math.min(list.length-1,4)*0.25)+'</div><div class="thx-card"><div class="thx-big" aria-hidden="true"><svg viewBox="0 0 120 112"><path d="M60 106l-6.5-5.9C28 77.4 12 63 12 45.2 12 30.7 23.4 19.5 37.6 19.5c8 0 15.7 3.7 22.4 11.4 6.7-7.7 14.4-11.4 22.4-11.4C96.6 19.5 108 30.7 108 45.2c0 17.8-16 32.2-41.5 54.9z" fill="#fff" stroke="#2b1d14" stroke-width="4" stroke-linejoin="round"/><path d="M60 96l-5-4.5C33 72 20 60 20 45.6 20 35 28.2 27 38.5 27c6.2 0 12.6 3.3 17.3 9.4L60 41.8l4.2-5.4C68.9 30.3 75.3 27 81.5 27 91.8 27 100 35 100 45.6 100 60 87 72 65 91.5z" fill="#ff4d6d" stroke="#2b1d14" stroke-width="3" stroke-linejoin="round"/><path d="M34 40q4-7 12-7" stroke="#fff" stroke-opacity=".75" stroke-width="5" fill="none" stroke-linecap="round"/></svg></div><h2></h2><p class="thx-for"></p><ul class="thx-list"></ul></div>';
     el.querySelector("h2").textContent=title;
-    const p=el.querySelector("p"), de=I18N.lang==="de"; p.translate=false; p.textContent = (de?"für ":"for ")+f.text+(more>0 ? (de?" und "+more+" weitere":" and "+more+" more") : "");
-    let done=false; const close=()=>{ if(done) return; done=true; el.classList.add("out"); setTimeout(()=>el.remove(), 380); };
+    const pf=el.querySelector(".thx-for"), ul=el.querySelector(".thx-list");
+    const paintList=()=>{
+      ul.innerHTML="";
+      if(items.length===1){ pf.translate=false; pf.textContent=(de?"für ":"for ")+items[0].text; ul.hidden=true; return; }
+      pf.textContent=de?"für":"for"; ul.hidden=false;
+      const max=5; items.slice(0,max).forEach(x=>{ const li=document.createElement("li"); li.translate=false; li.innerHTML=HEART; const sp=document.createElement("span"); sp.textContent=x.text; li.appendChild(sp); ul.appendChild(li); });
+      if(items.length>max){ const li=document.createElement("li"); li.className="more"; li.textContent=de ? "und "+(items.length-max)+" weitere" : "and "+(items.length-max)+" more"; ul.appendChild(li); }
+    };
+    paintList();
+    let done=false, timer=0; const close=()=>{ if(done) return; done=true; clearTimeout(timer); thxOpen=null; el.classList.add("out"); setTimeout(()=>el.remove(), 380); if(thxPending.length) queueThanks([]); };
+    const wait=()=>{ clearTimeout(timer); timer=setTimeout(close, 4500+Math.min(items.length-1,4)*600); };
+    // thank-yous that arrive while the screen is open join the list
+    thxOpen={ add:l=>{ const before=items.length; markSeen(l); addItems(l); paintList(); wait();
+      const extra=heartCount(items.length)-heartCount(before), fl=el.querySelector(".thx-float"); if(extra>0 && fl) fl.insertAdjacentHTML("beforeend", hearts(extra, 0.6)); } };
     el.addEventListener("click", close);
     el.tabIndex=-1; el.addEventListener("keydown", e=>{ if(e.key==="Escape"||e.key==="Enter"||e.key===" ") close(); });
     document.body.appendChild(el); try{ el.focus({preventScroll:true}); }catch(e){}
-    sfx("thanks"); setTimeout(close, 4500);
+    sfx("thanks"); wait();
   }
   function syncNotice(text){
     const el=document.createElement("div"); el.className="syncnote glass"; el.setAttribute("role","status"); el.translate=false; el.textContent=text;
