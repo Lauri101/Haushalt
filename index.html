@@ -1172,6 +1172,9 @@ html.wide .app .top .dring .dr-n{font-size:17px!important}
   border:1px solid;border-color:var(--e-t) var(--e-r) var(--e-b) var(--e-l);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 1px 0 0 rgba(255,255,255,.08),inset 0 -1px 0 rgba(255,255,255,.05),0 26px 50px -14px rgba(0,0,0,.8),0 0 40px -12px var(--glow)}
 :root:not([data-app-theme="light"]) .card:not(.behind){background:radial-gradient(120% 70% at 12% 0%,var(--t1),transparent 60%),radial-gradient(110% 65% at 100% 100%,var(--t2),transparent 62%),radial-gradient(80% 50% at 90% 10%,var(--t3),transparent 60%),linear-gradient(160deg,rgba(255,255,255,.09),rgba(255,255,255,.02))}
+ /* iOS draws streaks when a blurred glass card is dragged past the screen edge: no blur while it moves, a solid tint instead */
+.card.drag{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background-color:rgba(16,18,24,.96)!important}
+[data-app-theme="light"] .card.drag{background-color:rgba(250,250,252,.93)!important}
 :root:not([data-app-theme="light"]) .card.behind{background:rgba(255,255,255,.04);border-color:var(--edge-bot);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
 :root:not([data-app-theme="light"]) .btn:not(.ghost):not(.danger){background:var(--holo);background-size:240% 100%;color:var(--on-holo);box-shadow:0 10px 30px -10px var(--btn-glow),inset 0 1px 0 rgba(255,255,255,.55);animation:holoShift 10s ease-in-out infinite alternate}
 @keyframes holoShift{from{background-position:0% 50%}to{background-position:100% 50%}}
@@ -3577,7 +3580,7 @@ body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) bot
     card.addEventListener("pointermove", e=>{
       if(!dragging) return;
       const rx = (e.clientX - sx)/uiS(), ry = (e.clientY - sy)/uiS();
-      if(!axis && Math.hypot(rx,ry) > 10) axis = (ry > 0 && ry > Math.abs(rx)*1.2) ? "y" : "x";
+      if(!axis && Math.hypot(rx,ry) > 10){ axis = (ry > 0 && ry > Math.abs(rx)*1.2) ? "y" : "x"; card.classList.add("drag"); }
       if(axis==="y"){
         dx = rx*0.15; dy = Math.max(0, ry);
         card.style.transform = `translate(${dx}px,${dy}px) scale(${1 - Math.min(dy/H(),1)*0.06})`;
@@ -3598,6 +3601,7 @@ body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) bot
         if(Math.abs(dx) > W()*0.28 || (v>0.6 && Math.abs(dx)>40)) return commit(dx>0?"r":"l");
       }
       card.classList.add("back"); card.style.transform=""; resetTints();
+      if(card.classList.contains("drag")) setTimeout(()=>{ if(!dragging) card.classList.remove("drag"); }, 480);
       if(axis) sfx("snap");
       else if(dt<350) flipCard(card, task); // a short tap without movement turns the card
     };
