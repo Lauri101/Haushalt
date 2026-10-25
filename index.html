@@ -1067,6 +1067,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
 .dring svg{width:100%;height:100%;transform:rotate(-90deg)}
 .dring circle{fill:none;stroke-width:2.6;stroke-linecap:round}
 .dr-bg{stroke:rgba(127,127,127,.28)}
+.dring .dr-bg,.dring .dr-fg{stroke-width:3.4}
 .dr-fg{stroke:var(--accent);transition:stroke-dasharray .9s var(--spring)}
 .dring.full .dr-fg{stroke:#ffc23d;filter:drop-shadow(0 0 3px rgba(255,194,61,.9))}
 .dring.vanish{animation:ringOut .6s 1.3s var(--ease) both}
@@ -3364,7 +3365,7 @@ body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) bot
     ringLast=p; ringDoneLast=done;
     // up to 12 tasks: one segment per task, so the open ones can be counted at a glance; more than that: one smooth ring
     let arcs="";
-    if(tot>1 && tot<=12){
+    if(false){   // segments were too choppy: always one smooth ring
       const gap=tot>8?9:12, R=16;
       for(let i=0;i<tot;i++){ const a0=(i*360/tot+gap/2)*Math.PI/180, a1=((i+1)*360/tot-gap/2)*Math.PI/180;
         arcs+='<path class="dr-seg'+(i<was?" on":"")+'" data-i="'+i+'" d="M'+(20+R*Math.cos(a0)).toFixed(2)+' '+(20+R*Math.sin(a0)).toFixed(2)+'A'+R+' '+R+' 0 0 1 '+(20+R*Math.cos(a1)).toFixed(2)+' '+(20+R*Math.sin(a1)).toFixed(2)+'"/>'; }
