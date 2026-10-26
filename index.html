@@ -92,10 +92,10 @@ button{font:inherit;color:inherit}
 }
 .card.behind{transform:scale(.93) translateY(16px);opacity:.45;cursor:default;
   -webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(255,255,255,.05);box-shadow:none}
-.card .inner{display:flex;flex-direction:column;align-items:center;gap:24px;position:relative;z-index:1}
+.card .inner{display:flex;flex-direction:column;align-items:center;gap:24px;position:relative;z-index:1;width:100%;max-width:100%;min-width:0;box-sizing:border-box}
 .card .ico{width:clamp(84px,calc(24vw / var(--s,1)),104px);height:clamp(84px,calc(24vw / var(--s,1)),104px);border-radius:28px;display:grid;place-items:center;
   font-size:clamp(46px,calc(13vw / var(--s,1)),58px);line-height:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08)}
-.card .text{font-family:"Bebas Neue","Oswald","Impact","Arial Narrow",sans-serif;font-size:clamp(46px,calc(13.5vw / var(--s,1)),62px);line-height:.95;font-weight:400;text-align:center;letter-spacing:.025em;overflow-wrap:normal;word-break:normal;hyphens:none;max-width:100%;padding-top:.06em}
+.card .text{font-family:"Bebas Neue","Oswald","Impact","Arial Narrow",sans-serif;font-size:clamp(46px,calc(13.5vw / var(--s,1)),62px);line-height:.95;font-weight:400;text-align:center;letter-spacing:.025em;overflow-wrap:normal;word-break:normal;hyphens:none;width:100%;max-width:100%;box-sizing:border-box;padding:.06em 4px 0}
 .card .tint{position:absolute;inset:0;opacity:0;pointer-events:none;border-radius:inherit}
 .card .tint.r{background:radial-gradient(140% 110% at 100% 50%,rgba(48,209,88,.95),rgba(48,209,88,.45) 50%,rgba(48,209,88,.22) 100%)}
 .card .tint.l{background:radial-gradient(140% 110% at 0% 50%,rgba(255,159,10,.95),rgba(255,159,10,.45) 50%,rgba(255,159,10,.22) 100%)}
@@ -3529,12 +3529,21 @@ body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) bot
     if(dealPending || greet) dealCards(due.length, greet);
     attachSwipe(top, due[0]);
   }
-  // long words never break: the task name shrinks until its longest word fits on one line
+  // the task name shrinks until every word fits on its line and the whole name fits on the card;
+  // a single very long word (German compounds) that still does not fit at a readable size gets split with a hyphen
   function fitCardText(){
     stage.querySelectorAll(".card .text").forEach(el=>{
-      el.style.fontSize="";
+      const card=el.closest(".card"); if(!card) return;
+      el.style.fontSize=""; el.style.hyphens=""; el.style.webkitHyphens=""; el.style.overflowWrap=""; el.lang=document.documentElement.lang||"de";
+      const maxH=card.clientHeight*0.4;
+      const over=()=>el.scrollWidth>el.clientWidth+1 || el.offsetHeight>maxH;
       let fs=parseFloat(getComputedStyle(el).fontSize)||48;
-      while(el.scrollWidth>el.clientWidth+1 && fs>22){ fs-=2; el.style.fontSize=fs+"px"; }
+      while(over() && fs>34){ fs-=2; el.style.fontSize=fs+"px"; }
+      if(el.scrollWidth>el.clientWidth+1){
+        el.style.hyphens="auto"; el.style.webkitHyphens="auto";            // Safari splits German words at syllables
+        if(el.scrollWidth>el.clientWidth+1) el.style.overflowWrap="anywhere"; // no dictionary: split anyway, never cut off
+        while(el.offsetHeight>maxH && fs>26){ fs-=2; el.style.fontSize=fs+"px"; }
+      }
     });
   }
   try{ document.fonts && document.fonts.ready.then(()=>fitCardText()); document.fonts && document.fonts.addEventListener && document.fonts.addEventListener("loadingdone", ()=>fitCardText()); }catch(e){}
