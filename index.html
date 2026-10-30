@@ -1095,7 +1095,7 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
 .skwarp{position:fixed;z-index:9;pointer-events:none;margin:0;transform-origin:50% 50%;will-change:transform,filter,opacity}
 /* together done: two flames meet */
 #togFx{position:fixed;inset:0;z-index:12;pointer-events:auto;cursor:pointer;overflow:hidden;-webkit-tap-highlight-color:transparent}
-#togFx .tg-bg{position:absolute;inset:0;background:radial-gradient(120% 80% at 50% 42%,rgba(20,8,30,.78),rgba(4,4,10,.94));-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:0}
+#togFx .tg-bg{position:absolute;inset:0;background:radial-gradient(120% 80% at 50% 42%,rgba(20,8,30,.82),rgba(4,4,10,.95));opacity:0}
 #togFx .tg-fl{position:absolute;left:0;top:0;width:120px;height:150px;margin:-120px 0 0 -60px;transform-origin:60px 120px;will-change:transform,opacity}
 #togFx .tg-fl svg{width:100%;height:100%;overflow:visible}
 #togFx .tg-cv{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
@@ -3833,7 +3833,7 @@ body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) bot
     const bg=el("div","tg-bg");
     const mkF=kind=>{ const d=el("div","tg-fl"); d.innerHTML=flameSVG(kind); d.style.opacity="0";
       const q=c=>[...d.querySelectorAll("."+c)];
-      return {d, side:[q("fb0").concat(q("ft0")), q("fb1").concat(q("ft1"))], main:q("fb2").concat(q("ft2")), inner:d.querySelector(".fi"), core:d.querySelector(".fc"), halo:d.querySelector(".fh"), ph:Math.random()*10,
+      return {d, side:[q("ft0"), q("ft1")], main:q("ft2"), inner:d.querySelector(".fi"), core:d.querySelector(".fc"), halo:d.querySelector(".fh"), ph:Math.random()*10,
         x:0,y:0,rot:0,sx:1,sy:1,op:0}; };
     const A=mkF("L"), B=mkF("N"), M=mkF("M");
     const cv=el("canvas","tg-cv"), dpr=Math.min(devicePixelRatio||1,2); cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
@@ -3877,6 +3877,7 @@ body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) bot
     const emit=(x,y,kind,n,o)=>{ o=o||{}; for(let i=0;i<n;i++){ const a=o.burst?Math.random()*Math.PI*2:(-Math.PI/2+(Math.random()-.5)*(o.spread||.9)); const sp=o.burst?mix(o.smin||110,o.smax||420,Math.random()):mix(30,95,Math.random());
       parts.push({x:x+(Math.random()-.5)*(o.jx||14), y:y+(Math.random()-.5)*(o.jy||8), vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, age:0, life:mix(o.lmin||.7,o.lmax||1.5,Math.random()), r:mix(.7,1.9,Math.random())*(o.size||1), c:COL[kind][(Math.random()*3)|0], drag:o.burst?2.4:1.1, lift:o.burst?55:40}); } };
     const place=(F,t)=>{ // procedural sway of the tongues
+      if(F.op<.004){ if(F.d.style.display!=="none"){ F.d.style.display="none"; } return; } else if(F.d.style.display==="none") F.d.style.display="";
       const s1=Math.sin(t*7.3+F.ph), s2=Math.sin(t*9.1+F.ph*1.7), s3=Math.sin(t*5.2+F.ph*.6), s4=Math.sin(t*13+F.ph*2.3);
       F.side[0].forEach(e=>e.setAttribute("transform","rotate("+(s1*6-2).toFixed(2)+" -10 8)"));
       F.side[1].forEach(e=>e.setAttribute("transform","rotate("+(s2*7+2).toFixed(2)+" 10 8)"));
@@ -4014,7 +4015,7 @@ body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) bot
       return t<1 || W.motes.length;
     });
     [B,F].forEach(c=>{ c.globalCompositeOperation="source-over"; });
-    if(waves.length) waveRaf=requestAnimationFrame(waveTick); else { waveRaf=0; B.clearRect(0,0,w,h); F.clearRect(0,0,w,h); }
+    if(waves.length) waveRaf=requestAnimationFrame(waveTick); else { waveRaf=0; waveCv.width=waveCv.height=0; waveFr.width=waveFr.height=0; }
   }
   /* ---------- a card that was open for a long time: it freezes, glowing cracks run out of the middle, and a force from inside blows it apart ---------- */
   const SHATTER_DAYS=7;
