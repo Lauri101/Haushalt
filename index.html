@@ -1120,6 +1120,8 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
 .shx>*{position:absolute;pointer-events:none}
 .shx .card.shx-sh{position:absolute;inset:auto;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:linear-gradient(160deg,rgba(40,44,58,.97),rgba(16,18,24,.97))!important;box-shadow:none!important;filter:none!important;transition:none!important;will-change:auto!important;animation:none!important}
 .shx-svg{left:0;top:0;overflow:visible}
+.shx .shx-sh::before,.shx .shx-sh::after{content:none!important;animation:none!important}
+.shx .shx-sh *{animation:none!important;transition:none!important}
 .shx-shw{left:0;top:0;transform-origin:50% 44%}
 .shx-pc{position:absolute;overflow:hidden;will-change:transform,opacity}
 .shx-core{width:170px;height:170px;margin:-85px 0 0 -85px;border-radius:50%;background:radial-gradient(circle,#fff 0,#FFF8D6 9%,#FFE14D 20%,rgba(255,106,0,.55) 42%,rgba(255,45,26,0) 70%);opacity:0;will-change:transform,opacity}
@@ -4073,8 +4075,9 @@ body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) bot
     // the pieces are built during the crack phase, invisible, so the break itself costs nothing
     at(420,()=>{
       const base=card.cloneNode(true);
-      base.querySelectorAll(".back-face,.tint,.stamp,.note-mark").forEach(e=>e.remove());
-      base.className=card.className.replace(/\b(fly|drag|back|flipped|promote|behind)\b/g," ")+" shx-sh";
+      // the pieces are plain copies: no red pulse, no rotating arcs, nothing that keeps animating 40 times over (that crashed Safari)
+      base.querySelectorAll(".back-face,.tint,.stamp,.note-mark,.imp-ring,.imp-tag").forEach(e=>e.remove());
+      base.className=card.className.replace(/\b(fly|drag|back|flipped|promote|behind|important)\b/g," ")+" shx-sh";
       ["tabindex","aria-label","id","style"].forEach(a=>base.removeAttribute(a));
       base.style.width=w+"px"; base.style.height=h+"px";
       const gl=document.createElement("div"); gl.style.cssText="position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(circle at "+IX+"px "+IY+"px,rgba(255,150,50,.6),rgba(255,106,0,.2) 32%,rgba(255,106,0,0) 58%)"; base.appendChild(gl);
