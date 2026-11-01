@@ -4023,8 +4023,15 @@ body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) bot
     el("div","",d).innerHTML='<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4M9 15l2 2 4-4"/></svg>';
     el("h2","",d,tsL("Your plan is ready","Dein Plan ist fertig"));
     el("p","",d,tsL("Tap below and choose “Add All” in the calendar. Planning again later creates new events; remove the old ones in the calendar.","Tippe unten und wähle im Kalender „Alle hinzufügen“. Planst du später neu, entstehen neue Termine. Die alten löschst du im Kalender."));
-    const a=el("a","btn",d,tsL("Add to calendar","In den Kalender")); a.href="data:text/calendar;charset=utf-8,"+encodeURIComponent(ics);
+    // the calendar file is served by our own service worker under a real address: iPhone then shows "Add All";
+    // without a service worker (first start, private mode) the file is shared or downloaded instead
     const file=(()=>{ try{ return new File([ics], name, {type:"text/calendar"}); }catch(e){ return null; } })();
+    const a=el("a","btn",d,tsL("Add to calendar","In den Kalender"));
+    const sw=!!(navigator.serviceWorker && navigator.serviceWorker.controller);
+    if(sw) a.href="plan.ics?d="+encodeURIComponent(ics);
+    else { a.href="#"; a.onclick=e=>{ e.preventDefault();
+      if(file && navigator.canShare && navigator.canShare({files:[file]})) navigator.share({files:[file]}).catch(()=>{});
+      else { const u=URL.createObjectURL(new Blob([ics],{type:"text/calendar"})); const x=document.createElement("a"); x.href=u; x.download=name; document.body.appendChild(x); x.click(); x.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000); } }; }
     if(file && navigator.canShare && navigator.canShare({files:[file]})){ const sh=el("button","btn ghost",d,tsL("Share as file","Als Datei teilen")); sh.onclick=()=>{ navigator.share({files:[file]}).catch(()=>{}); }; }
     const fin=el("button","btn ghost",d,tsL("Done","Fertig")); fin.onclick=closeSheet;
   }
