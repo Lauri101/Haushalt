@@ -1143,12 +1143,15 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
 .ts-warn{margin-top:10px;font-size:13px;color:#FFC870}
 .ts-wait{margin-top:4px;font-size:12.5px;color:var(--muted)}
 .ts-head{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin:0 4px 8px}
-.ts-list{border-radius:20px;overflow:hidden;position:relative}
+.ts-list{border-radius:20px;overflow:hidden;position:relative;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.ts-list *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .ts-row{position:relative;touch-action:pan-y}
 .ts-row+.ts-row{border-top:1px solid rgba(127,127,127,.14)}
-.ts-del{position:absolute;right:0;top:0;bottom:0;width:72px;display:grid;place-items:center;background:rgba(229,18,43,.07)}
-.ts-del button{width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,120,120,.5);background:rgba(255,90,90,.24);color:#ffb3b3;font-size:24px;font-weight:600;line-height:1;cursor:pointer;display:grid;place-items:center}
-:root[data-app-theme="light"] .ts-del button{color:#c62828;background:rgba(229,57,53,.14)}
+.ts-del{position:absolute;right:0;top:0;bottom:0;width:72px;display:grid;place-items:center}
+.ts-del button{width:34px;height:34px;border-radius:50%;border:0;padding:0;cursor:pointer;display:grid;place-items:center;color:#FF8A8A;background:radial-gradient(circle at 50% 35%,rgba(255,138,138,.26),rgba(255,90,90,.12) 70%);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 0 0 1px rgba(255,138,138,.22),0 0 18px -4px rgba(255,90,90,.45);transform:scale(.6);opacity:0;transition:transform .3s var(--spring,cubic-bezier(.2,1.4,.4,1)),opacity .2s}
+.ts-row.open .ts-del button{transform:none;opacity:1}
+.ts-del svg{display:block}
+:root[data-app-theme="light"] .ts-del button{color:#D64545;background:radial-gradient(circle at 50% 35%,rgba(214,69,69,.16),rgba(214,69,69,.07) 70%);box-shadow:inset 0 0 0 1px rgba(214,69,69,.2)}
 .ts-fg{position:relative;display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);transition:transform .28s var(--ease)}
 .ts-row.drag .ts-fg{transition:none}
 .ts-row.lift{z-index:3}.ts-row.lift .ts-fg{box-shadow:0 12px 30px -8px rgba(0,0,0,.6);transform:scale(1.02)}
@@ -1182,6 +1185,26 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
 .fts span:last-child{margin-left:auto;font-weight:500;color:var(--muted);font-size:13px}
 .tsp h2{font-size:18px;margin:0 2px}.tsp .tsp-r{display:flex;align-items:center;gap:10px}.tsp .tsp-r .t{flex:1}.tsp .tsp-r .tt{font-size:15px;font-weight:600;display:block}.tsp .tsp-r .ld{font-size:12.5px;color:var(--muted)}
 .tsp .tsp-note{font-size:12.5px;color:var(--muted);line-height:1.4;margin:0 2px}
+.ts-fx{flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;gap:14px;padding:4px 0 12px}
+.ts-fx .ts-prog{align-self:stretch;display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin:0 4px}
+.ts-segs{align-self:stretch;display:flex;gap:4px;margin:-6px 4px 4px}.ts-segs i{flex:1;height:4px;border-radius:2px;background:rgba(127,127,127,.22)}.ts-segs i.d{background:var(--accent)}.ts-segs i.c{background:linear-gradient(90deg,var(--accent),rgba(var(--accent-rgb),.25))}
+.ts-now{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-top:4px}
+.ts-fico{width:88px;height:88px;display:grid;place-items:center}
+.ts-fname{font-family:"Bebas Neue","Oswald","Impact","Arial Narrow",sans-serif;font-size:44px;line-height:.95;letter-spacing:.02em;text-align:center;max-width:100%;padding:0 8px;overflow-wrap:anywhere}
+.ts-fplan{font-size:13px;color:var(--muted)}
+.ts-clock{position:relative;width:196px;height:196px;display:grid;place-items:center;margin:4px 0}
+.ts-clock svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.ts-clock b{font-family:"Bebas Neue","Oswald","Impact","Arial Narrow",sans-serif;font-size:58px;font-weight:400;letter-spacing:.03em;line-height:1}
+.ts-clock span{position:absolute;bottom:52px;font-size:12px;color:var(--muted)}
+.ts-delta{font-size:13px;font-weight:600;padding:5px 12px;border-radius:999px;background:rgba(127,127,127,.14);color:var(--muted)}
+.ts-delta.late{background:rgba(255,181,71,.16);color:#FFC870}.ts-delta.ok{background:rgba(var(--accent-rgb),.14);color:var(--accent)}
+.ts-fbtns{align-self:stretch;display:flex;gap:10px}.ts-fbtns .btn{flex:1}
+.ts-flink{display:flex;gap:18px;justify-content:center}.ts-flink button{border:0;background:none;color:var(--muted);font:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:6px}
+.ts-flink button.hl{color:#FFC870}
+.ts-next{align-self:stretch;border-radius:18px;padding:10px 14px}
+.ts-next h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0 0 4px}
+.ts-next div{display:flex;gap:10px;font-size:14px;padding:3px 0}.ts-next div span:first-child{color:var(--muted);min-width:44px}
+.ts-wait-n{font-size:13px;color:var(--accent)}
 /* long open card breaks apart */
 .card .frost{position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:2;opacity:0;transition:opacity .28s ease;background:linear-gradient(135deg,rgba(234,246,255,.4),rgba(185,214,242,.12) 46%,rgba(223,233,255,.32));box-shadow:inset 0 0 0 1.5px rgba(200,235,255,.55),inset 0 0 44px rgba(190,230,255,.22)}
 .card.frozen .frost{opacity:1}
@@ -3870,7 +3893,7 @@ body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) bot
   }
   /* ---------- Task Scheduling: plan today's tasks into a time window and hand them to the calendar (hidden under Settings, below Tasks) ---------- */
   const TS_KEY="haushalt-ts";
-  function tsLoad(){ try{ const o=JSON.parse(localStorage.getItem(TS_KEY)||"{}")||{}; return {t:o.t||{}, o:o.o||null}; }catch(e){ return {t:{}, o:null}; } }
+  function tsLoad(){ try{ const o=JSON.parse(localStorage.getItem(TS_KEY)||"{}")||{}; return {t:o.t||{}, o:o.o||null, pr:o.pr||{}, run:o.run||null}; }catch(e){ return {t:{}, o:null, pr:{}, run:null}; } }
   function tsSave(v){ try{ localStorage.setItem(TS_KEY, JSON.stringify(v)); }catch(e){} }
   function tsOf(id){ const x=tsLoad().t[id]||{}; return {d:x.d||0, w:x.w||0, a:x.a!=null?x.a:10, p:x.p||"n"}; }
   function tsSet(id, patch){ const v=tsLoad(); v.t[id]=Object.assign({}, v.t[id]||{}, patch); tsSave(v); }
@@ -3881,11 +3904,35 @@ body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) bot
   // the rules: waiting time first (longest first), then "early", then the rest shortest first, "at the end" last; very important first in every group
   function tsSort(list){
     const grp=t=>{ const x=tsOf(t.id); return x.w>0 ? 0 : x.p==="e" ? 1 : x.p==="l" ? 3 : 2; }, dur=t=>tsOf(t.id).d||15;
-    return list.slice().sort((a,b)=> grp(a)-grp(b) || (b.important?1:0)-(a.important?1:0) || (grp(a)===0 ? tsOf(b.id).w-tsOf(a.id).w : dur(a)-dur(b)) || a.text.localeCompare(b.text));
+    return tsChain(tsBase(list));
   }
-  // lay the tasks out: 5 min between, waiting time is filled with the next tasks, the step after a wait gets its own slot, what does not fit is skipped
-  function tsPlan(items, from, to){
-    const BUF=5, ev=[], out=[], fol=[]; let c=from;
+  function tsBase(list){ const grp=t=>{ const x=tsOf(t.id); return x.w>0 ? 0 : x.p==="e" ? 1 : x.p==="l" ? 3 : 2; }, dur=t=>tsOf(t.id).d||15;
+    return (list.slice().sort((a,b)=> grp(a)-grp(b) || (b.important?1:0)-(a.important?1:0) || (grp(a)===0 ? tsOf(b.id).w-tsOf(a.id).w : dur(a)-dur(b)) || a.text.localeCompare(b.text)));
+  }
+  // what you sorted by hand is remembered: pairs you put right after each other (Pfand, then shopping) stay together next time
+  // only what you changed by hand counts, and a pair is used once you have put it together twice
+  function tsLearn(items){
+    const ids=items.map(t=>t.id), v=tsLoad(), pr=v.pr||{}, seen=new Set(ids), base=tsBase(items).map(t=>t.id), nat=new Set();
+    for(let i=0;i<base.length-1;i++) nat.add(base[i]+"|"+base[i+1]);
+    const adj=new Set(); for(let i=0;i<ids.length-1;i++) if(!nat.has(ids[i]+"|"+ids[i+1])) adj.add(ids[i]+"|"+ids[i+1]);
+    const keep=new Set(); for(let i=0;i<ids.length-1;i++) keep.add(ids[i]+"|"+ids[i+1]);
+    Object.keys(pr).forEach(k=>{ const [a,b]=k.split("|"); if(seen.has(a) && seen.has(b) && !keep.has(k)){ pr[k]=(pr[k]||0)-0.5; if(pr[k]<=0) delete pr[k]; } });
+    adj.forEach(k=>{ pr[k]=Math.min(5,(pr[k]||0)+1); });
+    v.pr=pr; tsSave(v);
+  }
+  function tsChain(list){
+    const pr=tsLoad().pr||{}, out=list.slice(), info=t=>tsOf(t.id);
+    Object.entries(pr).filter(([,v])=>v>=2).sort((x,y)=>y[1]-x[1]).forEach(([k])=>{
+      const [a,b]=k.split("|"), ia=out.findIndex(t=>t.id===a), ib=out.findIndex(t=>t.id===b);
+      if(ia<0 || ib<0 || ib===ia+1) return;
+      const A=out[ia], B=out[ib]; if(info(B).w>0 || (info(B).p==="l")!==(info(A).p==="l")) return;   // waiting time stays first, "at the end" stays last
+      out.splice(ib,1); out.splice(out.indexOf(A)+1,0,B);
+    });
+    return out;
+  }
+  // lay the tasks out back to back, waiting time is filled with the next tasks, the step after a wait gets its own slot, what does not fit is skipped
+  function tsPlan(items, from, to, pre){
+    const BUF=0, ev=[], out=[], fol=(pre||[]).slice(); let c=from;   // back to back, no break between tasks
     const follow=limit=>{ fol.sort((x,y)=>x.at-y.at);
       while(fol.length && fol[0].at<limit){ const f=fol.shift(), st=Math.max(c,f.at);
         if(st+f.d<=to){ ev.push({s:st, e:st+f.d, t:f.t, title:f.t.text+tsL(" · done"," · fertig"), fol:true}); c=st+f.d+BUF; } else out.push({t:f.t, d:f.d, fol:true}); } };
@@ -3908,10 +3955,10 @@ body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) bot
     let order, off=[];
     if(v.o && v.o.d===td){ order=v.o.ids.filter(id=>ids.includes(id)); ids.forEach(id=>{ if(!order.includes(id)) order.push(id); }); off=(v.o.off||[]).filter(id=>ids.includes(id)); }
     else order=tsSort(due).map(t=>t.id);
-    tsS={from, to:Math.min(from+180, 23*60+45), order, off:new Set(off)};
+    tsS={from, to:Math.min(from+180, 23*60+45), order, off:new Set(off), manual:!!(v.o && v.o.d===td && v.o.m)};
     renderTS(1);
   }
-  function tsKeep(){ const v=tsLoad(); v.o={d:today(), ids:tsS.order, off:[...tsS.off]}; tsSave(v); }
+  function tsKeep(){ const v=tsLoad(); v.o={d:today(), ids:tsS.order, off:[...tsS.off], m:!!tsS.manual}; tsSave(v); }
   function tsItems(){ const byId={}; tsDue().forEach(t=>byId[t.id]=t); return tsS.order.map(id=>byId[id]).filter(t=>t && !tsS.off.has(t.id)); }
   function renderTS(step){
     sheetMode="ts"; inner.innerHTML="";
@@ -3938,11 +3985,11 @@ body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) bot
       const ti=mk(tsL("To","Bis"), tsS.to, m=>{ tsS.to=Math.max(m, tsS.from+15); ti.value=tsHM(tsS.to); ti.shown.textContent=tsHM(tsS.to); });
       el("div","setlbl",body,tsL("Due today","Heute fällig"));
       const sm=el("div","ts-sum glass",body);
-      const sum=()=>{ const its=tsItems(), act=its.reduce((a,t)=>a+(tsOf(t.id).d||15)+(tsOf(t.id).w>0?tsOf(t.id).a||10:0),0), buf=act+5*Math.max(0,its.length-1), win=tsS.to-tsS.from, wmax=Math.max(0,...its.map(t=>tsOf(t.id).w));
+      const sum=()=>{ const its=tsItems(), act=its.reduce((a,t)=>a+(tsOf(t.id).d||15)+(tsOf(t.id).w>0?tsOf(t.id).a||10:0),0), buf=act, win=tsS.to-tsS.from, wmax=Math.max(0,...its.map(t=>tsOf(t.id).w));
         sm.innerHTML="";
         const l1=el("div","ts-l1",sm); el("span","",l1, its.length===1 ? tsL("1 task","1 Aufgabe") : its.length+tsL(" tasks"," Aufgaben")); el("b","",l1, tsDur(act)+tsL(" active"," aktiv"));
         const bar=el("div","ts-bar",sm); const fill=el("i",buf>win?"over":"",bar); fill.style.width=Math.min(100, win? buf/win*100 : 100)+"%";
-        const l2=el("div","ts-l2",sm); el("span","",l2, tsL("with 5 min breaks: ","mit 5 min Puffer: ")+tsDur(buf)); el("span","",l2, tsL("Window: ","Fenster: ")+tsDur(win));
+        const l2=el("div","ts-l2",sm); el("span","",l2, tsL("planned: ","geplant: ")+tsDur(buf)); el("span","",l2, tsL("Window: ","Fenster: ")+tsDur(win));
         if(!its.length) el("div","ts-warn",sm, tsL("Nothing is due today.","Heute ist nichts fällig."));
         else if(buf>win) el("div","ts-warn",sm, tsL("Something will not fit today. You will see what on the next steps.","Etwas wird heute nicht passen. Du siehst gleich, was."));
         if(wmax) el("div","ts-wait",sm, "+ "+tsDur(wmax)+tsL(" of waiting time run alongside"," Wartezeit laufen nebenher"));
@@ -3957,10 +4004,10 @@ body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) bot
       const box=el("div","ts-list glass",body);
       const GRIP='<svg width="14" height="18" viewBox="0 0 14 18" fill="currentColor"><circle cx="4" cy="4" r="1.6"/><circle cx="10" cy="4" r="1.6"/><circle cx="4" cy="9" r="1.6"/><circle cx="10" cy="9" r="1.6"/><circle cx="4" cy="14" r="1.6"/><circle cx="10" cy="14" r="1.6"/></svg>';
       let openRow=null;
-      const closeOpen=()=>{ if(openRow){ openRow.querySelector(".ts-fg").style.transform=""; openRow=null; } };
+      const closeOpen=()=>{ if(openRow){ openRow.querySelector(".ts-fg").style.transform=""; openRow.classList.remove("open"); openRow=null; } };
       items.forEach(t=>{
         const x=tsOf(t.id), row=el("div","ts-row",box); row.dataset.id=t.id;
-        const del=el("div","ts-del",row); const db=el("button","",del,"−"); db.setAttribute("aria-label",tsL("Leave out today","Heute auslassen"));
+        const del=el("div","ts-del",row); const db=el("button","",del); db.innerHTML='<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><line x1="3.5" y1="8" x2="12.5" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'; db.setAttribute("aria-label",tsL("Leave out today","Heute auslassen"));
         db.onclick=()=>{ sfx("down"); row.style.transition="opacity .25s, transform .25s"; row.style.opacity="0"; row.style.transform="translateX(-40px)"; setTimeout(()=>{ tsS.off.add(t.id); tsKeep(); renderTS(2); }, 230); };
         const fg=el("div","ts-fg",row);
         const gp=el("span","ts-grip",fg); gp.innerHTML=GRIP; gp.setAttribute("aria-hidden","true");
@@ -3980,23 +4027,34 @@ body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) bot
         fg.addEventListener("pointermove", e=>{ if(!mode) return; const mx=e.clientX-sx, my=e.clientY-sy;
           if(mode==="?"){ if(Math.abs(mx)>8 && Math.abs(mx)>Math.abs(my)){ mode="x"; try{ fg.setPointerCapture(e.pointerId); }catch(_){} row.classList.add("drag"); if(openRow && openRow!==row) closeOpen(); } else if(Math.abs(my)>8){ mode=null; return; } }
           if(mode==="x"){ const base=openRow===row?-72:0; dx=Math.max(-90,Math.min(0,base+mx)); fg.style.transform="translateX("+dx+"px)"; } });
-        const end=()=>{ if(mode==="x"){ row.classList.remove("drag"); if(dx<-36){ fg.style.transform="translateX(-72px)"; openRow=row; } else { fg.style.transform=""; if(openRow===row) openRow=null; } } mode=null; };
+        const end=()=>{ if(mode==="x"){ row.classList.remove("drag"); if(dx<-36){ fg.style.transform="translateX(-72px)"; openRow=row; row.classList.add("open"); } else { fg.style.transform=""; row.classList.remove("open"); if(openRow===row) openRow=null; } } mode=null; };
         fg.addEventListener("pointerup", end); fg.addEventListener("pointercancel", end);
         // drag the grip up or down to sort
-        gp.addEventListener("pointerdown", e=>{ e.preventDefault(); closeOpen(); const rows=[...box.children], i0=rows.indexOf(row), hgt=row.offsetHeight, y0=e.clientY; let to=i0;
-          try{ gp.setPointerCapture(e.pointerId); }catch(_){} row.classList.add("lift","drag"); sfx("grab");
+        // iPhone would start selecting text on a held finger: stop that before it begins
+        gp.addEventListener("touchstart", e=>{ e.preventDefault(); }, {passive:false});
+        gp.addEventListener("contextmenu", e=>e.preventDefault());
+        // sort: drag the dots, or hold anywhere on the row for a moment and drag
+        const startDrag=(e,cap)=>{ closeOpen(); try{ getSelection().removeAllRanges(); }catch(_){} const rows=[...box.children], i0=rows.indexOf(row), hgt=row.offsetHeight, y0=e.clientY; let to=i0;
+          try{ cap.setPointerCapture(e.pointerId); }catch(_){} row.classList.add("lift","drag"); sfx("grab"); try{ navigator.vibrate && navigator.vibrate(8); }catch(_){}
           const mv=ev=>{ const d=ev.clientY-y0; row.style.transform="translateY("+d+"px)"; to=Math.max(0,Math.min(rows.length-1, i0+Math.round(d/hgt)));
             rows.forEach((r,k)=>{ if(r===row) return; r.classList.add("shift"); r.style.transform = (k>i0 && k<=to) ? "translateY("+(-hgt)+"px)" : (k<i0 && k>=to) ? "translateY("+hgt+"px)" : ""; }); };
-          const up=()=>{ gp.removeEventListener("pointermove",mv); gp.removeEventListener("pointerup",up); gp.removeEventListener("pointercancel",up);
-            if(to!==i0){ const vis=items.map(t=>t.id); const [m]=vis.splice(i0,1); vis.splice(to,0,m); const rest=tsS.order.filter(id=>!vis.includes(id)); tsS.order=vis.concat(rest); tsKeep(); sfx("snap"); }
+          const up=()=>{ cap.removeEventListener("pointermove",mv); cap.removeEventListener("pointerup",up); cap.removeEventListener("pointercancel",up);
+            if(to!==i0){ const vis=items.map(t=>t.id); const [m]=vis.splice(i0,1); vis.splice(to,0,m); const rest=tsS.order.filter(id=>!vis.includes(id)); tsS.order=vis.concat(rest); tsS.manual=true; tsKeep(); sfx("snap"); }
             renderTS(2); };
-          gp.addEventListener("pointermove",mv); gp.addEventListener("pointerup",up); gp.addEventListener("pointercancel",up); });
+          cap.addEventListener("pointermove",mv); cap.addEventListener("pointerup",up); cap.addEventListener("pointercancel",up); };
+        gp.addEventListener("pointerdown", e=>{ e.preventDefault(); startDrag(e,gp); });
+        let holdT=0;
+        fg.addEventListener("pointerdown", e=>{ if(e.target.closest(".ts-step") || e.target.closest(".ts-grip")) return; const x0=e.clientX, y0=e.clientY; clearTimeout(holdT);
+          const cancel=ev=>{ if(Math.hypot(ev.clientX-x0, ev.clientY-y0)>8){ clearTimeout(holdT); fg.removeEventListener("pointermove",cancel); } };
+          fg.addEventListener("pointermove",cancel);
+          holdT=setTimeout(()=>{ fg.removeEventListener("pointermove",cancel); if(mode==="x") return; mode=null; startDrag({clientY:y0, pointerId:e.pointerId}, fg); }, 380); });
+        const stopHold=()=>clearTimeout(holdT); fg.addEventListener("pointerup",stopHold); fg.addEventListener("pointercancel",stopHold);
       });
       if(!items.length) el("div","none",box,tsL("Nothing left in the plan.","Nichts mehr im Plan."));
       el("div","ts-hint",body,tsL("Swipe left to leave a task out today.","Nach links wischen nimmt eine Aufgabe nur heute aus dem Plan."));
       if(tsS.off.size){ const o=el("div","ts-off",body); o.appendChild(document.createTextNode((tsS.off.size===1?tsL("1 left out today","1 heute ausgelassen"):tsS.off.size+tsL(" left out today"," heute ausgelassen"))+" · ")); const b=el("button","",o,tsL("Bring back","Zurückholen")); b.onclick=()=>{ tsS.off.clear(); tsKeep(); renderTS(2); }; }
       const foot=el("div","foot ts-foot");
-      const auto=el("button","btn ghost",foot,tsL("Sort automatically","Automatisch sortieren")); auto.onclick=()=>{ tsS.order=tsSort(tsDue()).map(t=>t.id); tsKeep(); sfx("cone",2); renderTS(2); };
+      const auto=el("button","btn ghost",foot,tsL("Sort automatically","Automatisch sortieren")); auto.onclick=()=>{ tsS.order=tsSort(tsDue()).map(t=>t.id); tsS.manual=false; tsKeep(); sfx("cone",2); renderTS(2); };
       const go=el("button","btn",foot,tsL("Next","Weiter")); go.disabled=!items.length; go.onclick=()=>renderTS(3);
       return;
     }
@@ -4014,7 +4072,7 @@ body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) bot
         plan.out.forEach(x=>{ const r=el("div","",o); const a=el("span","",r,x.t.text+(x.fol?tsL(" · done"," · fertig"):"")); a.translate=false; el("span","",r,x.d+" min"); }); }
       const foot=el("div","foot ts-foot");
       const n=plan.ev.length, ok=el("button","btn",foot, "OK · "+n+(n===1?tsL(" event to the calendar"," Termin in den Kalender"):tsL(" events to the calendar"," Termine in den Kalender")));
-      ok.disabled=!n; ok.onclick=()=>{ sfx("on"); renderTS(4); };
+      ok.disabled=!n; ok.onclick=()=>{ sfx("on"); if(tsS.manual) tsLearn(items); tsRunNew(plan); renderTS(4); };
       return;
     }
     // step 4: the calendar file, added with one tap ("Add All" in the calendar)
@@ -4033,7 +4091,87 @@ body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) bot
       if(file && navigator.canShare && navigator.canShare({files:[file]})) navigator.share({files:[file]}).catch(()=>{});
       else { const u=URL.createObjectURL(new Blob([ics],{type:"text/calendar"})); const x=document.createElement("a"); x.href=u; x.download=name; document.body.appendChild(x); x.click(); x.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000); } }; }
     if(file && navigator.canShare && navigator.canShare({files:[file]})){ const sh=el("button","btn ghost",d,tsL("Share as file","Als Datei teilen")); sh.onclick=()=>{ navigator.share({files:[file]}).catch(()=>{}); }; }
+    const fo=el("button","btn ghost",d,tsL("Start focus mode","Fokus starten")); fo.onclick=()=>renderFocus();
     const fin=el("button","btn ghost",d,tsL("Done","Fertig")); fin.onclick=closeSheet;
+  }
+  /* ---------- focus view: one task at a time, start and stop, the measured time is saved (rounded up to 5 minutes) ---------- */
+  function tsRun(){ const r=tsLoad().run; return (r && r.d===today() && r.idx<r.ev.length) ? r : null; }
+  function tsRunSave(r){ const v=tsLoad(); v.run=r; tsSave(v); }
+  function tsRunNew(plan){ tsRunSave({d:today(), to:tsS.to, idx:0, ev:plan.ev.map(e=>({tid:e.t.id, title:e.title, s:e.s, e:e.e, fol:!!e.fol, wait:e.wait||0, done:false})), cur:null, spent:0}); }
+  const tsNowMin=()=>{ const n=new Date(); return n.getHours()*60+n.getMinutes(); };
+  let tsTick=0;
+  function renderFocus(){
+    clearInterval(tsTick); sheetMode="tsf"; inner.innerHTML="";
+    let r=tsLoad().run; if(!r || r.d!==today()){ openTS(); return; }
+    const el=(tag,cls,parent,txt)=>{ const e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; (parent||inner).appendChild(e); return e; };
+    const top=el("div","top");
+    const back=el("button","icon-btn",top); back.setAttribute("aria-label",tsL("Back","Zurück")); back.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>'; back.onclick=()=>{ clearInterval(tsTick); renderSettings("main"); };
+    el("h1","",top,tsL("Focus","Fokus"));
+    const cl=el("button","icon-btn",top); cl.setAttribute("aria-label",tsL("Close","Schließen")); cl.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>'; cl.onclick=()=>{ clearInterval(tsTick); closeSheet(); };
+    const body=el("div","ts-fx");
+    // everything done: a short summary
+    if(r.idx>=r.ev.length){
+      const planned=r.ev.reduce((a,e)=>a+(e.e-e.s),0);
+      el("div","ts-fico",body).innerHTML='<svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16.5 9"/></svg>';
+      const nd=r.ev.filter(e=>e.done).length, all=nd===r.ev.length;
+      el("div","ts-fname",body, all ? tsL("All done","Alles geschafft") : tsL("Plan finished","Plan beendet"));
+      el("div","ts-fplan",body,(all?"":nd+tsL(" of "," von ")+r.ev.length+tsL(" done · "," erledigt · "))+tsL("Planned ","Geplant ")+tsDur(planned)+(r.spent? tsL(" · measured "," · gemessen ")+tsDur(Math.round(r.spent/60000)) : ""));
+      const f=el("div","ts-fbtns",body); const b=el("button","btn",f,tsL("Done","Fertig")); b.onclick=()=>{ const v=tsLoad(); delete v.run; tsSave(v); closeSheet(); };
+      if(all) sfx("alldone"); return;
+    }
+    const ev=r.ev[r.idx], task=state.tasks.find(t=>t.id===ev.tid);
+    const prog=el("div","ts-prog",body); el("span","",prog,(r.idx+1)+tsL(" of "," von ")+r.ev.length); el("span","",prog,tsHM(r.ev[0].s)+"–"+tsHM(r.to));
+    const sg=el("div","ts-segs",body); r.ev.forEach((e,i)=>el("i", e.done?"d":i===r.idx?"c":"", sg));
+    el("div","ts-now",body, ev.fol ? tsL("Next step","Nächster Schritt") : tsL("Now","Jetzt dran"));
+    const ic=el("div","ts-fico",body); if(task) putIcon(ic, iconOf(task));
+    const nm=el("div","ts-fname",body, ev.fol && task ? tsL("After: ","Danach: ")+task.text : ev.title); nm.translate=false;
+    el("div","ts-fplan",body, tsL("Planned ","Geplant ")+tsHM(ev.s)+tsL(" to "," bis ")+tsHM(ev.e)+" · "+(ev.e-ev.s)+" min");
+    if(ev.fol && tsNowMin()<ev.s) el("div","ts-wait-n",body, tsL("Still running for ","Läuft noch ")+(ev.s-tsNowMin())+" min");
+    // the clock: elapsed time against the planned time
+    const clk=el("div","ts-clock",body), C=2*Math.PI*88;
+    clk.innerHTML='<svg viewBox="0 0 196 196"><circle cx="98" cy="98" r="88" fill="none" stroke="rgba(127,127,127,.2)" stroke-width="8"/><circle class="arc" cx="98" cy="98" r="88" fill="none" stroke="var(--accent)" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 '+C+'"/></svg><b>00:00</b><span></span>';
+    const arc=clk.querySelector(".arc"), big=clk.querySelector("b"), sub=clk.querySelector("span");
+    const dl=el("div","ts-delta",body);
+    const plannedMs=(ev.e-ev.s)*60000;
+    const elapsed=()=>{ const c=r.cur; if(!c) return 0; return c.acc+(c.run? Date.now()-c.run : 0); };
+    const paint=()=>{ const ms=elapsed(), sec=Math.floor(ms/1000); big.textContent=String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0");
+      const f=Math.min(1, ms/Math.max(1,plannedMs)); arc.setAttribute("stroke-dasharray",(C*f).toFixed(1)+" "+C); arc.setAttribute("stroke", ms>plannedMs ? "#FFB547" : "var(--accent)");
+      sub.textContent = !r.cur ? tsL("not started","nicht gestartet") : r.cur.run ? tsL("running","läuft") : tsL("paused","pausiert");
+      // ahead of or behind the plan, counted from where this step should end
+      const endAt = r.cur ? tsNowMin() + Math.max(0, Math.ceil((plannedMs-ms)/60000)) : Math.max(tsNowMin(), ev.s) + (ev.e-ev.s), late=endAt-ev.e;
+      dl.className="ts-delta"+(late>=5?" late":late<=0?" ok":""); dl.textContent = late>=5 ? late+tsL(" min behind plan"," min hinter Plan") : late<=-5 ? (-late)+tsL(" min ahead"," min voraus") : tsL("on plan","im Plan");
+      rp.style.display = late>=5 ? "" : "none"; };
+    const fb=el("div","ts-fbtns",body);
+    const save=()=>tsRunSave(r);
+    const draw=()=>{ fb.innerHTML="";
+      if(!r.cur || !r.cur.run){ const st=el("button","btn"+(r.cur?" ghost":""),fb, r.cur ? tsL("Resume","Weiter") : tsL("Start","Start")); st.onclick=()=>{ r.cur=r.cur||{acc:0,run:0}; r.cur.run=Date.now(); save(); sfx("tap"); draw(); paint(); }; }
+      else { const ps=el("button","btn ghost",fb,tsL("Pause","Pause")); ps.onclick=()=>{ r.cur.acc+=Date.now()-r.cur.run; r.cur.run=0; save(); sfx("tap"); draw(); paint(); }; }
+      const dn=el("button","btn",fb,tsL("Done","Fertig")); dn.onclick=finish; };
+    const finish=()=>{
+      const ms=elapsed();
+      if(r.cur && ms>=30000){ const mins=Math.max(5, Math.ceil(ms/60000/5)*5); r.spent=(r.spent||0)+ms; if(ev.fol) tsSet(ev.tid,{a:mins}); else tsSet(ev.tid,{d:mins}); }
+      ev.done=true; r.cur=null; r.idx++; save();
+      if(!ev.fol && task && dueTasks().some(t=>t.id===task.id)){ try{ apply(task.id,"r"); }catch(e){} } else sfx("done", 1);
+      renderFocus(); };
+    draw();
+    const lk=el("div","ts-flink",body);
+    const sk=el("button","",lk,tsL("Skip","Überspringen")); sk.onclick=()=>{ ev.done=false; r.cur=null; r.idx++; save(); sfx("down"); renderFocus(); };
+    const rp=el("button","hl",lk,tsL("Re-plan the rest from now","Rest ab jetzt neu planen")); rp.onclick=()=>{ tsReplan(r); renderFocus(); };
+    // what comes after
+    const nx=r.ev.slice(r.idx+1, r.idx+3); if(nx.length){ const n=el("div","ts-next glass",body); el("h3","",n,tsL("After that","Danach"));
+      nx.forEach(e=>{ const row=el("div","",n); el("span","",row,tsHM(e.s)); const t=el("span","",row,e.title); t.translate=false; }); }
+    paint(); tsTick=setInterval(()=>{ if(sheetMode!=="tsf" || !inner.contains(clk)){ clearInterval(tsTick); return; } paint(); }, 1000);
+  }
+  // behind the plan: lay the rest out again from now; machines already running keep their time
+  function tsReplan(r){
+    const now=tsNowMin(), rest=r.ev.slice(r.idx), doneIds=new Set(r.ev.slice(0,r.idx).filter(e=>!e.fol).map(e=>e.tid));
+    const byId={}; state.tasks.forEach(t=>byId[t.id]=t);
+    const items=rest.filter(e=>!e.fol && byId[e.tid]).map(e=>byId[e.tid]);
+    const pre=rest.filter(e=>e.fol && doneIds.has(e.tid) && byId[e.tid]).map(e=>({at:e.s, d:e.e-e.s, t:byId[e.tid]}));
+    const need=rest.reduce((a,e)=>a+(e.e-e.s),0)+items.reduce((a,t)=>a+tsOf(t.id).w,0);   // nothing gets dropped, the plan just runs longer
+    const plan=tsPlan(items, now, Math.max(r.to, now+need), pre);
+    r.ev=r.ev.slice(0,r.idx).concat(plan.ev.map(e=>({tid:e.t.id, title:e.title, s:e.s, e:e.e, fol:!!e.fol, wait:e.wait||0, done:false})));
+    r.cur=null; tsRunSave(r); sfx("cone",3);
   }
   function tsICS(ev){
     const ymd=today().replace(/-/g,""), at=m=>ymd+"T"+String(Math.floor(m/60)).padStart(2,"0")+String(m%60).padStart(2,"0")+"00";
@@ -5660,7 +5798,8 @@ body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) bot
       const a=document.createElement("span"); a.textContent = n===1 ? "1 task" : n+" tasks";
       gt.appendChild(navRow(SV('<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/>'), "Tasks", a, ()=>renderList("settings")));
       { const ld=document.createElement("span"); ld.textContent=tsL("Plan today into your calendar","Heute in den Kalender planen");
-        const r=navRow(SV('<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h3M8 17h6"/>'), "Task Scheduling", ld, ()=>openTS()); r.querySelector(".tt").translate=false; gt.appendChild(r); }
+        const run=tsRun(), cur=run && run.ev[run.idx]; if(cur){ ld.textContent=tsL("Plan running · now: ","Plan läuft · jetzt: ")+cur.title; ld.translate=false; }
+        const r=navRow(SV('<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h3M8 17h6"/>'), "Task Scheduling", ld, ()=>{ if(cur) renderFocus(); else openTS(); }); r.querySelector(".tt").translate=false; gt.appendChild(r); }
       list.appendChild(gt); }
     const gb=document.createElement("div"); gb.className="group glass";
     const brow=document.createElement("button"); brow.className="row";
