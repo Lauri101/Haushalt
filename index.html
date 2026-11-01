@@ -1124,6 +1124,64 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
 #togFx .tg-row svg{flex:none}
 #togFx .tg-row span{opacity:.8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #togFx .tg-more{padding-left:25px;font-size:13px;color:#9aa3b2}
+/* ---------- Task Scheduling ---------- */
+.ts-steps{display:flex;gap:6px;margin:2px 4px 14px}.ts-steps i{flex:1;height:3px;border-radius:2px;background:rgba(127,127,127,.25)}.ts-steps i.on{background:var(--accent)}
+.ts-q{font-size:15px;color:var(--muted);margin:0 4px 14px}
+.ts-frame{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:16px 18px;border-radius:20px}
+.ts-frame label{display:flex;flex-direction:column;gap:2px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.ts-frame label:last-of-type{align-items:flex-end}
+.ts-tw{position:relative;display:block}
+.ts-time{display:block;font-family:"Bebas Neue","Oswald","Impact","Arial Narrow",sans-serif;font-size:58px;line-height:1;letter-spacing:.02em;color:var(--ink)}
+.ts-tin{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;font-size:16px;cursor:pointer;-webkit-appearance:none;appearance:none}
+.ts-arrow{color:var(--muted);font-size:26px}
+.ts-sum{padding:14px 16px;border-radius:20px;margin-top:12px}
+.ts-sum .ts-l1{display:flex;justify-content:space-between;font-size:15px}.ts-sum .ts-l1 b{font-weight:700}
+.ts-bar{height:10px;border-radius:5px;background:rgba(127,127,127,.18);margin:12px 0 8px;overflow:hidden;position:relative}
+.ts-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:linear-gradient(90deg,var(--c1,var(--accent)),var(--c2,var(--accent)))}
+.ts-bar i.over{background:linear-gradient(90deg,var(--c1,var(--accent)),#FFB547 80%,#FF8A5C)}
+.ts-l2{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted)}
+.ts-warn{margin-top:10px;font-size:13px;color:#FFC870}
+.ts-wait{margin-top:4px;font-size:12.5px;color:var(--muted)}
+.ts-head{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin:0 4px 8px}
+.ts-list{border-radius:20px;overflow:hidden;position:relative}
+.ts-row{position:relative;touch-action:pan-y}
+.ts-row+.ts-row{border-top:1px solid rgba(127,127,127,.14)}
+.ts-del{position:absolute;right:0;top:0;bottom:0;width:72px;display:grid;place-items:center;background:rgba(229,18,43,.07)}
+.ts-del button{width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,120,120,.5);background:rgba(255,90,90,.24);color:#ffb3b3;font-size:24px;font-weight:600;line-height:1;cursor:pointer;display:grid;place-items:center}
+:root[data-app-theme="light"] .ts-del button{color:#c62828;background:rgba(229,57,53,.14)}
+.ts-fg{position:relative;display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);transition:transform .28s var(--ease)}
+.ts-row.drag .ts-fg{transition:none}
+.ts-row.lift{z-index:3}.ts-row.lift .ts-fg{box-shadow:0 12px 30px -8px rgba(0,0,0,.6);transform:scale(1.02)}
+.ts-row.shift{transition:transform .2s var(--ease)}
+.ts-grip{flex:none;width:26px;height:36px;display:grid;place-items:center;color:var(--muted);touch-action:none;cursor:grab}
+.ts-fg .t{flex:1;min-width:0}.ts-fg .tt{font-size:15px;font-weight:600;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ts-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}.ts-chips:empty{display:none}
+.ts-chip{font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;background:rgba(127,127,127,.16);color:var(--muted)}
+.ts-chip.w{background:rgba(var(--accent-rgb),.16);color:var(--accent)}.ts-chip.i{background:rgba(229,18,43,.16);color:#ff8a8a}.ts-chip.e{background:rgba(255,200,112,.16);color:#FFC870}
+.ts-step{flex:none;display:flex;align-items:center;gap:4px}
+.ts-step button{width:28px;height:28px;border-radius:50%;border:0;background:rgba(127,127,127,.16);color:var(--ink);font-size:17px;cursor:pointer;line-height:1}
+.ts-step b{min-width:50px;text-align:center;font-size:14px}
+.ts-hint{font-size:12px;color:var(--muted);margin:8px 6px 0}
+.ts-off{font-size:13px;color:var(--muted);margin:10px 6px 0}.ts-off button{border:0;background:none;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;padding:0}
+.ts-foot{display:flex;flex-direction:column;gap:10px}
+.ts-day{position:relative;margin:4px 0 8px}
+.ts-hr{position:absolute;left:0;right:0;border-top:1px solid rgba(127,127,127,.22)}
+.ts-hl{position:absolute;left:0;width:44px;font-size:12.5px;color:var(--muted);text-align:right;transform:translateY(-9px)}
+.ts-ev{position:absolute;left:78px;right:4px;border-radius:8px;border-left:3px solid var(--accent);background:rgba(var(--accent-rgb),.15);padding:4px 8px;overflow:hidden;box-sizing:border-box}
+.ts-ev b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ts-ev span{display:block;font-size:11.5px;color:var(--muted)}
+.ts-ev.small{display:flex;align-items:center;gap:6px;padding:0 8px}.ts-ev.small b{font-size:12px}.ts-ev.small span{display:inline}
+.ts-ev.imp{border-left-color:#ff6b6b;background:rgba(229,18,43,.14)}.ts-ev.fol{border-left-style:dashed}
+.ts-waitbar{position:absolute;left:54px;width:6px;border-radius:3px;background:repeating-linear-gradient(180deg,rgba(var(--accent-rgb),.6) 0 6px,transparent 6px 11px)}
+.ts-out{border-radius:18px;padding:10px 14px;margin-top:6px}
+.ts-out h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#FFC870;font-weight:600;margin:0 0 4px}
+.ts-out div{display:flex;justify-content:space-between;font-size:14px;padding:3px 0}.ts-out div span:last-child{color:var(--muted)}
+.ts-done{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:20px}
+.ts-done h2{font-size:24px}.ts-done p{color:var(--muted);font-size:14.5px;max-width:300px;line-height:1.45}
+.ts-done .btn{width:100%;max-width:320px;display:grid;place-items:center;text-decoration:none}
+.fts{flex:none;display:flex;align-items:center;gap:10px;height:46px;border-radius:23px;padding:0 16px;font-size:14.5px;font-weight:600;color:var(--ink);cursor:pointer;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));border:1px solid var(--edge-bot);border-top-color:var(--edge-top)}
+.fts span:last-child{margin-left:auto;font-weight:500;color:var(--muted);font-size:13px}
+.tsp h2{font-size:18px;margin:0 2px}.tsp .tsp-r{display:flex;align-items:center;gap:10px}.tsp .tsp-r .t{flex:1}.tsp .tsp-r .tt{font-size:15px;font-weight:600;display:block}.tsp .tsp-r .ld{font-size:12.5px;color:var(--muted)}
+.tsp .tsp-note{font-size:12.5px;color:var(--muted);line-height:1.4;margin:0 2px}
 /* long open card breaks apart */
 .card .frost{position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:2;opacity:0;transition:opacity .28s ease;background:linear-gradient(135deg,rgba(234,246,255,.4),rgba(185,214,242,.12) 46%,rgba(223,233,255,.32));box-shadow:inset 0 0 0 1.5px rgba(200,235,255,.55),inset 0 0 44px rgba(190,230,255,.22)}
 .card.frozen .frost{opacity:1}
@@ -3810,6 +3868,176 @@ body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) bot
     }
     setTimeout(()=>card.focus({preventScroll:true}), 0);
   }
+  /* ---------- Task Scheduling: plan today's tasks into a time window and hand them to the calendar (hidden under Settings, below Tasks) ---------- */
+  const TS_KEY="haushalt-ts";
+  function tsLoad(){ try{ const o=JSON.parse(localStorage.getItem(TS_KEY)||"{}")||{}; return {t:o.t||{}, o:o.o||null}; }catch(e){ return {t:{}, o:null}; } }
+  function tsSave(v){ try{ localStorage.setItem(TS_KEY, JSON.stringify(v)); }catch(e){} }
+  function tsOf(id){ const x=tsLoad().t[id]||{}; return {d:x.d||0, w:x.w||0, a:x.a!=null?x.a:10, p:x.p||"n"}; }
+  function tsSet(id, patch){ const v=tsLoad(); v.t[id]=Object.assign({}, v.t[id]||{}, patch); tsSave(v); }
+  const tsL=(en,de)=>I18N.lang==="de" ? de : en;
+  const tsDur=m=>{ const h=Math.floor(m/60), r=m%60; return h ? h+" h"+(r?" "+String(r).padStart(2,"0"):"") : r+" min"; };
+  const tsHM=m=>String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
+  const tsMin=v=>{ const m=/^(\d{1,2}):(\d{2})/.exec(v||""); return m ? (+m[1])*60+(+m[2]) : null; };
+  // the rules: waiting time first (longest first), then "early", then the rest shortest first, "at the end" last; very important first in every group
+  function tsSort(list){
+    const grp=t=>{ const x=tsOf(t.id); return x.w>0 ? 0 : x.p==="e" ? 1 : x.p==="l" ? 3 : 2; }, dur=t=>tsOf(t.id).d||15;
+    return list.slice().sort((a,b)=> grp(a)-grp(b) || (b.important?1:0)-(a.important?1:0) || (grp(a)===0 ? tsOf(b.id).w-tsOf(a.id).w : dur(a)-dur(b)) || a.text.localeCompare(b.text));
+  }
+  // lay the tasks out: 5 min between, waiting time is filled with the next tasks, the step after a wait gets its own slot, what does not fit is skipped
+  function tsPlan(items, from, to){
+    const BUF=5, ev=[], out=[], fol=[]; let c=from;
+    const follow=limit=>{ fol.sort((x,y)=>x.at-y.at);
+      while(fol.length && fol[0].at<limit){ const f=fol.shift(), st=Math.max(c,f.at);
+        if(st+f.d<=to){ ev.push({s:st, e:st+f.d, t:f.t, title:f.t.text+tsL(" · done"," · fertig"), fol:true}); c=st+f.d+BUF; } else out.push({t:f.t, d:f.d, fol:true}); } };
+    for(const t of items){
+      const x=tsOf(t.id), d=x.d||15;
+      if(fol.length) follow(c+d);
+      if(c+d>to){ out.push({t, d}); continue; }
+      ev.push({s:c, e:c+d, t, title:t.text, est:!x.d, wait:x.w});
+      if(x.w>0) fol.push({at:c+d+x.w, d:x.a||10, t});
+      c+=d+BUF;
+    }
+    follow(Infinity);
+    return {ev:ev.sort((a,b)=>a.s-b.s), out};
+  }
+  let tsS=null;
+  function tsDue(){ return dueTasks(); }
+  function openTS(){
+    const now=new Date(); let from=Math.ceil((now.getHours()*60+now.getMinutes())/15)*15; from=Math.min(from, 22*60);
+    const v=tsLoad(), td=today(), due=tsDue(), ids=due.map(t=>t.id);
+    let order, off=[];
+    if(v.o && v.o.d===td){ order=v.o.ids.filter(id=>ids.includes(id)); ids.forEach(id=>{ if(!order.includes(id)) order.push(id); }); off=(v.o.off||[]).filter(id=>ids.includes(id)); }
+    else order=tsSort(due).map(t=>t.id);
+    tsS={from, to:Math.min(from+180, 23*60+45), order, off:new Set(off)};
+    renderTS(1);
+  }
+  function tsKeep(){ const v=tsLoad(); v.o={d:today(), ids:tsS.order, off:[...tsS.off]}; tsSave(v); }
+  function tsItems(){ const byId={}; tsDue().forEach(t=>byId[t.id]=t); return tsS.order.map(id=>byId[id]).filter(t=>t && !tsS.off.has(t.id)); }
+  function renderTS(step){
+    sheetMode="ts"; inner.innerHTML="";
+    const el=(tag,cls,parent,txt)=>{ const e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; (parent||inner).appendChild(e); return e; };
+    const ICB='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>';
+    const ICX='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>';
+    const top=el("div","top");
+    const back=el("button","icon-btn",top); back.setAttribute("aria-label",tsL("Back","Zurück")); back.innerHTML=ICB; back.onclick=()=>{ if(step>1 && step<4) renderTS(step-1); else renderSettings("main"); };
+    const h=el("h1","",top, step===3 ? tsL("Today","Heute")+", "+new Date().toLocaleDateString(I18N.lang==="de"?"de-DE":"en-GB",{day:"numeric",month:"short"}) : "Task Scheduling"); h.translate=false;
+    const cl=el("button","icon-btn",top); cl.setAttribute("aria-label",tsL("Close","Schließen")); cl.innerHTML=ICX; cl.onclick=closeSheet;
+    if(step<4){ const st=el("div","ts-steps"); for(let i=1;i<=3;i++) el("i", i<=step?"on":"", st); }
+    const items=tsItems();
+    if(step===1){
+      const body=el("div","list");
+      el("div","ts-q",body,tsL("How much time do you have today?","Wie viel Zeit hast du heute?"));
+      const fr=el("div","ts-frame glass",body);
+      // the big 24 h numbers are our own text; the native time picker sits invisibly on top of them
+      const mk=(lbl,val,cb)=>{ const l=el("label","",fr); l.appendChild(document.createTextNode(lbl)); const w=el("span","ts-tw",l); const tv=el("span","ts-time",w,tsHM(val)); tv.translate=false;
+        const i=el("input","ts-tin",w); i.type="time"; i.step=900; i.value=tsHM(val); i.setAttribute("aria-label",lbl);
+        const upd=()=>{ const m=tsMin(i.value); if(m!=null){ cb(m); tv.textContent=tsHM(m===null?val:(lbl===tsL("From","Von")?tsS.from:tsS.to)); sum(); } }; i.onchange=upd; i.oninput=upd;
+        Object.defineProperty(i,"shown",{value:tv}); return i; };
+      const fi=mk(tsL("From","Von"), tsS.from, m=>{ tsS.from=m; if(tsS.to<=m){ tsS.to=Math.min(m+60,23*60+59); ti.value=tsHM(tsS.to); ti.shown.textContent=tsHM(tsS.to); } });
+      el("span","ts-arrow",fr,"→"); fr.insertBefore(fr.lastChild, fr.children[1]);
+      const ti=mk(tsL("To","Bis"), tsS.to, m=>{ tsS.to=Math.max(m, tsS.from+15); ti.value=tsHM(tsS.to); ti.shown.textContent=tsHM(tsS.to); });
+      el("div","setlbl",body,tsL("Due today","Heute fällig"));
+      const sm=el("div","ts-sum glass",body);
+      const sum=()=>{ const its=tsItems(), act=its.reduce((a,t)=>a+(tsOf(t.id).d||15)+(tsOf(t.id).w>0?tsOf(t.id).a||10:0),0), buf=act+5*Math.max(0,its.length-1), win=tsS.to-tsS.from, wmax=Math.max(0,...its.map(t=>tsOf(t.id).w));
+        sm.innerHTML="";
+        const l1=el("div","ts-l1",sm); el("span","",l1, its.length===1 ? tsL("1 task","1 Aufgabe") : its.length+tsL(" tasks"," Aufgaben")); el("b","",l1, tsDur(act)+tsL(" active"," aktiv"));
+        const bar=el("div","ts-bar",sm); const fill=el("i",buf>win?"over":"",bar); fill.style.width=Math.min(100, win? buf/win*100 : 100)+"%";
+        const l2=el("div","ts-l2",sm); el("span","",l2, tsL("with 5 min breaks: ","mit 5 min Puffer: ")+tsDur(buf)); el("span","",l2, tsL("Window: ","Fenster: ")+tsDur(win));
+        if(!its.length) el("div","ts-warn",sm, tsL("Nothing is due today.","Heute ist nichts fällig."));
+        else if(buf>win) el("div","ts-warn",sm, tsL("Something will not fit today. You will see what on the next steps.","Etwas wird heute nicht passen. Du siehst gleich, was."));
+        if(wmax) el("div","ts-wait",sm, "+ "+tsDur(wmax)+tsL(" of waiting time run alongside"," Wartezeit laufen nebenher"));
+      };
+      sum();
+      const foot=el("div","foot ts-foot"); const go=el("button","btn",foot,tsL("Next","Weiter")); go.onclick=()=>renderTS(2); go.disabled=!tsDue().length;
+      return;
+    }
+    if(step===2){
+      el("div","ts-head",null).append(Object.assign(document.createElement("span"),{textContent:tsHM(tsS.from)+tsL(" to "," bis ")+tsHM(tsS.to)}), Object.assign(document.createElement("span"),{textContent:tsL("Drag to sort","Ziehen zum Sortieren")}));
+      const body=el("div","list"); body.style.paddingTop="0";
+      const box=el("div","ts-list glass",body);
+      const GRIP='<svg width="14" height="18" viewBox="0 0 14 18" fill="currentColor"><circle cx="4" cy="4" r="1.6"/><circle cx="10" cy="4" r="1.6"/><circle cx="4" cy="9" r="1.6"/><circle cx="10" cy="9" r="1.6"/><circle cx="4" cy="14" r="1.6"/><circle cx="10" cy="14" r="1.6"/></svg>';
+      let openRow=null;
+      const closeOpen=()=>{ if(openRow){ openRow.querySelector(".ts-fg").style.transform=""; openRow=null; } };
+      items.forEach(t=>{
+        const x=tsOf(t.id), row=el("div","ts-row",box); row.dataset.id=t.id;
+        const del=el("div","ts-del",row); const db=el("button","",del,"−"); db.setAttribute("aria-label",tsL("Leave out today","Heute auslassen"));
+        db.onclick=()=>{ sfx("down"); row.style.transition="opacity .25s, transform .25s"; row.style.opacity="0"; row.style.transform="translateX(-40px)"; setTimeout(()=>{ tsS.off.add(t.id); tsKeep(); renderTS(2); }, 230); };
+        const fg=el("div","ts-fg",row);
+        const gp=el("span","ts-grip",fg); gp.innerHTML=GRIP; gp.setAttribute("aria-hidden","true");
+        const tt=el("span","t",fg); const nm=el("span","tt",tt,t.text); nm.translate=false;
+        const ch=el("span","ts-chips",tt);
+        if(t.important) el("span","ts-chip i",ch,"● "+tsL("Very important","Sehr wichtig"));
+        if(x.w>0) el("span","ts-chip w",ch, x.w+tsL(" min waiting"," min Wartezeit"));
+        if(x.p==="e") el("span","ts-chip e",ch,tsL("Early","Früh")); if(x.p==="l") el("span","ts-chip",ch,tsL("At the end","Zum Schluss"));
+        if(!x.d) el("span","ts-chip",ch,tsL("estimated","geschätzt"));
+        const sp=el("span","ts-step",fg); const mi=el("button","",sp,"−"); const val=el("b","",sp,(x.d||15)+" min"); const pl=el("button","",sp,"+");
+        mi.setAttribute("aria-label",tsL("Shorter","Kürzer")); pl.setAttribute("aria-label",tsL("Longer","Länger"));
+        const bump=dl=>{ const cur=tsOf(t.id).d||15, n=Math.max(5,Math.min(240,cur+dl)); tsSet(t.id,{d:n}); val.textContent=n+" min"; const e=ch.querySelector(".ts-chip:last-child"); if(e && e.textContent===tsL("estimated","geschätzt")) e.remove(); sfx("tap"); };
+        mi.onclick=e=>{ e.stopPropagation(); bump(-5); }; pl.onclick=e=>{ e.stopPropagation(); bump(5); };
+        // swipe from right to left: the small red minus appears
+        let sx=0, sy=0, dx=0, mode=null;
+        fg.addEventListener("pointerdown", e=>{ if(e.target.closest(".ts-step") || e.target.closest(".ts-grip")) return; sx=e.clientX; sy=e.clientY; dx=0; mode="?"; });
+        fg.addEventListener("pointermove", e=>{ if(!mode) return; const mx=e.clientX-sx, my=e.clientY-sy;
+          if(mode==="?"){ if(Math.abs(mx)>8 && Math.abs(mx)>Math.abs(my)){ mode="x"; try{ fg.setPointerCapture(e.pointerId); }catch(_){} row.classList.add("drag"); if(openRow && openRow!==row) closeOpen(); } else if(Math.abs(my)>8){ mode=null; return; } }
+          if(mode==="x"){ const base=openRow===row?-72:0; dx=Math.max(-90,Math.min(0,base+mx)); fg.style.transform="translateX("+dx+"px)"; } });
+        const end=()=>{ if(mode==="x"){ row.classList.remove("drag"); if(dx<-36){ fg.style.transform="translateX(-72px)"; openRow=row; } else { fg.style.transform=""; if(openRow===row) openRow=null; } } mode=null; };
+        fg.addEventListener("pointerup", end); fg.addEventListener("pointercancel", end);
+        // drag the grip up or down to sort
+        gp.addEventListener("pointerdown", e=>{ e.preventDefault(); closeOpen(); const rows=[...box.children], i0=rows.indexOf(row), hgt=row.offsetHeight, y0=e.clientY; let to=i0;
+          try{ gp.setPointerCapture(e.pointerId); }catch(_){} row.classList.add("lift","drag"); sfx("grab");
+          const mv=ev=>{ const d=ev.clientY-y0; row.style.transform="translateY("+d+"px)"; to=Math.max(0,Math.min(rows.length-1, i0+Math.round(d/hgt)));
+            rows.forEach((r,k)=>{ if(r===row) return; r.classList.add("shift"); r.style.transform = (k>i0 && k<=to) ? "translateY("+(-hgt)+"px)" : (k<i0 && k>=to) ? "translateY("+hgt+"px)" : ""; }); };
+          const up=()=>{ gp.removeEventListener("pointermove",mv); gp.removeEventListener("pointerup",up); gp.removeEventListener("pointercancel",up);
+            if(to!==i0){ const vis=items.map(t=>t.id); const [m]=vis.splice(i0,1); vis.splice(to,0,m); const rest=tsS.order.filter(id=>!vis.includes(id)); tsS.order=vis.concat(rest); tsKeep(); sfx("snap"); }
+            renderTS(2); };
+          gp.addEventListener("pointermove",mv); gp.addEventListener("pointerup",up); gp.addEventListener("pointercancel",up); });
+      });
+      if(!items.length) el("div","none",box,tsL("Nothing left in the plan.","Nichts mehr im Plan."));
+      el("div","ts-hint",body,tsL("Swipe left to leave a task out today.","Nach links wischen nimmt eine Aufgabe nur heute aus dem Plan."));
+      if(tsS.off.size){ const o=el("div","ts-off",body); o.appendChild(document.createTextNode((tsS.off.size===1?tsL("1 left out today","1 heute ausgelassen"):tsS.off.size+tsL(" left out today"," heute ausgelassen"))+" · ")); const b=el("button","",o,tsL("Bring back","Zurückholen")); b.onclick=()=>{ tsS.off.clear(); tsKeep(); renderTS(2); }; }
+      const foot=el("div","foot ts-foot");
+      const auto=el("button","btn ghost",foot,tsL("Sort automatically","Automatisch sortieren")); auto.onclick=()=>{ tsS.order=tsSort(tsDue()).map(t=>t.id); tsKeep(); sfx("cone",2); renderTS(2); };
+      const go=el("button","btn",foot,tsL("Next","Weiter")); go.disabled=!items.length; go.onclick=()=>renderTS(3);
+      return;
+    }
+    if(step===3){
+      const plan=tsPlan(items, tsS.from, tsS.to); tsS.plan=plan;
+      const body=el("div","list");
+      const last=Math.max(tsS.to, ...plan.ev.map(e=>e.e)), H0=Math.floor(tsS.from/60), H1=Math.ceil(last/60), PX=120, Y=m=>10+(m-H0*60)/60*PX;
+      const day=el("div","ts-day",body); day.style.height=(Y(H1*60)+14)+"px";
+      for(let hh=H0; hh<=H1; hh++){ const r=el("div","ts-hr",day); r.style.top=Y(hh*60)+"px"; const l=el("div","ts-hl",day,String(hh).padStart(2,"0")+":00"); l.style.top=Y(hh*60)+"px"; }
+      plan.ev.forEach(e=>{ if(e.wait){ const w=el("div","ts-waitbar",day); w.style.top=Y(e.e)+"px"; w.style.height=(Y(e.e+e.wait)-Y(e.e))+"px"; } });
+      plan.ev.forEach(e=>{ const hgt=Y(e.e)-Y(e.s), small=hgt<34; const b=el("div","ts-ev"+(small?" small":"")+(e.t.important&&!e.fol?" imp":"")+(e.fol?" fol":""),day);
+        b.style.top=(Y(e.s)+1)+"px"; b.style.height=Math.max(18,hgt-2)+"px";
+        const n=el("b","",b,e.title); n.translate=false; el("span","",b, small ? tsHM(e.s) : tsHM(e.s)+tsL(" to "," bis ")+tsHM(e.e)+(e.est?tsL(" · estimated"," · geschätzt"):"")); });
+      if(plan.out.length){ const o=el("div","ts-out glass",body); el("h3","",o,tsL("Does not fit today","Passt heute nicht mehr"));
+        plan.out.forEach(x=>{ const r=el("div","",o); const a=el("span","",r,x.t.text+(x.fol?tsL(" · done"," · fertig"):"")); a.translate=false; el("span","",r,x.d+" min"); }); }
+      const foot=el("div","foot ts-foot");
+      const n=plan.ev.length, ok=el("button","btn",foot, "OK · "+n+(n===1?tsL(" event to the calendar"," Termin in den Kalender"):tsL(" events to the calendar"," Termine in den Kalender")));
+      ok.disabled=!n; ok.onclick=()=>{ sfx("on"); renderTS(4); };
+      return;
+    }
+    // step 4: the calendar file, added with one tap ("Add All" in the calendar)
+    const ics=tsICS(tsS.plan.ev), name="haushalt-"+today()+".ics";
+    const d=el("div","ts-done");
+    el("div","",d).innerHTML='<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4M9 15l2 2 4-4"/></svg>';
+    el("h2","",d,tsL("Your plan is ready","Dein Plan ist fertig"));
+    el("p","",d,tsL("Tap below and choose “Add All” in the calendar. Planning again later creates new events; remove the old ones in the calendar.","Tippe unten und wähle im Kalender „Alle hinzufügen“. Planst du später neu, entstehen neue Termine. Die alten löschst du im Kalender."));
+    const a=el("a","btn",d,tsL("Add to calendar","In den Kalender")); a.href="data:text/calendar;charset=utf-8,"+encodeURIComponent(ics);
+    const file=(()=>{ try{ return new File([ics], name, {type:"text/calendar"}); }catch(e){ return null; } })();
+    if(file && navigator.canShare && navigator.canShare({files:[file]})){ const sh=el("button","btn ghost",d,tsL("Share as file","Als Datei teilen")); sh.onclick=()=>{ navigator.share({files:[file]}).catch(()=>{}); }; }
+    const fin=el("button","btn ghost",d,tsL("Done","Fertig")); fin.onclick=closeSheet;
+  }
+  function tsICS(ev){
+    const ymd=today().replace(/-/g,""), at=m=>ymd+"T"+String(Math.floor(m/60)).padStart(2,"0")+String(m%60).padStart(2,"0")+"00";
+    const esc=v=>String(v).replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\r?\n/g,"\\n");
+    const stamp=new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d+/,"");
+    const L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Haushalt//Task Scheduling//DE","CALSCALE:GREGORIAN","METHOD:PUBLISH"];
+    ev.forEach((e,i)=>{ L.push("BEGIN:VEVENT","UID:"+ymd+"-"+i+"-"+Math.random().toString(36).slice(2,9)+"@haushalt","DTSTAMP:"+stamp,"DTSTART:"+at(e.s),"DTEND:"+at(e.e),"SUMMARY:"+esc(e.title));
+      const ds=[]; if(e.t.note && !e.fol) ds.push(e.t.note); if(e.est) ds.push(tsL("Duration estimated","Dauer geschätzt")); if(ds.length) L.push("DESCRIPTION:"+esc(ds.join("\n")));
+      L.push("END:VEVENT"); });
+    L.push("END:VCALENDAR"); return L.join("\r\n");
+  }
   /* ---------- together done: when the last shared task of the day is done and both of you did some, two flames meet and fuse ---------- */
   function togetherInfo(){
     if(!Sync.joined) return null;
@@ -5424,6 +5652,8 @@ body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) bot
     { const gt=document.createElement("div"); gt.className="group glass"; const n=active().length;
       const a=document.createElement("span"); a.textContent = n===1 ? "1 task" : n+" tasks";
       gt.appendChild(navRow(SV('<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/>'), "Tasks", a, ()=>renderList("settings")));
+      { const ld=document.createElement("span"); ld.textContent=tsL("Plan today into your calendar","Heute in den Kalender planen");
+        const r=navRow(SV('<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h3M8 17h6"/>'), "Task Scheduling", ld, ()=>openTS()); r.querySelector(".tt").translate=false; gt.appendChild(r); }
       list.appendChild(gt); }
     const gb=document.createElement("div"); gb.className="group glass";
     const brow=document.createElement("button"); brow.className="row";
@@ -5834,6 +6064,29 @@ body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) bot
       const open=()=>{ bg.classList.add("open"); }; const close=()=>{ bg.classList.remove("open"); if(bg.onclose) bg.onclose(); };
       return {bg,p,open,close}; };
 
+    // Task Scheduling times: only when the task is opened from Settings › Tasks, never from the plus
+    if(from==="list" && task){
+      const tb=document.createElement("button"); tb.type="button"; tb.className="fts";
+      const paintTb=()=>{ const x=tsOf(task.id); tb.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2.5h6"/></svg><span>Task Scheduling</span><span></span>';
+        tb.lastChild.textContent = x.d ? x.d+" min"+(x.w? " · "+x.w+tsL(" min waiting"," min Wartezeit"):"") : tsL("No time yet","Noch keine Zeit"); tb.children[1].translate=false; };
+      paintTb(); wrap.insertBefore(tb, ok);
+      const P=panel("tsp");
+      const build=()=>{ const x=tsOf(task.id); P.p.innerHTML='<div class="grab" aria-hidden="true"></div>';
+        const h=document.createElement("h2"); h.textContent="Task Scheduling"; h.translate=false; P.p.appendChild(h);
+        const stepRow=(tt,ld,key,min,max,step,def)=>{ const r=document.createElement("div"); r.className="tsp-r"; const t=document.createElement("span"); t.className="t"; t.innerHTML='<span class="tt"></span><span class="ld"></span>'; t.firstChild.textContent=tt; t.lastChild.textContent=ld;
+          const sp=document.createElement("span"); sp.className="ts-step"; const mi=document.createElement("button"); mi.type="button"; mi.textContent="−"; const v=document.createElement("b"); const pl=document.createElement("button"); pl.type="button"; pl.textContent="+";
+          const show=()=>{ const cur=tsOf(task.id)[key]; v.textContent = (key==="d" && !cur) ? "–" : (cur||0)+" min"; };
+          const bump=dl=>{ const cur=tsOf(task.id)[key]||(key==="d"?def:0); tsSet(task.id,{[key]:Math.max(min,Math.min(max,cur+dl))}); show(); paintTb(); sfx("tap"); if(key==="w") build(); };
+          mi.onclick=()=>bump(-step); pl.onclick=()=>bump(step); sp.append(mi,v,pl); r.append(t,sp); show(); return r; };
+        P.p.appendChild(stepRow(tsL("Duration","Dauer"),tsL("active work","aktive Arbeitszeit"),"d",5,240,5,15));
+        P.p.appendChild(stepRow(tsL("Waiting time","Wartezeit"),tsL("runs by itself, like the washing machine","läuft von selbst, wie die Waschmaschine"),"w",0,360,15,0));
+        if(x.w>0) P.p.appendChild(stepRow(tsL("After that","Danach"),tsL("e.g. hang up the laundry","zum Beispiel Wäsche aufhängen"),"a",5,120,5,10));
+        const lb=document.createElement("div"); lb.className="tt"; lb.style.cssText="font-size:15px;font-weight:600;margin:4px 2px -6px"; lb.textContent=tsL("Position","Position"); P.p.appendChild(lb);
+        const seg=document.createElement("div"); seg.className="seg"; [["e",tsL("Early","Früh")],["n",tsL("Normal","Normal")],["l",tsL("At the end","Zum Schluss")]].forEach(([k,l])=>{ const b=document.createElement("button"); b.type="button"; b.textContent=l; b.setAttribute("aria-pressed", x.p===k?"true":"false"); b.onclick=()=>{ tsSet(task.id,{p:k}); sfx("tap"); build(); }; seg.appendChild(b); }); P.p.appendChild(seg);
+        const nt=document.createElement("p"); nt.className="tsp-note"; nt.textContent=tsL("Only used by Task Scheduling and only on this phone.","Wird nur von Task Scheduling genutzt und nur auf diesem Handy gespeichert."); P.p.appendChild(nt);
+        const dn=document.createElement("button"); dn.type="button"; dn.className="btn"; dn.textContent=tsL("Done","Fertig"); dn.onclick=()=>{ sfx("close"); P.close(); }; P.p.appendChild(dn); };
+      tb.onclick=()=>{ build(); P.open(); };
+    }
     // rhythm menu: one way to set it — number, unit, day, with the next dates as a check
     const R=panel("frq");
     const tw=(new Date().getDay()+6)%7;
