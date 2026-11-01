@@ -1185,26 +1185,63 @@ svg.locked .bsfx,.bdg.locked .bsfx{display:none}
 .fts span:last-child{margin-left:auto;font-weight:500;color:var(--muted);font-size:13px}
 .tsp h2{font-size:18px;margin:0 2px}.tsp .tsp-r{display:flex;align-items:center;gap:10px}.tsp .tsp-r .t{flex:1}.tsp .tsp-r .tt{font-size:15px;font-weight:600;display:block}.tsp .tsp-r .ld{font-size:12.5px;color:var(--muted)}
 .tsp .tsp-note{font-size:12.5px;color:var(--muted);line-height:1.4;margin:0 2px}
-.ts-fx{flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;gap:14px;padding:4px 0 12px}
-.ts-fx .ts-prog{align-self:stretch;display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin:0 4px}
-.ts-segs{align-self:stretch;display:flex;gap:4px;margin:-6px 4px 4px}.ts-segs i{flex:1;height:4px;border-radius:2px;background:rgba(127,127,127,.22)}.ts-segs i.d{background:var(--accent)}.ts-segs i.c{background:linear-gradient(90deg,var(--accent),rgba(var(--accent-rgb),.25))}
-.ts-now{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-top:4px}
-.ts-fico{width:88px;height:88px;display:grid;place-items:center}
-.ts-fname{font-family:"Bebas Neue","Oswald","Impact","Arial Narrow",sans-serif;font-size:44px;line-height:.95;letter-spacing:.02em;text-align:center;max-width:100%;padding:0 8px;overflow-wrap:anywhere}
-.ts-fplan{font-size:13px;color:var(--muted)}
-.ts-clock{position:relative;width:196px;height:196px;display:grid;place-items:center;margin:4px 0}
-.ts-clock svg{position:absolute;inset:0;transform:rotate(-90deg)}
-.ts-clock b{font-family:"Bebas Neue","Oswald","Impact","Arial Narrow",sans-serif;font-size:58px;font-weight:400;letter-spacing:.03em;line-height:1}
-.ts-clock span{position:absolute;bottom:52px;font-size:12px;color:var(--muted)}
-.ts-delta{font-size:13px;font-weight:600;padding:5px 12px;border-radius:999px;background:rgba(127,127,127,.14);color:var(--muted)}
-.ts-delta.late{background:rgba(255,181,71,.16);color:#FFC870}.ts-delta.ok{background:rgba(var(--accent-rgb),.14);color:var(--accent)}
-.ts-fbtns{align-self:stretch;display:flex;gap:10px}.ts-fbtns .btn{flex:1}
-.ts-flink{display:flex;gap:18px;justify-content:center}.ts-flink button{border:0;background:none;color:var(--muted);font:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:6px}
-.ts-flink button.hl{color:#FFC870}
-.ts-next{align-self:stretch;border-radius:18px;padding:10px 14px}
-.ts-next h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0 0 4px}
-.ts-next div{display:flex;gap:10px;font-size:14px;padding:3px 0}.ts-next div span:first-child{color:var(--muted);min-width:44px}
-.ts-wait-n{font-size:13px;color:var(--accent)}
+/* focus mode: full screen, one task, one number, one button */
+html.tsf-on .app,html.tsf-on #undo{opacity:0;visibility:hidden;transition:opacity .3s,visibility 0s .3s}
+.tsf{position:fixed;inset:0;z-index:9000;background:transparent;color:var(--ink);overflow:hidden;opacity:0;transition:opacity .35s ease;touch-action:pan-y;-webkit-user-select:none;user-select:none}
+.tsf.in{opacity:1}
+.tsf-name,.tsf-meta,.tsf-rin,.tsf-done,.tsf-next{text-shadow:0 1px 2px rgba(0,0,0,.35),0 4px 26px rgba(0,0,0,.45)}
+[data-app-theme="light"] .tsf-name,[data-app-theme="light"] .tsf-meta,[data-app-theme="light"] .tsf-rin,[data-app-theme="light"] .tsf-done,[data-app-theme="light"] .tsf-next{text-shadow:0 2px 22px rgba(255,255,255,.7)}
+.tsf-smoke{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.tsf-smoke::before{content:"";position:absolute;left:-20%;right:-20%;bottom:-12%;height:46%;background:radial-gradient(60% 55% at 50% 100%,rgba(var(--accent-rgb),.13),transparent 72%)}
+.tsf-late{color:#FFB547;font-weight:600}
+.tsf-meta .tsf-late{margin-left:10px}
+.tsf-rin .tsf-late{font-size:14px;margin-top:6px}
+[data-app-theme="light"] .tsf-late{color:#C26A00}
+.tsf-smoke i{position:absolute;bottom:-34vh;border-radius:50%;background:radial-gradient(circle,rgba(var(--accent-rgb),.13) 0%,rgba(var(--accent-rgb),.05) 38%,transparent 66%);opacity:0;animation:tsfRise linear infinite;will-change:transform,opacity}
+.tsf-smoke i:nth-child(1){left:-12%;width:68vw;height:68vw;animation-duration:17s;animation-delay:-2s}
+.tsf-smoke i:nth-child(2){left:30%;width:82vw;height:82vw;animation-duration:21s;animation-delay:-9s}
+.tsf-smoke i:nth-child(3){left:58%;width:60vw;height:60vw;animation-duration:15s;animation-delay:-5s}
+.tsf-smoke i:nth-child(4){left:12%;width:54vw;height:54vw;animation-duration:19s;animation-delay:-14s}
+.tsf-smoke i:nth-child(5){left:46%;width:46vw;height:46vw;animation-duration:13s;animation-delay:-11s}
+@keyframes tsfRise{0%{transform:translate3d(0,0,0) scale(.8);opacity:0}22%{opacity:1}55%{opacity:.55}78%{transform:translate3d(4vw,-62vh,0) scale(1.45);opacity:0}100%{transform:translate3d(4vw,-62vh,0) scale(1.45);opacity:0}}
+@media (prefers-reduced-motion:reduce){.tsf-smoke i{animation:none;display:none}}
+.tsf-top{position:absolute;top:calc(env(safe-area-inset-top,0px) + 22px);left:28px;right:18px;display:flex;justify-content:space-between;align-items:center;z-index:2}
+.tsf-dots{display:flex;gap:5px;align-items:center}.tsf-dots i{width:5px;height:5px;border-radius:3px;background:var(--ink);opacity:.18;transition:width .3s}.tsf-dots i.d{background:var(--accent);opacity:.55}.tsf-dots i.c{width:14px;background:var(--accent);opacity:1}
+.tsf-x{width:44px;height:44px;border:0;background:none;color:var(--ink);opacity:.8;display:grid;place-items:center;cursor:pointer}
+.tsf-main{position:absolute;left:28px;right:28px;top:50%;transform:translateY(-58%);transition:transform .3s,opacity .3s}
+.tsf-name{font-family:"Bebas Neue","Oswald","Impact","Arial Narrow",sans-serif;line-height:.92;letter-spacing:.02em;overflow-wrap:break-word}
+.tsf-meta{font-size:17px;color:var(--muted);margin-top:14px}
+.tsf-go{margin-top:44px;width:76px;height:76px;border-radius:50%;border:0;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;cursor:pointer;box-shadow:0 14px 40px -12px rgba(var(--accent-rgb),.7);transition:transform .15s}
+.tsf-go:active{transform:scale(.94)}
+.tsf-ring{position:absolute;left:50%;top:46%;width:280px;height:280px;margin:-140px 0 0 -140px}
+.tsf-ring svg{position:absolute;inset:0;transform:rotate(-90deg);overflow:visible}
+.tsf-ring .arc{transition:stroke-dasharray .9s linear,stroke .4s}
+.tsf-rin{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;border-radius:50%}
+.tsf-rin .n{font-family:"Bebas Neue","Oswald","Impact","Arial Narrow",sans-serif;font-size:24px;letter-spacing:.06em;opacity:.82;max-width:210px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tsf-rin b{font-family:"Bebas Neue","Oswald","Impact","Arial Narrow",sans-serif;font-weight:400;font-size:96px;line-height:1;margin-top:4px;letter-spacing:.02em;transition:opacity .3s}
+.tsf-rin span{font-size:13px;color:var(--muted);margin-top:2px}
+.tsf.paused .tsf-rin b{opacity:.4}
+.tsf-done{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 128px);margin:0 auto;display:block;border:0;background:none;color:var(--accent);font:inherit;font-size:16px;font-weight:600;padding:14px 30px;cursor:pointer}
+.tsf-next{position:absolute;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 30px);display:flex;justify-content:space-between;align-items:center;border:0;background:none;color:var(--muted);font:inherit;font-size:15px;padding:12px;cursor:pointer;text-align:left}
+.tsf-next b{color:var(--ink);font-weight:500;margin-left:6px}
+.tsf-end-btn{position:absolute;left:28px;right:28px;bottom:calc(env(safe-area-inset-bottom,0px) + 40px);height:54px;border-radius:27px;border:1.5px solid rgba(var(--accent-rgb),.6);background:none;color:var(--accent);font:inherit;font-weight:600;font-size:16px;cursor:pointer}
+.tsf-toast{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 74px);transform:translateX(-50%);font-size:13px;color:var(--muted);opacity:0;transition:opacity .3s}.tsf-toast.on{opacity:1}
+.tsf-sh{position:absolute;left:0;right:0;bottom:0;top:30%;background:rgba(127,127,127,.10);-webkit-backdrop-filter:blur(30px) saturate(1.3);backdrop-filter:blur(30px) saturate(1.3);border-radius:30px 30px 0 0;border-top:1px solid rgba(127,127,127,.18);box-shadow:0 -30px 60px -20px rgba(0,0,0,.6);padding:12px 26px calc(env(safe-area-inset-bottom,0px) + 20px);transform:translateY(105%);transition:transform .42s cubic-bezier(.2,.9,.25,1);display:flex;flex-direction:column;z-index:3}
+.tsf-sh::before{content:"";position:absolute;inset:0;border-radius:inherit;background:rgba(127,127,127,.06);pointer-events:none}
+.tsf-sh.open{transform:none}
+.tsf-dim{position:absolute;inset:0;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .35s;z-index:3}.tsf-dim.on{opacity:1;pointer-events:auto}
+.tsf-hd{width:36px;height:4px;border-radius:2px;background:var(--ink);opacity:.2;margin:0 auto 18px;flex:none}
+.tsf-shh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;font-size:13px;color:var(--muted);flex:none}.tsf-shh span:first-child{letter-spacing:.1em;text-transform:uppercase}
+.tsf-list{flex:1;overflow-y:auto;position:relative;margin:0 -10px;padding:0 10px}
+.tsf-row{position:relative;display:flex;align-items:center;gap:12px;padding:0 0 0 10px;min-height:56px;border-top:1px solid rgba(127,127,127,.12);font-size:18px;background:transparent;touch-action:pan-y;transition:transform .25s,opacity .25s}
+.tsf-row:first-child{border-top:0}
+.tsf-row .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tsf-row .mn{font-size:14px;color:var(--muted)}.tsf-row .fx{font-size:13px;color:var(--accent);padding-right:12px}
+.tsf-grip{width:46px;height:56px;display:grid;place-items:center;color:var(--muted);touch-action:none;cursor:grab;flex:none}
+.tsf-row.lift{z-index:2;border-radius:16px;border-top-color:transparent;transform:scale(1.03);transition:none;background:rgba(127,127,127,.22);box-shadow:0 18px 36px -12px rgba(0,0,0,.6)}
+.tsf-row.lift .tsf-grip{color:var(--ink)}
+.tsf-row.gone{transform:translateX(-110%);opacity:0}
+.tsf-hint{text-align:center;font-size:13.5px;color:var(--muted);padding-top:12px;flex:none}
 /* long open card breaks apart */
 .card .frost{position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:2;opacity:0;transition:opacity .28s ease;background:linear-gradient(135deg,rgba(234,246,255,.4),rgba(185,214,242,.12) 46%,rgba(223,233,255,.32));box-shadow:inset 0 0 0 1.5px rgba(200,235,255,.55),inset 0 0 44px rgba(190,230,255,.22)}
 .card.frozen .frost{opacity:1}
@@ -4094,84 +4131,141 @@ body:has(.sheet.closing) .app{animation:appBack .42s cubic-bezier(.4,0,.2,1) bot
     const fo=el("button","btn ghost",d,tsL("Start focus mode","Fokus starten")); fo.onclick=()=>renderFocus();
     const fin=el("button","btn ghost",d,tsL("Done","Fertig")); fin.onclick=closeSheet;
   }
-  /* ---------- focus view: one task at a time, start and stop, the measured time is saved (rounded up to 5 minutes) ---------- */
+  /* ---------- focus mode: full screen, one task, one number, one button ----------
+     not started: the name big and a start button; running: a thin ring with the time; "after" at the bottom opens the rest, which can be reordered */
   function tsRun(){ const r=tsLoad().run; return (r && r.d===today() && r.idx<r.ev.length) ? r : null; }
   function tsRunSave(r){ const v=tsLoad(); v.run=r; tsSave(v); }
-  function tsRunNew(plan){ tsRunSave({d:today(), to:tsS.to, idx:0, ev:plan.ev.map(e=>({tid:e.t.id, title:e.title, s:e.s, e:e.e, fol:!!e.fol, wait:e.wait||0, done:false})), cur:null, spent:0}); }
+  const tsEvOf=e=>({tid:e.t.id, title:e.title, s:e.s, e:e.e, fol:!!e.fol, wait:e.wait||0, done:false});
+  function tsRunNew(plan){ tsRunSave({d:today(), to:tsS.to, base:Math.max(...plan.ev.map(e=>e.e)), idx:0, ev:plan.ev.map(tsEvOf), cur:null, spent:0}); }
   const tsNowMin=()=>{ const n=new Date(); return n.getHours()*60+n.getMinutes(); };
-  let tsTick=0;
+  const tsElapsed=r=>{ const c=r.cur; return c ? c.acc+(c.run? Date.now()-c.run : 0) : 0; };
+  // lay out everything after the current step again: from now, in the order given; follow-ups of machines already running keep their time
+  function tsRetime(r, order){
+    const byId={}; state.tasks.forEach(t=>byId[t.id]=t);
+    const cur=r.ev[r.idx], rest=r.ev.slice(r.idx+1);
+    const ids=(order || rest.filter(e=>!e.fol).map(e=>e.tid)).filter(id=>byId[id]);
+    const pend=new Set(ids), items=ids.map(id=>byId[id]);
+    const pre=rest.filter(e=>e.fol && !pend.has(e.tid) && byId[e.tid]).map(e=>({at:e.s, d:e.e-e.s, t:byId[e.tid]}));
+    const now=tsNowMin(), curLeft = cur ? (r.cur ? Math.max(0, Math.ceil(((cur.e-cur.s)*60000-tsElapsed(r))/60000)) : (cur.e-cur.s)) : 0;
+    let from = cur ? (r.cur ? now : Math.max(now, cur.s)) + curLeft : now;
+    if(cur && !r.cur){ const st=Math.max(now, cur.s); cur.e=st+(cur.e-cur.s); cur.s=st; }   // the step you have not started moves to now
+    const need=rest.reduce((a,e)=>a+(e.e-e.s),0)+items.reduce((a,t)=>a+tsOf(t.id).w,0);
+    const plan=tsPlan(items, from, Math.max(r.to, from+need+60), pre);
+    r.ev=r.ev.slice(0, r.idx+1).concat(plan.ev.map(tsEvOf));
+  }
+  // how far behind the plan you are: where the whole plan would end now, against where it was meant to end
+  function tsLate(r){ if(r.base==null) r.base=Math.max(...r.ev.map(e=>e.e));
+    const c=JSON.parse(JSON.stringify(r)); try{ tsRetime(c); }catch(e){ return 0; }
+    const left=c.ev.slice(c.idx); return left.length ? Math.max(...left.map(e=>e.e))-r.base : 0; }
+  let tsTick=0, tsfEl=null;
   function renderFocus(){
-    clearInterval(tsTick); sheetMode="tsf"; inner.innerHTML="";
-    let r=tsLoad().run; if(!r || r.d!==today()){ openTS(); return; }
-    const el=(tag,cls,parent,txt)=>{ const e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; (parent||inner).appendChild(e); return e; };
-    const top=el("div","top");
-    const back=el("button","icon-btn",top); back.setAttribute("aria-label",tsL("Back","Zurück")); back.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>'; back.onclick=()=>{ clearInterval(tsTick); renderSettings("main"); };
-    el("h1","",top,tsL("Focus","Fokus"));
-    const cl=el("button","icon-btn",top); cl.setAttribute("aria-label",tsL("Close","Schließen")); cl.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>'; cl.onclick=()=>{ clearInterval(tsTick); closeSheet(); };
-    const body=el("div","ts-fx");
-    // everything done: a short summary
+    if(sheet.classList.contains("open")){ closeSheet(); setTimeout(renderFocus, 260); return; }
+    clearInterval(tsTick);
+    const r=tsLoad().run; if(!r || r.d!==today()){ if(tsfEl){ tsfEl.remove(); tsfEl=null; document.documentElement.classList.remove("tsf-on"); } openTS(); return; }
+    const fresh=!tsfEl;
+    if(fresh){ document.documentElement.classList.add("tsf-on"); tsfEl=document.createElement("div"); tsfEl.className="tsf"; document.body.appendChild(tsfEl); requestAnimationFrame(()=>requestAnimationFrame(()=>tsfEl && tsfEl.classList.add("in"))); }
+    const root=tsfEl; root.innerHTML='<div class="tsf-smoke"><i></i><i></i><i></i><i></i><i></i></div>'; root.classList.remove("paused");
+    const el=(tag,cls,parent,txt)=>{ const e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; (parent||root).appendChild(e); return e; };
+    const close=()=>{ clearInterval(tsTick); const x=tsfEl; tsfEl=null; if(!x) return; x.classList.remove("in"); document.documentElement.classList.remove("tsf-on"); setTimeout(()=>x.remove(), 360); render(); };
+    const save=()=>tsRunSave(r);
+    const top=el("div","tsf-top"), dots=el("div","tsf-dots",top);
+    r.ev.forEach((e,i)=>el("i", i===r.idx ? "c" : (e.done||i<r.idx) ? "d" : "", dots));
+    const x=el("button","tsf-x",top); x.setAttribute("aria-label",tsL("Close","Schließen"));
+    x.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>'; x.onclick=close;
+    // ---- end
     if(r.idx>=r.ev.length){
-      const planned=r.ev.reduce((a,e)=>a+(e.e-e.s),0);
-      el("div","ts-fico",body).innerHTML='<svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16.5 9"/></svg>';
-      const nd=r.ev.filter(e=>e.done).length, all=nd===r.ev.length;
-      el("div","ts-fname",body, all ? tsL("All done","Alles geschafft") : tsL("Plan finished","Plan beendet"));
-      el("div","ts-fplan",body,(all?"":nd+tsL(" of "," von ")+r.ev.length+tsL(" done · "," erledigt · "))+tsL("Planned ","Geplant ")+tsDur(planned)+(r.spent? tsL(" · measured "," · gemessen ")+tsDur(Math.round(r.spent/60000)) : ""));
-      const f=el("div","ts-fbtns",body); const b=el("button","btn",f,tsL("Done","Fertig")); b.onclick=()=>{ const v=tsLoad(); delete v.run; tsSave(v); closeSheet(); };
+      const nd=r.ev.filter(e=>e.done).length, all=nd===r.ev.length, planned=r.ev.filter(e=>e.done).reduce((a,e)=>a+(e.e-e.s),0);
+      const m=el("div","tsf-main"); el("div","tsf-name",m,tsL("Done.","Fertig.")).style.fontSize="84px";
+      const mt=el("div","tsf-meta",m); mt.style.lineHeight="1.6";
+      mt.textContent = nd+tsL(" of "," von ")+r.ev.length+tsL(" done"," erledigt");
+      if(r.spent){ mt.appendChild(document.createElement("br")); mt.appendChild(document.createTextNode(tsDur(Math.round(r.spent/60000))+tsL(" instead of "," statt ")+tsDur(planned))); }
+      const b=el("button","tsf-end-btn",null,tsL("Close","Schließen")); b.onclick=()=>{ const v=tsLoad(); delete v.run; tsSave(v); close(); };
       if(all) sfx("alldone"); return;
     }
-    const ev=r.ev[r.idx], task=state.tasks.find(t=>t.id===ev.tid);
-    const prog=el("div","ts-prog",body); el("span","",prog,(r.idx+1)+tsL(" of "," von ")+r.ev.length); el("span","",prog,tsHM(r.ev[0].s)+"–"+tsHM(r.to));
-    const sg=el("div","ts-segs",body); r.ev.forEach((e,i)=>el("i", e.done?"d":i===r.idx?"c":"", sg));
-    el("div","ts-now",body, ev.fol ? tsL("Next step","Nächster Schritt") : tsL("Now","Jetzt dran"));
-    const ic=el("div","ts-fico",body); if(task) putIcon(ic, iconOf(task));
-    const nm=el("div","ts-fname",body, ev.fol && task ? tsL("After: ","Danach: ")+task.text : ev.title); nm.translate=false;
-    el("div","ts-fplan",body, tsL("Planned ","Geplant ")+tsHM(ev.s)+tsL(" to "," bis ")+tsHM(ev.e)+" · "+(ev.e-ev.s)+" min");
-    if(ev.fol && tsNowMin()<ev.s) el("div","ts-wait-n",body, tsL("Still running for ","Läuft noch ")+(ev.s-tsNowMin())+" min");
-    // the clock: elapsed time against the planned time
-    const clk=el("div","ts-clock",body), C=2*Math.PI*88;
-    clk.innerHTML='<svg viewBox="0 0 196 196"><circle cx="98" cy="98" r="88" fill="none" stroke="rgba(127,127,127,.2)" stroke-width="8"/><circle class="arc" cx="98" cy="98" r="88" fill="none" stroke="var(--accent)" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 '+C+'"/></svg><b>00:00</b><span></span>';
-    const arc=clk.querySelector(".arc"), big=clk.querySelector("b"), sub=clk.querySelector("span");
-    const dl=el("div","ts-delta",body);
-    const plannedMs=(ev.e-ev.s)*60000;
-    const elapsed=()=>{ const c=r.cur; if(!c) return 0; return c.acc+(c.run? Date.now()-c.run : 0); };
-    const paint=()=>{ const ms=elapsed(), sec=Math.floor(ms/1000); big.textContent=String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0");
-      const f=Math.min(1, ms/Math.max(1,plannedMs)); arc.setAttribute("stroke-dasharray",(C*f).toFixed(1)+" "+C); arc.setAttribute("stroke", ms>plannedMs ? "#FFB547" : "var(--accent)");
-      sub.textContent = !r.cur ? tsL("not started","nicht gestartet") : r.cur.run ? tsL("running","läuft") : tsL("paused","pausiert");
-      // ahead of or behind the plan, counted from where this step should end
-      const endAt = r.cur ? tsNowMin() + Math.max(0, Math.ceil((plannedMs-ms)/60000)) : Math.max(tsNowMin(), ev.s) + (ev.e-ev.s), late=endAt-ev.e;
-      dl.className="ts-delta"+(late>=5?" late":late<=0?" ok":""); dl.textContent = late>=5 ? late+tsL(" min behind plan"," min hinter Plan") : late<=-5 ? (-late)+tsL(" min ahead"," min voraus") : tsL("on plan","im Plan");
-      rp.style.display = late>=5 ? "" : "none"; };
-    const fb=el("div","ts-fbtns",body);
-    const save=()=>tsRunSave(r);
-    const draw=()=>{ fb.innerHTML="";
-      if(!r.cur || !r.cur.run){ const st=el("button","btn"+(r.cur?" ghost":""),fb, r.cur ? tsL("Resume","Weiter") : tsL("Start","Start")); st.onclick=()=>{ r.cur=r.cur||{acc:0,run:0}; r.cur.run=Date.now(); save(); sfx("tap"); draw(); paint(); }; }
-      else { const ps=el("button","btn ghost",fb,tsL("Pause","Pause")); ps.onclick=()=>{ r.cur.acc+=Date.now()-r.cur.run; r.cur.run=0; save(); sfx("tap"); draw(); paint(); }; }
-      const dn=el("button","btn",fb,tsL("Done","Fertig")); dn.onclick=finish; };
+    const ev=r.ev[r.idx], task=state.tasks.find(t=>t.id===ev.tid), plannedMs=(ev.e-ev.s)*60000;
+    const nameTxt = ev.fol && task ? task.text+tsL(" · next step"," · danach") : ev.title;
+    let paint=()=>{};
+    if(!r.cur){
+      // ---- ready: the task, its minutes, one button
+      const m=el("div","tsf-main"), nm=el("div","tsf-name",m,nameTxt); nm.translate=false;
+      const W=Math.max(200, window.innerWidth-56), lw=Math.max(...nameTxt.split(/\s+/).map(w=>w.length)), L=nameTxt.length;
+      nm.style.fontSize=Math.round(Math.min(L<=16?92:L<=26?72:56, W/(lw*0.44)))+"px";   // the longest word always fits on one line
+      const mt=el("div","tsf-meta",m);
+      const wait = ev.fol && tsNowMin()<ev.s;
+      mt.textContent = wait ? tsL("Still running for ","Läuft noch ")+(ev.s-tsNowMin())+" min" : (ev.e-ev.s)+" min · "+tsL("until ","bis ")+tsHM(Math.max(tsNowMin(),ev.s)+(ev.e-ev.s));
+      const lt=document.createElement("span"); lt.className="tsf-late"; mt.appendChild(lt);
+      paint=()=>{ const l=tsLate(r); lt.textContent = l>=5 ? "+"+l+" min" : ""; };
+      const go=el("button","tsf-go",m); go.setAttribute("aria-label",tsL("Start","Start"));
+      go.innerHTML='<svg width="28" height="28" viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>';
+      go.onclick=()=>{ r.cur={acc:0, run:Date.now()}; save(); sfx("tap"); renderFocus(); };
+    } else {
+      // ---- running: only the ring
+      const C=2*Math.PI*130, ring=el("div","tsf-ring");
+      ring.innerHTML='<svg viewBox="0 0 280 280"><circle cx="140" cy="140" r="130" fill="none" stroke="currentColor" stroke-opacity=".08" stroke-width="2"/><circle class="arc" cx="140" cy="140" r="130" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="0 '+C+'"/></svg>';
+      const rin=el("div","tsf-rin",ring), rn=el("div","n",rin,nameTxt); rn.translate=false;
+      const big=el("b","",rin,"00:00"), sub=el("span","",rin), lt=el("div","tsf-late",rin), arc=ring.querySelector(".arc");
+      rin.onclick=()=>{ if(r.cur.run){ r.cur.acc+=Date.now()-r.cur.run; r.cur.run=0; } else r.cur.run=Date.now(); save(); sfx("tap"); paint(); };
+      paint=()=>{ const ms=tsElapsed(r), sec=Math.floor(ms/1000);
+        big.textContent=String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0");
+        const f=Math.min(1, ms/Math.max(1,plannedMs)); arc.setAttribute("stroke-dasharray",(C*f).toFixed(1)+" "+C);
+        arc.setAttribute("stroke", ms>plannedMs ? "#FFB547" : "var(--accent)");
+        const paused=!r.cur.run; root.classList.toggle("paused", paused);
+        sub.textContent = paused ? tsL("paused · tap to resume","pausiert · tippen für weiter") : tsL("of ","von ")+(ev.e-ev.s)+" min";
+        const l=tsLate(r); lt.textContent = l>=5 ? "+"+l+tsL(" min behind plan"," min hinter Plan") : ""; };
+      const dn=el("button","tsf-done",null,tsL("Done","Fertig")); dn.onclick=()=>finish();
+    }
     const finish=()=>{
-      const ms=elapsed();
+      const ms=tsElapsed(r);
       if(r.cur && ms>=30000){ const mins=Math.max(5, Math.ceil(ms/60000/5)*5); r.spent=(r.spent||0)+ms; if(ev.fol) tsSet(ev.tid,{a:mins}); else tsSet(ev.tid,{d:mins}); }
       ev.done=true; r.cur=null; r.idx++; save();
       if(!ev.fol && task && dueTasks().some(t=>t.id===task.id)){ try{ apply(task.id,"r"); }catch(e){} } else sfx("done", 1);
       renderFocus(); };
-    draw();
-    const lk=el("div","ts-flink",body);
-    const sk=el("button","",lk,tsL("Skip","Überspringen")); sk.onclick=()=>{ ev.done=false; r.cur=null; r.idx++; save(); sfx("down"); renderFocus(); };
-    const rp=el("button","hl",lk,tsL("Re-plan the rest from now","Rest ab jetzt neu planen")); rp.onclick=()=>{ tsReplan(r); renderFocus(); };
-    // what comes after
-    const nx=r.ev.slice(r.idx+1, r.idx+3); if(nx.length){ const n=el("div","ts-next glass",body); el("h3","",n,tsL("After that","Danach"));
-      nx.forEach(e=>{ const row=el("div","",n); el("span","",row,tsHM(e.s)); const t=el("span","",row,e.title); t.translate=false; }); }
-    paint(); tsTick=setInterval(()=>{ if(sheetMode!=="tsf" || !inner.contains(clk)){ clearInterval(tsTick); return; } paint(); }, 1000);
-  }
-  // behind the plan: lay the rest out again from now; machines already running keep their time
-  function tsReplan(r){
-    const now=tsNowMin(), rest=r.ev.slice(r.idx), doneIds=new Set(r.ev.slice(0,r.idx).filter(e=>!e.fol).map(e=>e.tid));
-    const byId={}; state.tasks.forEach(t=>byId[t.id]=t);
-    const items=rest.filter(e=>!e.fol && byId[e.tid]).map(e=>byId[e.tid]);
-    const pre=rest.filter(e=>e.fol && doneIds.has(e.tid) && byId[e.tid]).map(e=>({at:e.s, d:e.e-e.s, t:byId[e.tid]}));
-    const need=rest.reduce((a,e)=>a+(e.e-e.s),0)+items.reduce((a,t)=>a+tsOf(t.id).w,0);   // nothing gets dropped, the plan just runs longer
-    const plan=tsPlan(items, now, Math.max(r.to, now+need), pre);
-    r.ev=r.ev.slice(0,r.idx).concat(plan.ev.map(e=>({tid:e.t.id, title:e.title, s:e.s, e:e.e, fol:!!e.fol, wait:e.wait||0, done:false})));
-    r.cur=null; tsRunSave(r); sfx("cone",3);
+    const toast=el("div","tsf-toast");
+    const skip=()=>{ ev.done=false; r.cur=null; r.idx++; save(); sfx("down"); renderFocus(); const t=tsfEl && tsfEl.querySelector(".tsf-toast"); if(t){ t.textContent=tsL("Skipped: ","Übersprungen: ")+ev.title; t.classList.add("on"); setTimeout(()=>t.classList.remove("on"),1600); } };
+    // swipe left anywhere on the screen skips the current step
+    { let sx=null, sy=0; root.onpointerdown=e=>{ if(e.target.closest(".tsf-sh,.tsf-next,.tsf-x,.tsf-go,.tsf-done")) { sx=null; return; } sx=e.clientX; sy=e.clientY; };
+      root.onpointerup=e=>{ if(sx==null) return; const dx=e.clientX-sx, dy=e.clientY-sy; sx=null; if(dx<-90 && Math.abs(dy)<60) skip(); }; }
+    // ---- after: the next step at the bottom, tap opens the rest
+    const rest=r.ev.slice(r.idx+1), nb=el("button","tsf-next");
+    if(rest.length){ nb.append(Object.assign(document.createElement("span"),{textContent:tsL("After","Danach")})); const bn=document.createElement("b"); bn.textContent=rest[0].title; bn.translate=false; nb.firstChild.appendChild(bn);
+      const up=document.createElement("span"); up.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>'; nb.appendChild(up);
+      nb.onclick=()=>openRest(); }
+    else nb.append(Object.assign(document.createElement("span"),{textContent:tsL("Last step","Letzter Schritt")}));
+    const dim=el("div","tsf-dim"), sh=el("div","tsf-sh");
+    function openRest(){
+      tsRetime(r); save();
+      sh.innerHTML=""; const hd=el("div","tsf-hd",sh), hh=el("div","tsf-shh",sh), endEl=document.createElement("span");
+      hh.append(Object.assign(document.createElement("span"),{textContent:tsL("After","Danach")}), endEl);
+      const list=el("div","tsf-list",sh); el("div","tsf-hint",sh,tsL("Drag to change · swipe left to skip","Ziehen zum Ändern · nach links wischen überspringt"));
+      const draw=()=>{ list.innerHTML=""; const rs=r.ev.slice(r.idx+1); endEl.textContent=rs.length ? tsL("done at ","fertig um ")+tsHM(Math.max(...rs.map(e=>e.e))) : "";
+        rs.forEach(e=>{ const row=el("div","tsf-row",list); row.dataset.tid=e.tid; if(e.fol) row.dataset.fol="1";
+          const n=el("span","nm",row,e.title); n.translate=false;
+          if(e.fol){ el("span","fx",row,tsHM(e.s)+tsL(" fixed"," fest")); }
+          else { el("span","mn",row,(e.e-e.s)+" min"); const g=el("span","tsf-grip",row); g.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.3"/><circle cx="15" cy="6" r="1.3"/><circle cx="9" cy="12" r="1.3"/><circle cx="15" cy="12" r="1.3"/><circle cx="9" cy="18" r="1.3"/><circle cx="15" cy="18" r="1.3"/></svg>'; g.onpointerdown=ev2=>drag(ev2,row); }
+          // swipe left on a row: out of today's plan
+          let sx=null; row.addEventListener("pointerdown",p=>{ if(p.target.closest(".tsf-grip")) return; sx=p.clientX; });
+          row.addEventListener("pointermove",p=>{ if(sx==null) return; const dx=Math.min(0,p.clientX-sx); row.style.transform="translateX("+dx+"px)"; });
+          const up=p=>{ if(sx==null) return; const dx=p.clientX-sx; sx=null; if(dx<-80){ row.classList.add("gone"); sfx("down"); setTimeout(()=>{ const i=r.ev.indexOf(e); if(i>r.idx) r.ev.splice(i,1); const ord=r.ev.slice(r.idx+1).filter(z=>!z.fol).map(z=>z.tid); tsRetime(r, ord); save(); draw(); renderBehind(); },230); } else row.style.transform=""; };
+          row.addEventListener("pointerup",up); row.addEventListener("pointercancel",()=>{ sx=null; row.style.transform=""; });
+        }); };
+      const commit=()=>{ const ord=[...list.querySelectorAll(".tsf-row:not([data-fol])")].map(x=>x.dataset.tid); tsRetime(r, ord); save(); draw(); renderBehind(); sfx("snap"); };
+      function drag(e,row){ e.preventDefault(); e.stopPropagation(); // moving the row in the list drops pointer capture, so follow the finger on the window
+        row.classList.add("lift"); sfx("grab"); const y0=e.clientY; let moved=false;
+        const mv=p=>{ moved=true; const rows=[...list.querySelectorAll(".tsf-row:not([data-fol])")], i=rows.indexOf(row);
+          row.style.transform="translateY("+(p.clientY-y0- (row.offsetTop-row._t0))+"px) scale(1.03)";
+          const prev=rows[i-1], next=rows[i+1];
+          if(next && p.clientY>next.getBoundingClientRect().top+next.offsetHeight/2){ list.insertBefore(next,row); }
+          else if(prev && p.clientY<prev.getBoundingClientRect().top+prev.offsetHeight/2){ list.insertBefore(row,prev); } };
+        row._t0=row.offsetTop;
+        const end=()=>{ window.removeEventListener("pointermove",mv); window.removeEventListener("pointerup",end); window.removeEventListener("pointercancel",end); row.classList.remove("lift"); row.style.transform=""; if(moved) commit(); };
+        window.addEventListener("pointermove",mv); window.addEventListener("pointerup",end); window.addEventListener("pointercancel",end); }
+      draw(); dim.classList.add("on"); requestAnimationFrame(()=>sh.classList.add("open"));
+      // close by tapping the dim area or pulling the handle down
+      dim.onclick=closeRest; let hy=null; hd.onpointerdown=p=>{ hy=p.clientY; }; sh.onpointerup=p=>{ if(hy!=null && p.clientY-hy>50) closeRest(); hy=null; };
+    }
+    function closeRest(){ sh.classList.remove("open"); dim.classList.remove("on"); setTimeout(renderFocus, 380); }
+    function renderBehind(){ const nx=r.ev[r.idx+1], b=nb.querySelector("b"); if(b && nx) b.textContent=nx.title; }
+    paint(); tsTick=setInterval(()=>{ if(!tsfEl || !root.isConnected){ clearInterval(tsTick); return; } paint(); }, 1000);
   }
   function tsICS(ev){
     const ymd=today().replace(/-/g,""), at=m=>ymd+"T"+String(Math.floor(m/60)).padStart(2,"0")+String(m%60).padStart(2,"0")+"00";
